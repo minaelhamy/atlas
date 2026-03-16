@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - /bin/mkdir -p /home/hatchwan/atlas.hatchers.ai
+    - /bin/rsync -a --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --exclude '.git' --exclude '.github' --exclude '.cpanel.yml' --exclude '.env' --exclude '.env.local' --exclude 'AGENTS.md' --exclude 'storage/' --exclude 'admin/uploads/' --exclude 'install/' --exclude 'error_log' --exclude 'php/error_log' ./ /home/hatchwan/atlas.hatchers.ai/

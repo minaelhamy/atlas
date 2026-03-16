@@ -1,0 +1,12 @@
+.env
+.env.local
+
+error_log
+php/error_log
+install/error_log
+errors.log
+
+admin/uploads/*.zip
+admin/uploads/*.log
+
+.DS_Store
