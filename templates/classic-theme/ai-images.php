@@ -107,11 +107,21 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             <?php if (!empty($meta['asset']['title'])) { ?>
                                                 <p class="margin-bottom-0"><strong><?php _e('Asset') ?>:</strong> <?php _esc($meta['asset']['title']) ?></p>
                                             <?php } ?>
-                                            <?php if (!empty($meta['rendered_video'])) { ?>
-                                                <div class="margin-top-15">
-                                                    <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video']; ?>" class="button ripple-effect btn-sm" target="_blank"><?php _e('Open Reel Video') ?></a>
-                                                </div>
-                                            <?php } ?>
+                                            <?php
+                                            $captionExport = $post['caption'];
+                                            if (!empty($hashtags)) {
+                                                $captionExport .= "\n\n" . $hashtags;
+                                            }
+                                            ?>
+                                            <div class="d-flex margin-top-15 flex-wrap">
+                                                <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Post') ?></a>
+                                                <a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="<?php _esc($post['title']) ?>" data-caption="<?php _esc($captionExport) ?>"><?php _e('Download Caption') ?></a>
+                                                <?php if (!empty($meta['rendered_video'])) { ?>
+                                                    <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><?php _e('Open Reel Video') ?></a>
+                                                    <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Reel Video') ?></a>
+                                                <?php } ?>
+                                                <a href="#" class="button red ripple-effect btn-sm quick-delete" data-id="<?php _esc($post['id']) ?>" data-action="delete_image"><?php _e('Delete') ?></a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

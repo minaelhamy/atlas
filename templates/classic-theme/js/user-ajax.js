@@ -5,6 +5,25 @@ jQuery(function ($) {
         return $('<div>').text(text || '').html();
     }
 
+    function download_text_file(filename, text) {
+        var blob = new Blob([text || ''], { type: 'text/plain;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function slugify_filename(text) {
+        return String(text || 'caption')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'caption';
+    }
+
     // email resend
     $('.resend').on('click', function (e) { 						// Button which will activate our modal
         var the_id = $(this).attr('id');						//get the id
@@ -346,23 +365,30 @@ jQuery(function ($) {
                 if (response.success) {
                     $.each(response.posts, function(index, post) {
                         var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
-                        var details = '';
+                        var captionText = String(post.caption || '') + (hashtags ? "\n\n" + String(post.hashtags.join(' ')) : '');
+                        var infoHtml = '';
+                        var actionsHtml = '<div class="d-flex margin-top-15">' +
+                            '<a href="' + escape_html(post.preview_image) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Post</a>' +
+                            '<a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '">Download Caption</a>';
 
                         if (Array.isArray(post.slides) && post.slides.length) {
-                            details += '<p class="margin-bottom-10"><strong>Carousel Flow:</strong> ' + escape_html(post.slides.join(' | ')) + '</p>';
+                            infoHtml += '<p class="margin-bottom-10"><strong>Carousel Flow:</strong> ' + escape_html(post.slides.join(' | ')) + '</p>';
                         }
 
                         if (Array.isArray(post.reel_script) && post.reel_script.length) {
-                            details += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
+                            infoHtml += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
                         }
 
                         if (post.asset_title) {
-                            details += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
+                            infoHtml += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
                         }
 
                         if (post.rendered_video) {
-                            details += '<div class="margin-top-15"><a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm" target="_blank">Open Reel Video</a></div>';
+                            actionsHtml += '<a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm margin-right-5" target="_blank">Open Reel Video</a>';
+                            actionsHtml += '<a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Reel Video</a>';
                         }
+
+                        actionsHtml += '<a href="#" class="button red ripple-effect btn-sm quick-delete" data-id="' + escape_html(String(post.id)) + '" data-action="delete_image">Delete</a></div>';
 
                         $("#generated_images_wrapper").prepend(
                             '<div class="col-xl-4 col-md-6 margin-bottom-30">' +
@@ -376,7 +402,8 @@ jQuery(function ($) {
                                             '<p class="margin-bottom-10"><strong>Caption:</strong> ' + escape_html(post.caption) + '</p>' +
                                             '<p class="margin-bottom-10"><strong>CTA:</strong> ' + escape_html(post.cta) + '</p>' +
                                             '<p class="margin-bottom-10"><strong>Hashtags:</strong> ' + hashtags + '</p>' +
-                                            details +
+                                            infoHtml +
+                                            actionsHtml +
                                         '</div>' +
                                     '</div>' +
                                 '</div>' +
@@ -430,7 +457,7 @@ jQuery(function ($) {
     });
 
     /* delete ajax */
-    $('.quick-delete').on('click', function (e) {
+    $(document).on('click', '.quick-delete', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -470,6 +497,15 @@ jQuery(function ($) {
                 }
             });
         }
+    });
+
+    $(document).on('click', '.download-caption', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $btn = $(this);
+        var title = $btn.data('title') || 'caption';
+        var caption = $btn.data('caption') || '';
+        download_text_file(slugify_filename(title) + '-caption.txt', caption);
     });
 
     function animate_value(id, start, end, duration) {

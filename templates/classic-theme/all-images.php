@@ -53,10 +53,18 @@ overall_header(__("All Social Posts"));
                                                 <p class="margin-bottom-10"><strong><?php _e("Hashtags") ?>:</strong> <?php _esc($image['hashtags']) ?></p>
                                             <?php } ?>
                                             <p class="margin-bottom-15"><small><?php echo _esc($image['date'], 0) . ' <strong>' . _esc($image['time'], 0) . '</strong>' ?></small></p>
-                                            <div class="d-flex">
+                                            <?php
+                                            $captionExport = $image['description'];
+                                            if (!empty($image['hashtags'])) {
+                                                $captionExport .= "\n\n" . $image['hashtags'];
+                                            }
+                                            ?>
+                                            <div class="d-flex flex-wrap">
                                                 <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/' . $image['image']; ?>" class="button ripple-effect btn-sm margin-right-5" download><i class="fa fa-download"></i></a>
+                                                <a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="<?php _esc($image['title']) ?>" data-caption="<?php _esc($captionExport) ?>"><?php _e('Caption') ?></a>
                                                 <?php if (!empty($image['rendered_video'])) { ?>
                                                     <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><i class="fa fa-play"></i></a>
+                                                    <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e("Video") ?></a>
                                                 <?php } ?>
                                                 <a href="#" class="button red ripple-effect btn-sm quick-delete"
                                                    data-id="<?php _esc($image['id']) ?>"
