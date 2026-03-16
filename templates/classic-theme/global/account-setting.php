@@ -38,15 +38,17 @@ overall_header(__("Account Setting"));
                                         <div class="col-md-12">
                                         <div class="submit-field">
                                             <h5><?php _e('Avatar'); ?></h5>
-                                            <div class="uploadButton">
+                                            <div class="account-media-card">
+                                                <div class="account-media-preview avatar-preview-wrap">
+                                                    <img id="account-avatar-preview" src="<?php echo _esc($config['site_url'], 0) . 'storage/profile/' . $current_avatar; ?>" alt="" class="account-media-image avatar-shape">
+                                                </div>
+                                                <div class="uploadButton">
                                                 <input class="uploadButton-input" type="file" accept="images/*" id="avatar"
                                                        name="avatar"/>
                                                 <label class="uploadButton-button ripple-effect"
                                                        for="avatar"><?php _e('Upload Avatar') ?></label>
-                                                <span class="uploadButton-file-name"><?php _e('Use 150x150px for better use') ?></span>
-                                            </div>
-                                            <div class="margin-top-15">
-                                                <img src="<?php echo _esc($config['site_url'], 0) . 'storage/profile/' . $current_avatar; ?>" alt="" style="max-width: 90px; border-radius: 50%;">
+                                                <span class="uploadButton-file-name" id="avatar-upload-status"><?php _e('Select a photo and it will upload instantly.') ?></span>
+                                                </div>
                                             </div>
                                             <?php if(!empty($avatar_error)){ _esc($avatar_error) ; }?>
                                         </div>
@@ -100,30 +102,23 @@ overall_header(__("Account Setting"));
                                 <div class="notification notice"><?php _e("This profile powers every AI agent and the social media generator.") ?></div>
                                 <form method="post" accept-charset="UTF-8" enctype="multipart/form-data">
                                     <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Founder Photo") ?></h5>
-                                                <div class="uploadButton">
-                                                    <input class="uploadButton-input" type="file" accept="images/*" id="founder_photo" name="founder_photo"/>
-                                                    <label class="uploadButton-button ripple-effect" for="founder_photo"><?php _e('Upload Founder Photo') ?></label>
-                                                    <span class="uploadButton-file-name"><?php _e('Used in generated social assets and agent context.') ?></span>
-                                                </div>
-                                                <?php if (!empty($founder_photo)) { ?>
-                                                    <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $founder_photo; ?>" alt="" style="max-width: 120px; border-radius: 12px;">
-                                                <?php } ?>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <div class="submit-field">
                                                 <h5><?php _e("Company Logo") ?></h5>
+                                                <div class="account-media-card">
+                                                    <div class="account-media-preview logo-preview-wrap">
+                                                        <?php if (!empty($company_logo)) { ?>
+                                                            <img id="company-logo-preview" src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $company_logo; ?>" alt="" class="account-media-image logo-shape">
+                                                        <?php } else { ?>
+                                                            <div id="company-logo-preview" class="account-media-placeholder logo-shape"><?php _e('Logo') ?></div>
+                                                        <?php } ?>
+                                                    </div>
                                                 <div class="uploadButton">
                                                     <input class="uploadButton-input" type="file" accept="images/*" id="company_logo" name="company_logo"/>
                                                     <label class="uploadButton-button ripple-effect" for="company_logo"><?php _e('Upload Company Logo') ?></label>
-                                                    <span class="uploadButton-file-name"><?php _e('Used as branding on generated posts.') ?></span>
+                                                    <span class="uploadButton-file-name" id="company-logo-upload-status"><?php _e('Select a logo and it will upload instantly.') ?></span>
                                                 </div>
-                                                <?php if (!empty($company_logo)) { ?>
-                                                    <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $company_logo; ?>" alt="" style="max-width: 120px; border-radius: 12px; background: #fff; padding: 8px;">
-                                                <?php } ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -344,8 +339,89 @@ overall_header(__("Account Setting"));
         </div>
     </div>
 <?php ob_start() ?>
+    <style>
+        .account-media-card {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .account-media-preview {
+            width: 104px;
+            height: 104px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #f4f7fb 0%, #e8eef7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid #dbe4f0;
+        }
+        .account-media-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .account-media-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7a8797;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .avatar-shape {
+            border-radius: 50%;
+        }
+        .logo-shape {
+            border-radius: 18px;
+            background: #fff;
+            padding: 10px;
+        }
+    </style>
     <script>
         var error = "";
+        function uploadProfileMedia(type, inputSelector, statusSelector, previewSelector) {
+            var input = $(inputSelector).get(0);
+            if (!input || !input.files || !input.files.length) {
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('type', type);
+            formData.append(type === 'avatar' ? 'avatar' : 'company_logo', input.files[0]);
+
+            $(statusSelector).text('<?php _e("Uploading...") ?>');
+
+            $.ajax({
+                type: "POST",
+                url: ajaxurl + '?action=upload_profile_media',
+                data: formData,
+                dataType: 'json',
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.success) {
+                        var imageHtml = '<img src="' + response.url + '?t=' + Date.now() + '" alt="" class="account-media-image ' + (type === 'avatar' ? 'avatar-shape' : 'logo-shape') + '">';
+                        $(previewSelector).replaceWith($(imageHtml).attr('id', previewSelector.replace('#', '')));
+                        $(statusSelector).text('<?php _e("Uploaded successfully.") ?>');
+                        if (type === 'avatar' && response.small_url) {
+                            $('.user-avatar img').attr('src', response.small_url + '?t=' + Date.now());
+                        }
+                    } else {
+                        $(statusSelector).text(response.error || '<?php _e("Upload failed.") ?>');
+                    }
+                },
+                error: function () {
+                    $(statusSelector).text('<?php _e("Upload failed.") ?>');
+                }
+            });
+        }
         function checkAvailabilityUsername() {
             jQuery.ajax({
                 url: "<?php _esc($config['app_url']) ?>global/check_availability.php",
@@ -415,6 +491,14 @@ overall_header(__("Account Setting"));
             else
                 $('.billing-tax-id').slideUp();
         }).trigger('change');
+
+        $('#avatar').on('change', function () {
+            uploadProfileMedia('avatar', '#avatar', '#avatar-upload-status', '#account-avatar-preview');
+        });
+
+        $('#company_logo').on('change', function () {
+            uploadProfileMedia('company_logo', '#company_logo', '#company-logo-upload-status', '#company-logo-preview');
+        });
     </script>
 <?php
 $footer_content = ob_get_clean();

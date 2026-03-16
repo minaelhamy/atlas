@@ -68,6 +68,9 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "delete_speech") {
         delete_speech();
     }
+    if ($_GET['action'] == "upload_profile_media") {
+        upload_profile_media();
+    }
     die(0);
 }
 
@@ -124,6 +127,84 @@ function email_verify()
     } else {
         exit;
     }
+}
+
+function upload_profile_media()
+{
+    global $config;
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    if (!check_allow()) {
+        $result['error'] = __('Disabled on demo');
+        die(json_encode($result));
+    }
+
+    $type = !empty($_POST['type']) ? validate_input($_POST['type']) : '';
+
+    if ($type === 'avatar') {
+        if (empty($_FILES['avatar']['name'])) {
+            $result['error'] = __('Please choose an image.');
+            die(json_encode($result));
+        }
+
+        $mainPath = ROOTPATH . "/storage/profile/";
+        $upload = quick_file_upload('avatar', $mainPath);
+        if (!$upload['success']) {
+            $result['error'] = $upload['error'];
+            die(json_encode($result));
+        }
+
+        $fileName = $upload['file_name'];
+        resizeImage(150, $mainPath . $fileName, $mainPath . $fileName);
+        resizeImage(60, $mainPath . 'small_' . $fileName, $mainPath . $fileName);
+
+        $person = ORM::for_table($config['db']['pre'] . 'user')->find_one($_SESSION['user']['id']);
+        $oldImage = $person['image'];
+        $person->set('image', $fileName);
+        $person->set_expr('updated_at', 'NOW()');
+        $person->save();
+
+        if (!empty($oldImage) && $oldImage !== 'default_user.png') {
+            foreach ([$mainPath . $oldImage, $mainPath . 'small_' . $oldImage] as $oldFile) {
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
+            }
+        }
+
+        $loggedin = get_user_data("", $_SESSION['user']['id']);
+        create_user_session($loggedin['id'], $loggedin['username'], $loggedin['password'], $loggedin['user_type']);
+
+        $result['success'] = true;
+        $result['url'] = $config['site_url'] . 'storage/profile/' . $fileName;
+        $result['small_url'] = $config['site_url'] . 'storage/profile/small_' . $fileName;
+        die(json_encode($result));
+    }
+
+    if ($type === 'company_logo') {
+        if (empty($_FILES['company_logo']['name'])) {
+            $result['error'] = __('Please choose an image.');
+            die(json_encode($result));
+        }
+
+        $profile = social_media_get_profile($_SESSION['user']['id']);
+        $fileName = social_media_upload_company_logo($_SESSION['user']['id'], $profile['company_logo']);
+        if (empty($fileName)) {
+            $result['error'] = __('Unable to upload company logo.');
+            die(json_encode($result));
+        }
+
+        $result['success'] = true;
+        $result['url'] = $config['site_url'] . 'storage/company/' . $fileName;
+        die(json_encode($result));
+    }
+
+    $result['error'] = __('Invalid upload type.');
+    die(json_encode($result));
 }
 
 function submitBlogComment()

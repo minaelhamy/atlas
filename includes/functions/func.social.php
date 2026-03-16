@@ -62,7 +62,6 @@ function social_media_get_profile($user_id)
     $defaults = [
         'founder_name' => '',
         'founder_title' => '',
-        'founder_photo' => '',
         'company_name' => '',
         'company_logo' => '',
         'company_website' => '',
@@ -137,6 +136,17 @@ function social_media_handle_profile_upload($field_name, $existing = '')
     }
 
     return $result['file_name'];
+}
+
+function social_media_upload_company_logo($user_id, $existing = '')
+{
+    $fileName = social_media_handle_profile_upload('company_logo', $existing);
+    if ($fileName !== $existing || !empty($_FILES['company_logo']['name'])) {
+        $profile = social_media_get_profile($user_id);
+        $profile['company_logo'] = $fileName;
+        social_media_save_profile($user_id, $profile);
+    }
+    return $fileName;
 }
 
 function social_media_get_company_context_text($user_id)

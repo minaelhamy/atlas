@@ -12,6 +12,7 @@ if(isset($current_user['id']))
     $password_error = '';
     $delete_account_error = '';
     $avatarName = null;
+    $avatar_error = '';
 
     if(isset($_POST['submit']))
     {
@@ -219,9 +220,6 @@ if(isset($current_user['id']))
                 'competitor_notes' => validate_input($_POST['competitor_notes']),
             ];
 
-            $profileData['founder_photo'] = social_media_handle_profile_upload('founder_photo', $social_profile['founder_photo']);
-            $profileData['company_logo'] = social_media_handle_profile_upload('company_logo', $social_profile['company_logo']);
-
             $social_profile = social_media_save_profile($_SESSION['user']['id'], $profileData);
 
             transfer($link['ACCOUNT_SETTING'], __("Company profile saved successfully"), __("Settings Saved Successfully"));
@@ -246,7 +244,6 @@ if(isset($current_user['id']))
 
     $founder_name = $social_profile['founder_name'];
     $founder_title = $social_profile['founder_title'];
-    $founder_photo = $social_profile['founder_photo'];
     $company_name = $social_profile['company_name'];
     $company_logo = $social_profile['company_logo'];
     $company_website = $social_profile['company_website'];
