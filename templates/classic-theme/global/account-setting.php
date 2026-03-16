@@ -45,6 +45,9 @@ overall_header(__("Account Setting"));
                                                        for="avatar"><?php _e('Upload Avatar') ?></label>
                                                 <span class="uploadButton-file-name"><?php _e('Use 150x150px for better use') ?></span>
                                             </div>
+                                            <div class="margin-top-15">
+                                                <img src="<?php echo _esc($config['site_url'], 0) . 'storage/profile/' . $current_avatar; ?>" alt="" style="max-width: 90px; border-radius: 50%;">
+                                            </div>
                                             <?php if(!empty($avatar_error)){ _esc($avatar_error) ; }?>
                                         </div>
                                         </div>
@@ -53,7 +56,7 @@ overall_header(__("Account Setting"));
                                                 <h5><?php _e("Username") ?> *</h5>
                                                 <div class="input-with-icon-left">
                                                     <i class="la la-user"></i>
-                                                    <input type="text" class="with-border" id="username" name="username" value="<?php _esc($username)?>" onBlur="checkAvailabilityUsername()">
+                                                    <input type="text" class="with-border" id="username" name="username" value="<?php _esc($username_field)?>" onBlur="checkAvailabilityUsername()">
                                                 </div>
                                                 <span id="user-availability-status"><?php if($username_error != ""){ _esc($username_error) ; }?></span>
                                             </div>

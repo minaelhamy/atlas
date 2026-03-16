@@ -241,6 +241,9 @@ if(isset($current_user['id']))
         $password_error = '';
     }
 
+    $username = $username_field;
+    $current_avatar = !empty($ses_userdata['image']) ? $ses_userdata['image'] : 'default_user.png';
+
     $founder_name = $social_profile['founder_name'];
     $founder_title = $social_profile['founder_title'];
     $founder_photo = $social_profile['founder_photo'];
