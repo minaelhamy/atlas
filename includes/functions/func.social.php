@@ -47,7 +47,30 @@ function social_media_bootstrap()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
+    social_media_ensure_asset_schema();
+
     $bootstrapped = true;
+}
+
+function social_media_ensure_asset_schema()
+{
+    global $config;
+
+    $table = $config['db']['pre'] . 'social_media_assets';
+    $columns = [
+        'analysis_json' => "ALTER TABLE `{$table}` ADD `analysis_json` LONGTEXT NULL DEFAULT NULL",
+        'manifest_json' => "ALTER TABLE `{$table}` ADD `manifest_json` LONGTEXT NULL DEFAULT NULL",
+        'render_preset' => "ALTER TABLE `{$table}` ADD `render_preset` VARCHAR(50) NULL DEFAULT 'auto'",
+    ];
+
+    $pdo = ORM::get_db();
+    foreach ($columns as $column => $sql) {
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
+        $stmt->execute([$column]);
+        if (!$stmt->fetch()) {
+            ORM::raw_execute($sql);
+        }
+    }
 }
 
 function social_media_make_directory($path)
@@ -348,7 +371,12 @@ function social_media_get_assets($filters = [])
         $orm->where_raw('(post_type = ? OR post_type = ?)', [$filters['post_type'], 'all']);
     }
 
-    return $orm->find_array();
+    $assets = $orm->find_array();
+    foreach ($assets as &$asset) {
+        $asset = social_media_prepare_asset_record($asset);
+    }
+
+    return $assets;
 }
 
 function social_media_get_asset($id)
@@ -356,7 +384,61 @@ function social_media_get_asset($id)
     social_media_bootstrap();
     global $config;
 
-    return ORM::for_table($config['db']['pre'] . 'social_media_assets')->find_one($id);
+    $asset = ORM::for_table($config['db']['pre'] . 'social_media_assets')->find_array($id);
+    return $asset ? social_media_prepare_asset_record($asset) : null;
+}
+
+function social_media_prepare_asset_record($asset)
+{
+    if (empty($asset)) {
+        return $asset;
+    }
+
+    if (empty($asset['analysis_json']) || empty($asset['manifest_json'])) {
+        social_media_refresh_asset_analysis($asset['id']);
+        global $config;
+        $asset = ORM::for_table($config['db']['pre'] . 'social_media_assets')->find_array($asset['id']);
+    }
+
+    $asset['analysis'] = !empty($asset['analysis_json']) ? json_decode($asset['analysis_json'], true) : [];
+    $asset['manifest'] = !empty($asset['manifest_json']) ? json_decode($asset['manifest_json'], true) : [];
+
+    return $asset;
+}
+
+function social_media_refresh_asset_analysis($assetId, $force = false)
+{
+    social_media_bootstrap();
+    global $config;
+
+    $asset = ORM::for_table($config['db']['pre'] . 'social_media_assets')->find_one($assetId);
+    if (!$asset) {
+        return false;
+    }
+
+    if (!$force && !empty($asset['analysis_json']) && !empty($asset['manifest_json'])) {
+        return true;
+    }
+
+    $analysis = social_media_analyze_asset($asset->as_array());
+    $manifest = social_media_generate_template_manifest($asset->as_array(), $analysis);
+
+    $asset->analysis_json = json_encode($analysis);
+    $asset->manifest_json = json_encode($manifest);
+    $asset->text_position = !empty($analysis['best_text_zone']) ? $analysis['best_text_zone'] : $asset['text_position'];
+    if (!empty($analysis['source_width'])) {
+        $asset->width = $analysis['source_width'];
+    }
+    if (!empty($analysis['source_height'])) {
+        $asset->height = $analysis['source_height'];
+    }
+    if (!empty($analysis['preview_name']) && empty($asset['preview_name'])) {
+        $asset->preview_name = $analysis['preview_name'];
+    }
+    $asset->updated_at = date('Y-m-d H:i:s');
+    $asset->save();
+
+    return true;
 }
 
 function social_media_get_recent_posts($user_id, $limit = 18)
@@ -424,6 +506,14 @@ function social_media_pick_asset($post_type, $keywords = [])
         }
         if ($asset['post_type'] === $post_type) {
             $score += 1;
+        }
+        if (!empty($asset['analysis']['best_text_zone'])) {
+            $score += 1;
+        }
+        if (empty($asset['analysis']['ocr_text'])) {
+            $score += 1;
+        } else {
+            $score -= 1;
         }
         if ($score > $bestScore) {
             $bestScore = $score;
@@ -656,21 +746,368 @@ function social_media_shell_available($functionName)
     return !in_array($functionName, $disabledList, true);
 }
 
-function social_media_ffmpeg_path()
+function social_media_command_path($binary)
 {
-    $envPath = get_env_setting('FFMPEG_PATH');
-    if (!empty($envPath) && file_exists($envPath)) {
-        return $envPath;
+    $env = get_env_setting(strtoupper($binary) . '_PATH');
+    if (!empty($env) && file_exists($env)) {
+        return $env;
     }
 
     if (social_media_shell_available('shell_exec')) {
-        $path = trim((string) shell_exec('command -v ffmpeg 2>/dev/null'));
+        $path = trim((string) shell_exec('command -v ' . escapeshellarg($binary) . ' 2>/dev/null'));
         if ($path !== '') {
             return $path;
         }
     }
 
     return '';
+}
+
+function social_media_ffmpeg_path()
+{
+    return social_media_command_path('ffmpeg');
+}
+
+function social_media_tesseract_path()
+{
+    return social_media_command_path('tesseract');
+}
+
+function social_media_asset_source_path($asset)
+{
+    if (!empty($asset['file_name'])) {
+        return ROOTPATH . '/storage/social_assets/' . $asset['file_name'];
+    }
+    return '';
+}
+
+function social_media_asset_preview_path($asset)
+{
+    if (!empty($asset['preview_name'])) {
+        return ROOTPATH . '/storage/social_assets/' . $asset['preview_name'];
+    }
+    return '';
+}
+
+function social_media_analyze_asset($asset)
+{
+    $sourcePath = social_media_asset_source_path($asset);
+    $previewPath = social_media_asset_preview_path($asset);
+    $previewName = !empty($asset['preview_name']) ? $asset['preview_name'] : '';
+
+    if ($asset['asset_type'] === 'video' && empty($previewPath)) {
+        $extractedPreview = social_media_extract_video_preview($asset);
+        if (!empty($extractedPreview)) {
+            $previewName = $extractedPreview;
+            $previewPath = ROOTPATH . '/storage/social_assets/' . $previewName;
+        }
+    }
+
+    $analysis = [
+        'asset_type' => $asset['asset_type'],
+        'preview_name' => $previewName,
+        'source_width' => 0,
+        'source_height' => 0,
+        'preview_width' => 0,
+        'preview_height' => 0,
+        'brightness' => [],
+        'clutter' => [],
+        'best_text_zone' => 'center',
+        'suggested_text_color' => '#FFFFFF',
+        'overlay_opacity' => 0.36,
+        'ocr_text' => '',
+        'analysis_version' => 1,
+    ];
+
+    if ($sourcePath && file_exists($sourcePath)) {
+        if ($asset['asset_type'] === 'image') {
+            $size = @getimagesize($sourcePath);
+            if ($size) {
+                $analysis['source_width'] = $size[0];
+                $analysis['source_height'] = $size[1];
+            }
+        } else {
+            $videoInfo = social_media_probe_video_dimensions($sourcePath);
+            if (!empty($videoInfo['width'])) {
+                $analysis['source_width'] = $videoInfo['width'];
+                $analysis['source_height'] = $videoInfo['height'];
+            }
+        }
+    }
+
+    if ($previewPath && file_exists($previewPath)) {
+        $previewInfo = @getimagesize($previewPath);
+        if ($previewInfo) {
+            $analysis['preview_width'] = $previewInfo[0];
+            $analysis['preview_height'] = $previewInfo[1];
+        }
+
+        $zoneMetrics = social_media_measure_asset_zones($previewPath);
+        $analysis['brightness'] = $zoneMetrics['brightness'];
+        $analysis['clutter'] = $zoneMetrics['clutter'];
+        $analysis['best_text_zone'] = $zoneMetrics['best_zone'];
+        $analysis['suggested_text_color'] = $zoneMetrics['text_color'];
+        $analysis['overlay_opacity'] = $zoneMetrics['overlay_opacity'];
+        $analysis['ocr_text'] = social_media_ocr_image($previewPath);
+    }
+
+    return $analysis;
+}
+
+function social_media_extract_video_preview($asset)
+{
+    $ffmpeg = social_media_ffmpeg_path();
+    if ($ffmpeg === '') {
+        return '';
+    }
+
+    $sourcePath = social_media_asset_source_path($asset);
+    if (!$sourcePath || !file_exists($sourcePath) || !social_media_shell_available('exec')) {
+        return '';
+    }
+
+    $output = uniqid('preview_') . '.jpg';
+    $outputPath = ROOTPATH . '/storage/social_assets/' . $output;
+    $cmd = escapeshellarg($ffmpeg)
+        . ' -y -i ' . escapeshellarg($sourcePath)
+        . ' -ss 00:00:01.000 -vframes 1 '
+        . escapeshellarg($outputPath) . ' 2>&1';
+
+    $lines = [];
+    $status = 0;
+    exec($cmd, $lines, $status);
+    return ($status === 0 && file_exists($outputPath)) ? $output : '';
+}
+
+function social_media_probe_video_dimensions($path)
+{
+    $ffmpeg = social_media_ffmpeg_path();
+    if ($ffmpeg === '' || !social_media_shell_available('exec')) {
+        return ['width' => 0, 'height' => 0];
+    }
+
+    $cmd = escapeshellarg($ffmpeg) . ' -i ' . escapeshellarg($path) . ' 2>&1';
+    $lines = [];
+    $status = 0;
+    exec($cmd, $lines, $status);
+    $output = implode("\n", $lines);
+    if (preg_match('/, (\d{2,5})x(\d{2,5})[,\s]/', $output, $match)) {
+        return ['width' => (int) $match[1], 'height' => (int) $match[2]];
+    }
+
+    return ['width' => 0, 'height' => 0];
+}
+
+function social_media_measure_asset_zones($imagePath)
+{
+    $image = social_media_load_image_resource($imagePath);
+    if (!$image) {
+        return [
+            'brightness' => ['top' => 120, 'center' => 120, 'bottom' => 120],
+            'clutter' => ['top' => 0.5, 'center' => 0.5, 'bottom' => 0.5],
+            'best_zone' => 'center',
+            'text_color' => '#FFFFFF',
+            'overlay_opacity' => 0.36,
+        ];
+    }
+
+    $sampleW = 60;
+    $sampleH = 60;
+    $sample = imagecreatetruecolor($sampleW, $sampleH);
+    imagecopyresampled($sample, $image, 0, 0, 0, 0, $sampleW, $sampleH, imagesx($image), imagesy($image));
+    imagedestroy($image);
+
+    $segments = [
+        'top' => [0, 19],
+        'center' => [20, 39],
+        'bottom' => [40, 59],
+    ];
+    $brightness = [];
+    $clutter = [];
+    $bestZone = 'center';
+    $bestScore = null;
+
+    foreach ($segments as $zone => $range) {
+        $sum = 0;
+        $count = 0;
+        $edge = 0;
+        for ($y = $range[0]; $y <= $range[1]; $y++) {
+            for ($x = 0; $x < $sampleW; $x++) {
+                $rgb = imagecolorat($sample, $x, $y);
+                $r = ($rgb >> 16) & 0xFF;
+                $g = ($rgb >> 8) & 0xFF;
+                $b = $rgb & 0xFF;
+                $lum = (0.299 * $r) + (0.587 * $g) + (0.114 * $b);
+                $sum += $lum;
+                $count++;
+
+                if ($x > 0) {
+                    $prev = imagecolorat($sample, $x - 1, $y);
+                    $pr = ($prev >> 16) & 0xFF;
+                    $pg = ($prev >> 8) & 0xFF;
+                    $pb = $prev & 0xFF;
+                    $edge += abs($r - $pr) + abs($g - $pg) + abs($b - $pb);
+                }
+            }
+        }
+
+        $brightness[$zone] = $count ? round($sum / $count, 2) : 120;
+        $clutter[$zone] = $count ? round($edge / ($count * 3), 4) : 0.5;
+        $score = $clutter[$zone] + (abs($brightness[$zone] - 128) / 255);
+        if ($bestScore === null || $score < $bestScore) {
+            $bestScore = $score;
+            $bestZone = $zone;
+        }
+    }
+
+    imagedestroy($sample);
+
+    $zoneBrightness = $brightness[$bestZone];
+    $textColor = $zoneBrightness > 155 ? '#0B1220' : '#FFFFFF';
+    $overlayOpacity = $zoneBrightness > 155 ? 0.22 : 0.40;
+
+    return [
+        'brightness' => $brightness,
+        'clutter' => $clutter,
+        'best_zone' => $bestZone,
+        'text_color' => $textColor,
+        'overlay_opacity' => $overlayOpacity,
+    ];
+}
+
+function social_media_ocr_image($imagePath)
+{
+    $tesseract = social_media_tesseract_path();
+    if ($tesseract === '' || !social_media_shell_available('exec')) {
+        return '';
+    }
+
+    $cmd = escapeshellarg($tesseract) . ' ' . escapeshellarg($imagePath) . ' stdout 2>/dev/null';
+    $lines = [];
+    $status = 0;
+    exec($cmd, $lines, $status);
+    if ($status !== 0) {
+        return '';
+    }
+
+    return trim(implode("\n", $lines));
+}
+
+function social_media_generate_template_manifest($asset, $analysis)
+{
+    $variants = [];
+    $zones = ['top', 'center', 'bottom'];
+    $bestZone = in_array($analysis['best_text_zone'], $zones, true) ? $analysis['best_text_zone'] : 'center';
+
+    foreach (social_media_get_format_map() as $format => $spec) {
+        $variants[$format] = social_media_build_manifest_variant($spec, $analysis, $bestZone, $format);
+    }
+
+    return [
+        'version' => 1,
+        'render_preset' => !empty($asset['render_preset']) ? $asset['render_preset'] : 'auto',
+        'variants' => $variants,
+        'ocr_text' => $analysis['ocr_text'],
+    ];
+}
+
+function social_media_build_manifest_variant($spec, $analysis, $bestZone, $format)
+{
+    $width = $spec['width'];
+    $height = $spec['height'];
+    $padding = 84;
+    $zoneYMap = [
+        'top' => 180,
+        'center' => (int) floor($height * 0.28),
+        'bottom' => (int) floor($height * 0.50),
+    ];
+    $baseY = $zoneYMap[$bestZone];
+    $headlineSize = $format === 'reel' ? 64 : ($format === 'carousel' ? 56 : 60);
+    $subheadlineSize = $format === 'reel' ? 28 : 26;
+    $ctaSize = 24;
+
+    return [
+        'width' => $width,
+        'height' => $height,
+        'overlay' => [
+            'color' => '#07111C',
+            'opacity' => $analysis['overlay_opacity'],
+        ],
+        'zones' => [
+            'logo' => [
+                'x' => $padding,
+                'y' => 40,
+                'width' => 120,
+                'height' => 120,
+            ],
+            'label' => [
+                'x' => $padding,
+                'y' => $baseY,
+                'width' => 240,
+                'height' => 40,
+                'font_size' => 26,
+                'color' => '#FFAD33',
+                'align' => 'left',
+                'max_lines' => 1,
+            ],
+            'headline' => [
+                'x' => $padding,
+                'y' => $baseY + 54,
+                'width' => $width - ($padding * 2),
+                'height' => $format === 'reel' ? 340 : 270,
+                'font_size' => $headlineSize,
+                'min_font_size' => 28,
+                'line_height' => 1.12,
+                'color' => $analysis['suggested_text_color'],
+                'align' => 'left',
+                'max_lines' => $format === 'reel' ? 5 : 4,
+                'shrink_to_fit' => true,
+            ],
+            'subheadline' => [
+                'x' => $padding,
+                'y' => $baseY + 320,
+                'width' => $width - ($padding * 2),
+                'height' => 180,
+                'font_size' => $subheadlineSize,
+                'min_font_size' => 18,
+                'line_height' => 1.28,
+                'color' => $analysis['suggested_text_color'] === '#FFFFFF' ? '#D7E0EB' : '#253142',
+                'align' => 'left',
+                'max_lines' => 4,
+                'shrink_to_fit' => true,
+            ],
+            'cta' => [
+                'x' => $padding,
+                'y' => $height - 120,
+                'width' => $width - ($padding * 2),
+                'height' => 40,
+                'font_size' => $ctaSize,
+                'min_font_size' => 18,
+                'line_height' => 1.0,
+                'color' => '#D7E0EB',
+                'align' => 'left',
+                'max_lines' => 1,
+                'shrink_to_fit' => true,
+            ],
+            'brand' => [
+                'x' => $padding,
+                'y' => $height - 160,
+                'width' => $width - ($padding * 2),
+                'height' => 40,
+                'font_size' => 24,
+                'min_font_size' => 18,
+                'line_height' => 1.0,
+                'color' => $analysis['suggested_text_color'],
+                'align' => 'left',
+                'max_lines' => 1,
+                'shrink_to_fit' => true,
+            ],
+        ],
+        'rules' => [
+            'ideal_text_zone' => $bestZone,
+            'supports_long_copy' => $format !== 'reel',
+        ],
+    ];
 }
 
 function social_media_render_reel_video($asset, $overlayFile)
@@ -731,6 +1168,67 @@ function social_media_render_lines($text, $maxChars)
     }
 
     return array_slice($lines, 0, 5);
+}
+
+function social_media_wrap_text_for_box($text, $fontPath, $fontSize, $maxWidth, $maxLines)
+{
+    $text = trim((string) $text);
+    if ($text === '') {
+        return [];
+    }
+
+    if (!$fontPath || !function_exists('imagettfbbox')) {
+        return array_slice(social_media_render_lines($text, max(18, (int) floor($maxWidth / max($fontSize * 0.72, 1)))), 0, $maxLines);
+    }
+
+    $words = preg_split('/\s+/', $text);
+    $lines = [];
+    $line = '';
+
+    foreach ($words as $word) {
+        $candidate = trim($line . ' ' . $word);
+        $box = imagettfbbox($fontSize, 0, $fontPath, $candidate);
+        $candidateWidth = abs($box[2] - $box[0]);
+        if ($candidateWidth > $maxWidth && $line !== '') {
+            $lines[] = $line;
+            $line = $word;
+        } else {
+            $line = $candidate;
+        }
+    }
+
+    if ($line !== '') {
+        $lines[] = $line;
+    }
+
+    return array_slice($lines, 0, $maxLines);
+}
+
+function social_media_fit_text_to_zone($text, $zone, $fontPath)
+{
+    $fontSize = !empty($zone['font_size']) ? (int) $zone['font_size'] : 28;
+    $minFontSize = !empty($zone['min_font_size']) ? (int) $zone['min_font_size'] : 16;
+    $maxLines = !empty($zone['max_lines']) ? (int) $zone['max_lines'] : 3;
+    $lineHeight = !empty($zone['line_height']) ? (float) $zone['line_height'] : 1.2;
+
+    while ($fontSize >= $minFontSize) {
+        $lines = social_media_wrap_text_for_box($text, $fontPath, $fontSize, $zone['width'], $maxLines);
+        $estimatedHeight = count($lines) * (int) floor($fontSize * $lineHeight);
+        if ($estimatedHeight <= $zone['height'] && count($lines) <= $maxLines) {
+            return [
+                'font_size' => $fontSize,
+                'lines' => $lines,
+                'line_height' => $lineHeight,
+            ];
+        }
+        $fontSize -= 2;
+    }
+
+    return [
+        'font_size' => $minFontSize,
+        'lines' => social_media_wrap_text_for_box($text, $fontPath, $minFontSize, $zone['width'], $maxLines),
+        'line_height' => $lineHeight,
+    ];
 }
 
 function social_media_open_asset_background($asset, $width, $height)
@@ -794,90 +1292,93 @@ function social_media_render_text_block($canvas, $text, $x, $y, $width, $fontSiz
     return $currentY;
 }
 
+function social_media_hex_to_rgb($hex)
+{
+    $hex = ltrim((string) $hex, '#');
+    if (strlen($hex) === 3) {
+        $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    return [
+        hexdec(substr($hex, 0, 2)),
+        hexdec(substr($hex, 2, 2)),
+        hexdec(substr($hex, 4, 2)),
+    ];
+}
+
+function social_media_render_zone_text($canvas, $text, $zone, $fontPath)
+{
+    if (trim((string) $text) === '' || empty($zone)) {
+        return;
+    }
+
+    list($r, $g, $b) = social_media_hex_to_rgb(isset($zone['color']) ? $zone['color'] : '#FFFFFF');
+    $color = imagecolorallocate($canvas, $r, $g, $b);
+    $fit = social_media_fit_text_to_zone($text, $zone, $fontPath);
+    $fontSize = $fit['font_size'];
+    $lineHeight = (int) floor($fontSize * $fit['line_height']);
+    $y = $zone['y'] + $fontSize;
+
+    foreach ($fit['lines'] as $line) {
+        $x = $zone['x'];
+        if (!empty($zone['align']) && $zone['align'] !== 'left' && $fontPath && function_exists('imagettfbbox')) {
+            $box = imagettfbbox($fontSize, 0, $fontPath, $line);
+            $lineWidth = abs($box[2] - $box[0]);
+            if ($zone['align'] === 'center') {
+                $x = $zone['x'] + (int) floor(($zone['width'] - $lineWidth) / 2);
+            } elseif ($zone['align'] === 'right') {
+                $x = $zone['x'] + $zone['width'] - $lineWidth;
+            }
+        }
+
+        if ($fontPath && function_exists('imagettftext')) {
+            imagettftext($canvas, $fontSize, 0, $x, $y, $color, $fontPath, $line);
+        } else {
+            imagestring($canvas, 5, $x, $y - 15, $line, $color);
+        }
+        $y += $lineHeight;
+    }
+}
+
 function social_media_render_preview($post, $asset, $profile)
 {
     $formats = social_media_get_format_map();
     $format = $formats[$post['post_type']];
-    $width = $format['width'];
-    $height = $format['height'];
+    $asset = $asset ? social_media_prepare_asset_record($asset) : [];
+    $variant = social_media_get_manifest_variant($asset, $post['post_type'], $format);
+    $width = $variant['width'];
+    $height = $variant['height'];
     $canvas = social_media_open_asset_background($asset ?: [], $width, $height);
 
-    $overlay = imagecolorallocatealpha($canvas, 7, 12, 21, 50);
+    list($ovR, $ovG, $ovB) = social_media_hex_to_rgb($variant['overlay']['color']);
+    $overlay = imagecolorallocatealpha($canvas, $ovR, $ovG, $ovB, (int) floor(127 * min(max($variant['overlay']['opacity'], 0), 1)));
     imagefilledrectangle($canvas, 0, 0, $width, $height, $overlay);
-
-    $white = imagecolorallocate($canvas, 255, 255, 255);
-    $muted = imagecolorallocate($canvas, 215, 224, 235);
-    $accent = imagecolorallocate($canvas, 255, 173, 51);
     $fontPath = social_media_font_path();
-
-    $padding = 90;
-    $position = !empty($asset['text_position']) ? $asset['text_position'] : 'center';
-    if ($position === 'top') {
-        $topY = 120;
-    } elseif ($position === 'bottom') {
-        $topY = (int) floor($height * 0.52);
-    } else {
-        $topY = (int) floor($height * 0.32);
-    }
 
     if (!empty($profile['company_logo'])) {
         $logoPath = ROOTPATH . '/storage/company/' . $profile['company_logo'];
         if (file_exists($logoPath)) {
             $logo = social_media_load_image_resource($logoPath);
             if ($logo) {
-                $logoCanvas = imagecreatetruecolor(120, 120);
+                $logoZone = $variant['zones']['logo'];
+                $logoCanvas = imagecreatetruecolor($logoZone['width'], $logoZone['height']);
                 imagealphablending($logoCanvas, false);
                 imagesavealpha($logoCanvas, true);
                 $transparent = imagecolorallocatealpha($logoCanvas, 0, 0, 0, 127);
                 imagefill($logoCanvas, 0, 0, $transparent);
-                imagecopyresampled($logoCanvas, $logo, 0, 0, 0, 0, 120, 120, imagesx($logo), imagesy($logo));
-                imagecopy($canvas, $logoCanvas, $padding, 40, 0, 0, 120, 120);
+                imagecopyresampled($logoCanvas, $logo, 0, 0, 0, 0, $logoZone['width'], $logoZone['height'], imagesx($logo), imagesy($logo));
+                imagecopy($canvas, $logoCanvas, $logoZone['x'], $logoZone['y'], 0, 0, $logoZone['width'], $logoZone['height']);
                 imagedestroy($logo);
                 imagedestroy($logoCanvas);
             }
         }
     }
 
-    $pillText = strtoupper($format['label']);
-    if ($fontPath && function_exists('imagettftext')) {
-        imagettftext($canvas, 26, 0, $padding, $topY, $accent, $fontPath, $pillText);
-    } else {
-        imagestring($canvas, 5, $padding, $topY - 20, $pillText, $accent);
-    }
-
-    $topY += 60;
-    $topY = social_media_render_text_block(
-        $canvas,
-        $post['overlay_text'],
-        $padding,
-        $topY,
-        $width - ($padding * 2),
-        $post['post_type'] === 'reel' ? 44 : 52,
-        $white,
-        $fontPath
-    );
-
-    $topY += 20;
-    $topY = social_media_render_text_block(
-        $canvas,
-        $post['hook'],
-        $padding,
-        $topY,
-        $width - ($padding * 2),
-        $post['post_type'] === 'reel' ? 22 : 24,
-        $muted,
-        $fontPath
-    );
-
-    $footerY = $height - 120;
     $brand = !empty($profile['company_name']) ? $profile['company_name'] : 'Atlas';
-    if ($fontPath && function_exists('imagettftext')) {
-        imagettftext($canvas, 24, 0, $padding, $footerY, $white, $fontPath, $brand);
-        imagettftext($canvas, 18, 0, $padding, $footerY + 40, $muted, $fontPath, trim((string) $post['cta']));
-    } else {
-        imagestring($canvas, 5, $padding, $footerY - 18, $brand, $white);
-        imagestring($canvas, 4, $padding, $footerY + 8, trim((string) $post['cta']), $muted);
-    }
+    social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $fontPath);
+    social_media_render_zone_text($canvas, $post['overlay_text'], $variant['zones']['headline'], $fontPath);
+    social_media_render_zone_text($canvas, $post['hook'], $variant['zones']['subheadline'], $fontPath);
+    social_media_render_zone_text($canvas, $brand, $variant['zones']['brand'], $fontPath);
+    social_media_render_zone_text($canvas, trim((string) $post['cta']), $variant['zones']['cta'], $fontPath);
 
     $targetDir = ROOTPATH . '/storage/social_posts/';
     social_media_make_directory($targetDir);
@@ -886,6 +1387,19 @@ function social_media_render_preview($post, $asset, $profile)
     imagedestroy($canvas);
 
     return $fileName;
+}
+
+function social_media_get_manifest_variant($asset, $postType, $format)
+{
+    if (!empty($asset['manifest']['variants'][$postType])) {
+        return $asset['manifest']['variants'][$postType];
+    }
+
+    return social_media_build_manifest_variant($format, [
+        'best_text_zone' => !empty($asset['text_position']) ? $asset['text_position'] : 'center',
+        'suggested_text_color' => '#FFFFFF',
+        'overlay_opacity' => 0.36,
+    ], !empty($asset['text_position']) ? $asset['text_position'] : 'center', $postType);
 }
 
 function social_media_store_generated_posts($user_id, $items, $brief = '')
@@ -1014,6 +1528,13 @@ function social_media_save_asset($payload)
     $asset->preview_name = $previewName;
     $asset->tags = implode(',', social_media_normalize_list($payload['tags']));
     $asset->text_position = $payload['text_position'];
+    $asset->render_preset = !empty($payload['render_preset']) ? $payload['render_preset'] : 'auto';
+    if (isset($payload['manifest_json']) && trim($payload['manifest_json']) !== '') {
+        $manifest = json_decode($payload['manifest_json'], true);
+        if (is_array($manifest)) {
+            $asset->manifest_json = json_encode($manifest);
+        }
+    }
     $asset->status = !empty($payload['status']) ? 1 : 0;
     $asset->width = $width;
     $asset->height = $height;
@@ -1022,6 +1543,8 @@ function social_media_save_asset($payload)
     }
     $asset->updated_at = date('Y-m-d H:i:s');
     $asset->save();
+
+    social_media_refresh_asset_analysis($asset->id(), empty($asset['manifest_json']));
 
     return ['success' => true, 'id' => $asset->id()];
 }

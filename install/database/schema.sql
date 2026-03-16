@@ -103,6 +103,9 @@ CREATE TABLE IF NOT EXISTS `<<prefix>>social_media_assets`
     `status`        tinyint(1)                              NOT NULL DEFAULT 1,
     `width`         int(11)                                          DEFAULT NULL,
     `height`        int(11)                                          DEFAULT NULL,
+    `analysis_json` longtext COLLATE utf8mb4_unicode_ci              DEFAULT NULL,
+    `manifest_json` longtext COLLATE utf8mb4_unicode_ci              DEFAULT NULL,
+    `render_preset` varchar(50) COLLATE utf8mb4_unicode_ci           DEFAULT 'auto',
     `created_at`    datetime                                         DEFAULT NULL,
     `updated_at`    datetime                                         DEFAULT NULL,
     PRIMARY KEY (`id`)

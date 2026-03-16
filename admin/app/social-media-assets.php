@@ -11,6 +11,14 @@ if (!empty($_GET['edit'])) {
     $editAsset = social_media_get_asset((int) $_GET['edit']);
 }
 
+if (!empty($_GET['reanalyze'])) {
+    social_media_refresh_asset_analysis((int) $_GET['reanalyze'], true);
+    $message = __('Asset reanalyzed successfully.');
+    if (!empty($_GET['edit']) && (int) $_GET['edit'] === (int) $_GET['reanalyze']) {
+        $editAsset = social_media_get_asset((int) $_GET['edit']);
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['delete_asset_id'])) {
     if (social_media_delete_asset((int) $_POST['delete_asset_id'])) {
         $message = __('Asset deleted successfully.');
@@ -28,6 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['delete_asset_id'])) {
         'post_type' => validate_input($_POST['post_type']),
         'tags' => validate_input($_POST['tags']),
         'text_position' => validate_input($_POST['text_position']),
+        'render_preset' => validate_input($_POST['render_preset']),
+        'manifest_json' => isset($_POST['manifest_json']) ? trim($_POST['manifest_json']) : '',
         'status' => !empty($_POST['status']) ? 1 : 0,
     ];
 
@@ -108,6 +118,13 @@ include '../header.php'; ?>
                                     </select>
                                 </div>
                                 <div class="form-group">
+                                    <label><?php _e('Render Preset') ?></label>
+                                    <select name="render_preset" class="form-control">
+                                        <option value="auto" <?php echo (empty($editAsset['render_preset']) || $editAsset['render_preset'] === 'auto') ? 'selected' : ''; ?>><?php _e('Auto Analyze') ?></option>
+                                        <option value="manual" <?php echo (!empty($editAsset['render_preset']) && $editAsset['render_preset'] === 'manual') ? 'selected' : ''; ?>><?php _e('Manual Manifest') ?></option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label><?php _e('Primary File') ?></label>
                                     <input type="file" name="asset_file" class="form-control" <?php echo empty($editAsset['id']) ? 'required' : ''; ?>>
                                 </div>
@@ -125,19 +142,50 @@ include '../header.php'; ?>
                                         <img src="<?php echo $config['site_url'] . 'storage/social_assets/' . $editAsset['preview_name']; ?>" alt="" style="max-width: 120px; border-radius: 8px;">
                                     </div>
                                 <?php } ?>
+                                <div class="form-group">
+                                    <label><?php _e('Template Manifest JSON') ?></label>
+                                    <textarea name="manifest_json" class="form-control" rows="12"><?php echo !empty($editAsset['manifest_json']) ? _esc($editAsset['manifest_json']) : ''; ?></textarea>
+                                    <small class="form-text text-muted"><?php _e('Leave empty to use the auto-generated manifest from asset analysis.') ?></small>
+                                </div>
                                 <button type="submit" class="btn btn-primary"><?php echo !empty($editAsset['id']) ? __('Update Asset') : __('Upload Asset'); ?></button>
                                 <?php if (!empty($editAsset['id'])) { ?>
                                     <a href="<?php echo ADMINURL; ?>app/social-media-assets.php" class="btn btn-light"><?php _e('Cancel') ?></a>
+                                    <a href="<?php echo ADMINURL; ?>app/social-media-assets.php?edit=<?php echo (int) $editAsset['id']; ?>&reanalyze=<?php echo (int) $editAsset['id']; ?>" class="btn btn-warning"><?php _e('Reanalyze') ?></a>
                                 <?php } ?>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-8">
+                    <?php if (!empty($editAsset['analysis'])) { ?>
+                        <div class="quick-card card">
+                            <div class="card-header">
+                                <h5><?php _e('Asset Analysis') ?></h5>
+                                <span><?php _e('Auto-detected safe zones, brightness, clutter, OCR text, and recommended text color.') ?></span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong><?php _e('Best Text Zone') ?>:</strong> <?php _esc($editAsset['analysis']['best_text_zone']) ?></p>
+                                        <p><strong><?php _e('Suggested Text Color') ?>:</strong> <?php _esc($editAsset['analysis']['suggested_text_color']) ?></p>
+                                        <p><strong><?php _e('Overlay Opacity') ?>:</strong> <?php _esc($editAsset['analysis']['overlay_opacity']) ?></p>
+                                        <p><strong><?php _e('Source Dimensions') ?>:</strong> <?php _esc($editAsset['analysis']['source_width'] . 'x' . $editAsset['analysis']['source_height']) ?></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong><?php _e('Brightness') ?>:</strong> <?php _esc(json_encode($editAsset['analysis']['brightness'])) ?></p>
+                                        <p><strong><?php _e('Clutter') ?>:</strong> <?php _esc(json_encode($editAsset['analysis']['clutter'])) ?></p>
+                                    </div>
+                                </div>
+                                <?php if (!empty($editAsset['analysis']['ocr_text'])) { ?>
+                                    <div class="alert alert-light"><?php _esc($editAsset['analysis']['ocr_text']) ?></div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    <?php } ?>
                     <div class="quick-card card">
                         <div class="card-header">
                             <h5><?php _e('Asset Library') ?></h5>
-                            <span><?php _e('The generator scores these assets using post type match and tag overlap with generated keywords.') ?></span>
+                            <span><?php _e('The generator scores these assets using post type match, tag overlap, and the template manifest generated from analysis.') ?></span>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -149,6 +197,7 @@ include '../header.php'; ?>
                                         <th><?php _e('Type') ?></th>
                                         <th><?php _e('Post Type') ?></th>
                                         <th><?php _e('Tags') ?></th>
+                                        <th><?php _e('Best Zone') ?></th>
                                         <th><?php _e('Status') ?></th>
                                         <th><?php _e('Action') ?></th>
                                     </tr>
@@ -167,9 +216,11 @@ include '../header.php'; ?>
                                             <td><?php _esc(ucfirst($asset['asset_type'])) ?></td>
                                             <td><?php _esc(ucfirst($asset['post_type'])) ?></td>
                                             <td><?php _esc($asset['tags']) ?></td>
+                                            <td><?php _esc(!empty($asset['analysis']['best_text_zone']) ? ucfirst($asset['analysis']['best_text_zone']) : '-') ?></td>
                                             <td><?php echo !empty($asset['status']) ? '<span class="badge badge-success">' . __('Active') . '</span>' : '<span class="badge badge-secondary">' . __('Inactive') . '</span>'; ?></td>
                                             <td>
                                                 <a href="<?php echo ADMINURL; ?>app/social-media-assets.php?edit=<?php echo (int) $asset['id']; ?>" class="btn btn-sm btn-primary"><?php _e('Edit') ?></a>
+                                                <a href="<?php echo ADMINURL; ?>app/social-media-assets.php?reanalyze=<?php echo (int) $asset['id']; ?>" class="btn btn-sm btn-warning"><?php _e('Reanalyze') ?></a>
                                                 <form method="post" style="display:inline-block;" onsubmit="return confirm('<?php echo escape(__('Delete this asset?')); ?>')">
                                                     <input type="hidden" name="delete_asset_id" value="<?php echo (int) $asset['id']; ?>">
                                                     <button type="submit" class="btn btn-sm btn-danger"><?php _e('Delete') ?></button>
