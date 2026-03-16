@@ -86,6 +86,59 @@ CREATE TABLE IF NOT EXISTS `<<prefix>>ai_images`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `<<prefix>>social_media_assets`
+--
+
+DROP TABLE IF EXISTS `<<prefix>>social_media_assets`;
+CREATE TABLE IF NOT EXISTS `<<prefix>>social_media_assets`
+(
+    `id`            int(11) NOT NULL AUTO_INCREMENT,
+    `title`         varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `asset_type`    varchar(20) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT 'image',
+    `post_type`     varchar(20) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT 'all',
+    `file_name`     varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `preview_name`  varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `tags`          text COLLATE utf8mb4_unicode_ci         DEFAULT NULL,
+    `text_position` varchar(30) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT 'center',
+    `status`        tinyint(1)                              NOT NULL DEFAULT 1,
+    `width`         int(11)                                          DEFAULT NULL,
+    `height`        int(11)                                          DEFAULT NULL,
+    `created_at`    datetime                                         DEFAULT NULL,
+    `updated_at`    datetime                                         DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `<<prefix>>social_media_posts`
+--
+
+DROP TABLE IF EXISTS `<<prefix>>social_media_posts`;
+CREATE TABLE IF NOT EXISTS `<<prefix>>social_media_posts`
+(
+    `id`            int(11) NOT NULL AUTO_INCREMENT,
+    `user_id`       int(11)                                          DEFAULT NULL,
+    `batch_key`     varchar(80) COLLATE utf8mb4_unicode_ci  DEFAULT NULL,
+    `post_type`     varchar(20) COLLATE utf8mb4_unicode_ci  DEFAULT NULL,
+    `title`         varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `caption`       longtext COLLATE utf8mb4_unicode_ci     DEFAULT NULL,
+    `overlay_text`  text COLLATE utf8mb4_unicode_ci         DEFAULT NULL,
+    `asset_id`      int(11)                                          DEFAULT NULL,
+    `asset_file`    varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `preview_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `metadata`      longtext COLLATE utf8mb4_unicode_ci     DEFAULT NULL,
+    `created_at`    datetime                                         DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `<<prefix>>balance`
 --
 

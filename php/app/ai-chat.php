@@ -51,7 +51,7 @@ if (isset($current_user['id'])) {
 
         $chat_bot_id = 'default';
         $bot_id = $bot_welcome_msg = $bot_role = null;
-        $ai_chat_bot_name = !empty($config['ai_chat_bot_name']) ? $config['ai_chat_bot_name'] : __('AI Chat Bot');
+        $ai_chat_bot_name = !empty($config['ai_chat_bot_name']) ? $config['ai_chat_bot_name'] : __('AI Agent');
 
         $ai_chat_bot_avatar = !empty($config['chat_bot_avatar']) ? $config['chat_bot_avatar'] : 'default_user.png';
         $ai_chat_bot_avatar = $config['site_url'].'storage/profile/'.$ai_chat_bot_avatar;

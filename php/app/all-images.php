@@ -15,7 +15,9 @@ if (isset($current_user['id'])) {
 
     $limit = 25;
 
-    $orm = ORM::for_table($config['db']['pre'] . 'ai_images')
+    social_media_bootstrap();
+
+    $orm = ORM::for_table($config['db']['pre'] . 'social_media_posts')
         ->where('user_id', $_SESSION['user']['id'])
         ->order_by_desc('id');
 
@@ -28,11 +30,14 @@ if (isset($current_user['id'])) {
 
     $images = array();
     foreach ($rows as $row) {
+        $meta = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
         $images[$row['id']]['id'] = $row['id'];
         $images[$row['id']]['title'] = $row['title'];
-        $images[$row['id']]['description'] = strip_tags($row['description']);
-        $images[$row['id']]['image'] = $row['image'];
-        $images[$row['id']]['resolution'] = $row['resolution'];
+        $images[$row['id']]['description'] = strip_tags($row['caption']);
+        $images[$row['id']]['image'] = $row['preview_image'];
+        $images[$row['id']]['post_type'] = $row['post_type'];
+        $images[$row['id']]['rendered_video'] = !empty($meta['rendered_video']) ? $meta['rendered_video'] : '';
+        $images[$row['id']]['hashtags'] = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
         $images[$row['id']]['date'] = date('d M, Y', strtotime($row['created_at']));
         $images[$row['id']]['time'] = date('H:i:s', strtotime($row['created_at']));
     }

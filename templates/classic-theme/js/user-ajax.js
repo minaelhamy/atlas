@@ -1,6 +1,10 @@
 jQuery(function ($) {
     "use strict";
 
+    function escape_html(text) {
+        return $('<div>').text(text || '').html();
+    }
+
     // email resend
     $('.resend').on('click', function (e) { 						// Button which will activate our modal
         var the_id = $(this).attr('id');						//get the id
@@ -340,17 +344,44 @@ jQuery(function ($) {
             success: function (response) {
                 $btn.removeClass('button-progress').prop('disabled', false);
                 if (response.success) {
-                    $('#generated_images_notice').hide();
+                    $.each(response.posts, function(index, post) {
+                        var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
+                        var details = '';
 
-                    $.each(response.data, function( index, value ) {
-                        $("#generated_images_wrapper").prepend('<div class="col-sm-4 col-md-2 col-6 margin-bottom-30"><a href="'+ value.large +'" target="_blank" class="ai-lightbox-image"><img width="100%" src="'+ value.small +'" alt="" data-tippy-placement="top" title="'+ response.description +'"></a></div>')
-                    });
+                        if (Array.isArray(post.slides) && post.slides.length) {
+                            details += '<p class="margin-bottom-10"><strong>Carousel Flow:</strong> ' + escape_html(post.slides.join(' | ')) + '</p>';
+                        }
 
-                    /* refresh lightbox */
-                    window.lgData[$('.image-lightbox').attr('lg-uid')].destroy(true);
-                    lightGallery($('.image-lightbox').get(0),{
-                        selector: '.ai-lightbox-image',
-                        download: true,
+                        if (Array.isArray(post.reel_script) && post.reel_script.length) {
+                            details += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
+                        }
+
+                        if (post.asset_title) {
+                            details += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
+                        }
+
+                        if (post.rendered_video) {
+                            details += '<div class="margin-top-15"><a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm" target="_blank">Open Reel Video</a></div>';
+                        }
+
+                        $("#generated_images_wrapper").prepend(
+                            '<div class="col-xl-4 col-md-6 margin-bottom-30">' +
+                                '<div class="dashboard-box social-post-card margin-top-0">' +
+                                    '<div class="content">' +
+                                        '<div class="social-post-preview"><img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '"></div>' +
+                                        '<div class="social-post-body with-padding">' +
+                                            '<span class="dashboard-status-button yellow">' + escape_html(post.post_type.charAt(0).toUpperCase() + post.post_type.slice(1)) + '</span>' +
+                                            '<h4 class="margin-top-15">' + escape_html(post.title) + '</h4>' +
+                                            '<p class="margin-bottom-10"><strong>Overlay:</strong> ' + escape_html(post.overlay_text) + '</p>' +
+                                            '<p class="margin-bottom-10"><strong>Caption:</strong> ' + escape_html(post.caption) + '</p>' +
+                                            '<p class="margin-bottom-10"><strong>CTA:</strong> ' + escape_html(post.cta) + '</p>' +
+                                            '<p class="margin-bottom-10"><strong>Hashtags:</strong> ' + hashtags + '</p>' +
+                                            details +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>'
+                        );
                     });
 
                     animate_value('quick-images-left', response.old_used_images, response.current_used_images, 1000)
@@ -418,9 +449,13 @@ jQuery(function ($) {
                 success: function (response) {
                     $btn.removeClass('button-progress').prop('disabled', false);
                     if (response.success) {
-                        $btn.closest('tr').fadeOut("slow", function(){
+                        var $container = $btn.closest('tr, .col-xl-4, .col-md-6, .col-sm-4, .col-md-2, .col-6');
+                        if (!$container.length) {
+                            $container = $btn.closest('.dashboard-box');
+                        }
+                        $container.fadeOut("slow", function(){
                             $(this).remove();
-                        })
+                        });
 
                         Snackbar.show({
                             text: response.message,

@@ -1110,21 +1110,30 @@ function generate_image()
             $membership = get_user_membership_detail($_SESSION['user']['id']);
             $images_limit = $membership['settings']['ai_images_limit'];
 
-            $start = date('Y-m-01');
-            $end = date_create(date('Y-m-t'))->modify('+1 day')->format('Y-m-d');
             $total_images_used = get_user_option($_SESSION['user']['id'], 'total_images_used', 0);
+            $postsToGenerate = 9;
 
             // check user's images limit
-            if ($images_limit != -1 && ((($images_limit + get_user_option($_SESSION['user']['id'], 'total_images_available', 0)) - $total_images_used) < $_POST['no_of_images'])) {
+            if ($images_limit != -1 && ((($images_limit + get_user_option($_SESSION['user']['id'], 'total_images_available', 0)) - $total_images_used) < $postsToGenerate)) {
                 $result['success'] = false;
                 $result['error'] = __('Images limit exceeded, Upgrade your membership plan.');
                 die(json_encode($result));
             }
 
-            $prompt = $_POST['description'];
-            $prompt .= !empty($_POST['style']) ? ', ' . $_POST['style'] . ' style' : '';
-            $prompt .= !empty($_POST['lighting']) ? ', ' . $_POST['lighting'] . ' lighting' : '';
-            $prompt .= !empty($_POST['mood']) ? ', ' . $_POST['mood'] . ' mood' : '';
+            $profile = social_media_get_profile($_SESSION['user']['id']);
+            if (empty($profile['company_name']) || empty($profile['company_description'])) {
+                $result['success'] = false;
+                $result['error'] = __('Complete your company profile first from Account Settings to generate social media posts.');
+                die(json_encode($result));
+            }
+
+            $prompt = trim($_POST['description']);
+            if (!empty($_POST['focus_area'])) {
+                $prompt .= "\nFocus area: " . trim($_POST['focus_area']);
+            }
+            if (!empty($_POST['campaign_goal'])) {
+                $prompt .= "\nCampaign goal: " . trim($_POST['campaign_goal']);
+            }
 
             // check bad words
             if ($word = check_bad_words($prompt)) {
@@ -1133,151 +1142,23 @@ function generate_image()
                 die(json_encode($result));
             }
 
-            // check image api
-            $image_api = get_option('ai_image_api');
-            if ($image_api == 'any') {
-                // check random
-                $data = ['openai', 'stable-diffusion'];
-                $image_api = $data[array_rand($data)];
-            }
+            $ideas = social_media_generate_batch($_SESSION['user']['id'], $prompt);
+            $posts = social_media_store_generated_posts($_SESSION['user']['id'], $ideas, $prompt);
 
-            if ($image_api == 'stable-diffusion') {
-                include ROOTPATH . '/includes/lib/StableDiffusion.php';
+            $image_used = ORM::for_table($config['db']['pre'] . 'image_used')->create();
+            $image_used->user_id = $_SESSION['user']['id'];
+            $image_used->images = $postsToGenerate;
+            $image_used->date = date('Y-m-d H:i:s');
+            $image_used->save();
 
-                $stableDiffusion = new StableDiffusion(get_image_api_key($image_api));
+            update_user_option($_SESSION['user']['id'], 'total_images_used', $total_images_used + $postsToGenerate);
 
-                $width = 1024;
-                $height = 1024;
+            $result['success'] = true;
+            $result['posts'] = $posts;
+            $result['description'] = $_POST['description'];
+            $result['old_used_images'] = (int) $total_images_used;
+            $result['current_used_images'] = (int) $total_images_used + $postsToGenerate;
 
-                $response = $stableDiffusion->image([
-                    "text_prompts" => [
-                        ["text" => $prompt]
-                    ],
-                    "height" => $height,
-                    "width" => $width,
-                    "samples" => (int)$_POST['no_of_images'],
-                    "steps" => 50,
-                ]);
-                $response = json_decode($response, true);
-                if (isset($response['artifacts'])) {
-                    foreach ($response['artifacts'] as $image) {
-
-                        $name = uniqid() . '.png';
-                        $target_dir = ROOTPATH . '/storage/ai_images/';
-                        file_put_contents($target_dir . $name, base64_decode($image['base64']));
-                        resizeImage(200, $target_dir . 'small_' . $name, $target_dir . $name);
-                        $content = ORM::for_table($config['db']['pre'] . 'ai_images')->create();
-                        $content->user_id = $_SESSION['user']['id'];
-                        $content->title = $_POST['title'];
-                        $content->description = $_POST['description'];
-                        $content->resolution = $_POST['resolution'];
-                        $content->image = $name;
-                        $content->created_at = date('Y-m-d H:i:s');
-                        $content->save();
-
-                        $array = [
-                            'small' => $config['site_url'] . 'storage/ai_images/small_' . $name,
-                            'large' => $config['site_url'] . 'storage/ai_images/' . $name,
-                        ];
-                        $images[] = $array;
-                    }
-
-                    $image_used = ORM::for_table($config['db']['pre'] . 'image_used')->create();
-                    $image_used->user_id = $_SESSION['user']['id'];
-                    $image_used->images = (int)$_POST['no_of_images'];
-                    $image_used->date = date('Y-m-d H:i:s');
-                    $image_used->save();
-
-                    update_user_option($_SESSION['user']['id'], 'total_images_used', $total_images_used + $_POST['no_of_images']);
-
-                    $result['success'] = true;
-                    $result['data'] = $images;
-                    $result['description'] = $_POST['description'];
-                    $result['old_used_images'] = $total_images_used;
-                    $result['current_used_images'] = $total_images_used + $_POST['no_of_images'];
-                } else {
-                    // error log default message
-                    if (!empty($response['message']))
-                        error_log('Stable Diffusion: ' . $response['message']);
-
-                    $result['success'] = false;
-                    $result['api_error'] = $response['message'];
-                    $result['error'] = get_api_error_message($stableDiffusion->getCURLInfo()['http_code']);
-                    die(json_encode($result));
-                }
-            } else {
-                // openai
-                require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/OpenAi.php';
-                require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
-
-                $open_ai = new Orhanerday\OpenAi\OpenAi(get_image_api_key($image_api));
-
-                $complete = $open_ai->image([
-                    'model' => normalize_openai_model(get_option('ai_image_openai_model', get_default_openai_image_model()), 'image'),
-                    'prompt' => $prompt,
-                    'size' => $_POST['resolution'],
-                    'n' => (int)$_POST['no_of_images'],
-                    "response_format" => "url",
-                    'user' => $_SESSION['user']['id']
-                ]);
-
-                $response = json_decode($complete, true);
-
-                if (isset($response['data'])) {
-                    $images = array();
-
-                    foreach ($response['data'] as $key => $value) {
-                        $url = $value['url'];
-
-                        $name = uniqid() . '.png';
-
-                        $image = file_get_contents($url);
-
-                        $target_dir = ROOTPATH . '/storage/ai_images/';
-                        file_put_contents($target_dir . $name, $image);
-
-                        resizeImage(200, $target_dir . 'small_' . $name, $target_dir . $name);
-
-                        $content = ORM::for_table($config['db']['pre'] . 'ai_images')->create();
-                        $content->user_id = $_SESSION['user']['id'];
-                        $content->title = $_POST['title'];
-                        $content->description = $_POST['description'];
-                        $content->resolution = $_POST['resolution'];
-                        $content->image = $name;
-                        $content->created_at = date('Y-m-d H:i:s');
-                        $content->save();
-
-                        $array = [
-                            'small' => $config['site_url'] . 'storage/ai_images/small_' . $name,
-                            'large' => $config['site_url'] . 'storage/ai_images/' . $name,
-                        ];
-                        $images[] = $array;
-                    }
-
-                    $image_used = ORM::for_table($config['db']['pre'] . 'image_used')->create();
-                    $image_used->user_id = $_SESSION['user']['id'];
-                    $image_used->images = (int)$_POST['no_of_images'];
-                    $image_used->date = date('Y-m-d H:i:s');
-                    $image_used->save();
-
-                    update_user_option($_SESSION['user']['id'], 'total_images_used', $total_images_used + $_POST['no_of_images']);
-
-                    $result['success'] = true;
-                    $result['data'] = $images;
-                    $result['description'] = $_POST['description'];
-                    $result['old_used_images'] = (int) $total_images_used;
-                    $result['current_used_images'] = (int) $total_images_used + $_POST['no_of_images'];
-                } else {
-                    // error log default message
-                    if (!empty($response['error']['message']))
-                        error_log('OpenAI: ' . $response['error']['message']);
-
-                    $result['success'] = false;
-                    $result['api_error'] = $response['error']['message'];
-                    $result['error'] = get_api_error_message($open_ai->getCURLInfo()['http_code']);
-                    die(json_encode($result));
-                }
-            }
             die(json_encode($result));
         }
     }
@@ -1351,6 +1232,12 @@ function delete_image()
     $result = array();
     if (checkloggedin()) {
         global $config;
+
+        if (social_media_delete_post($_SESSION['user']['id'], $_POST['id'])) {
+            $result['success'] = true;
+            $result['message'] = __('Deleted Successfully');
+            die(json_encode($result));
+        }
 
         $images = ORM::for_table($config['db']['pre'] . 'ai_images')
             ->select('image')
@@ -1694,7 +1581,7 @@ function chat_stream()
         $SYS = "system";
         $ASSISTANT = "assistant";
 
-        $system_prompt = "You are a helpful assistant.";
+        $system_prompt = "You are a helpful AI agent for a founder. Always answer using the founder's company context, priorities, and previous history when relevant.";
         $bot_training_data = null;
         if (!empty($_GET['bot_id'])) {
             $bot_sql = "and `bot_id` = {$_GET['bot_id']}";
@@ -1716,6 +1603,16 @@ function chat_stream()
         } else {
             $bot_sql = "and `bot_id` IS NULL";
         }
+
+        $company_context = social_media_get_company_context_text($_SESSION['user']['id']);
+        $history_context = social_media_get_recent_chat_context($_SESSION['user']['id'], 12);
+        if (!empty($company_context)) {
+            $system_prompt .= "\n\nCompany context:\n" . $company_context;
+        }
+        if (!empty($history_context)) {
+            $system_prompt .= "\n\nRecent company history from prior agent conversations:\n" . $history_context;
+        }
+        $system_prompt .= "\n\nIf the user asks for content, strategy, messaging, or positioning, tailor the answer to their company and competitors instead of giving generic advice.";
 
         // get last 5 messages
         $sql = "SELECT * FROM

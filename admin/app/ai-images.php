@@ -1,7 +1,7 @@
 <?php
 include '../includes.php';
 
-$page_title = __('AI Images');
+$page_title = __('Social Generation History');
 include '../header.php'; ?>
 
     <!-- Page Body Start-->
@@ -28,7 +28,7 @@ include '../header.php'; ?>
                         <table class="table table-striped" id="ajax_datatable" data-jsonfile="ai_images.php" data-order-col="3">
                             <thead>
                             <tr>
-                                <th><?php _e('Image') ?></th>
+                                <th><?php _e('Preview') ?></th>
                                 <th><?php _e('Resolution') ?></th>
                                 <th><?php _e('User') ?></th>
                                 <th><?php _e('Date') ?></th>

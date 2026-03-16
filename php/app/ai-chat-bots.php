@@ -52,7 +52,7 @@ if (isset($current_user['id'])) {
 
     $total_words_used = get_user_option($_SESSION['user']['id'], 'total_words_used', 0);
 
-    $ai_chat_bot_name = !empty($config['ai_chat_bot_name']) ? $config['ai_chat_bot_name'] : __('AI Chat Bot');
+    $ai_chat_bot_name = !empty($config['ai_chat_bot_name']) ? $config['ai_chat_bot_name'] : __('AI Agent');
     $ai_chat_bot_avatar = !empty($config['chat_bot_avatar']) ? $config['chat_bot_avatar'] : 'default_user.png';
 
     HtmlTemplate::display('ai-chat-bots', array(

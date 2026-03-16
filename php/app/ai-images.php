@@ -16,17 +16,14 @@ if(isset($current_user['id']))
     $membership = get_user_membership_detail($_SESSION['user']['id']);
     $images_limit = $membership['settings']['ai_images_limit'];
 
-    // get ai images
-    $ai_images = ORM::for_table($config['db']['pre'] . 'ai_images')
-        ->where('user_id', $_SESSION['user']['id'])
-        ->order_by_desc('id')
-        ->limit(30)
-        ->find_many();
+    $social_posts = social_media_get_recent_posts($_SESSION['user']['id'], 18);
+    $social_profile = social_media_get_profile($_SESSION['user']['id']);
 
     HtmlTemplate::display('ai-images', array(
         'total_images_used' => $total_images_used,
         'images_limit' => $images_limit,
-        'ai_images' => $ai_images
+        'social_posts' => $social_posts,
+        'social_profile' => $social_profile
     ));
 }
 else{

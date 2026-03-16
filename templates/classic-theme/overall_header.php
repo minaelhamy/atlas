@@ -187,7 +187,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_images']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                                     <li><a href="<?php url("AI_IMAGES") ?>"><i
-                                                                    class="icon-feather-image"></i> <?php _e("AI Images") ?>
+                                                                    class="icon-feather-image"></i> <?php _e("Social Media Generator") ?>
                                                         </a>
                                                     </li>
                                                 <?php }
@@ -195,7 +195,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_chat']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                                     <li><a href="<?php url("AI_CHAT_BOTS") ?>"><i
-                                                                    class="icon-feather-message-circle"></i> <?php _e("AI Chat") ?>
+                                                                    class="icon-feather-message-circle"></i> <?php _e("AI Agents") ?>
                                                         </a></li>
                                                 <?php }
                                             }
@@ -366,7 +366,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_images']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                                     <li><a href="<?php url("AI_IMAGES") ?>"><i
-                                                                    class="icon-feather-image"></i> <?php _e("AI Images") ?>
+                                                                    class="icon-feather-image"></i> <?php _e("Social Media Generator") ?>
                                                         </a>
                                                     </li>
                                                 <?php }
@@ -374,7 +374,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_chat']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                                     <li><a href="<?php url("AI_CHAT_BOTS") ?>"><i
-                                                                    class="icon-feather-message-circle"></i> <?php _e("AI Chat") ?>
+                                                                    class="icon-feather-message-circle"></i> <?php _e("AI Agents") ?>
                                                         </a></li>
                                                 <?php }
                                             }

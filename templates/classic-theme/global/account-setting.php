@@ -89,6 +89,132 @@ overall_header(__("Account Setting"));
                                 </form>
                             </div>
                         </div>
+                        <div class="dashboard-box">
+                            <div class="headline">
+                                <h3><i class="icon-feather-briefcase"></i> <?php _e("Company Profile") ?></h3>
+                            </div>
+                            <div class="content with-padding">
+                                <div class="notification notice"><?php _e("This profile powers every AI agent and the social media generator.") ?></div>
+                                <form method="post" accept-charset="UTF-8" enctype="multipart/form-data">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Founder Photo") ?></h5>
+                                                <div class="uploadButton">
+                                                    <input class="uploadButton-input" type="file" accept="images/*" id="founder_photo" name="founder_photo"/>
+                                                    <label class="uploadButton-button ripple-effect" for="founder_photo"><?php _e('Upload Founder Photo') ?></label>
+                                                    <span class="uploadButton-file-name"><?php _e('Used in generated social assets and agent context.') ?></span>
+                                                </div>
+                                                <?php if (!empty($founder_photo)) { ?>
+                                                    <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $founder_photo; ?>" alt="" style="max-width: 120px; border-radius: 12px;">
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Company Logo") ?></h5>
+                                                <div class="uploadButton">
+                                                    <input class="uploadButton-input" type="file" accept="images/*" id="company_logo" name="company_logo"/>
+                                                    <label class="uploadButton-button ripple-effect" for="company_logo"><?php _e('Upload Company Logo') ?></label>
+                                                    <span class="uploadButton-file-name"><?php _e('Used as branding on generated posts.') ?></span>
+                                                </div>
+                                                <?php if (!empty($company_logo)) { ?>
+                                                    <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $company_logo; ?>" alt="" style="max-width: 120px; border-radius: 12px; background: #fff; padding: 8px;">
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Founder Name") ?></h5>
+                                                <input type="text" name="founder_name" class="with-border" value="<?php _esc($founder_name) ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Founder Title") ?></h5>
+                                                <input type="text" name="founder_title" class="with-border" value="<?php _esc($founder_title) ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Company Name") ?></h5>
+                                                <input type="text" name="company_name" class="with-border" value="<?php _esc($company_name) ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Company Website") ?></h5>
+                                                <input type="text" name="company_website" class="with-border" value="<?php _esc($company_website) ?>" placeholder="https://example.com">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Industry") ?></h5>
+                                                <input type="text" name="company_industry" class="with-border" value="<?php _esc($company_industry) ?>" placeholder="<?php _e('SaaS, eCommerce, fintech, agency...') ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Instagram Handle") ?></h5>
+                                                <input type="text" name="instagram_handle" class="with-border" value="<?php _esc($instagram_handle) ?>" placeholder="@yourbrand">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="submit-field">
+                                        <h5><?php _e("Company Description") ?></h5>
+                                        <textarea name="company_description" class="with-border" rows="4"><?php _esc($company_description) ?></textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Target Audience") ?></h5>
+                                                <textarea name="target_audience" class="with-border" rows="4"><?php _esc($target_audience) ?></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Brand Voice") ?></h5>
+                                                <textarea name="brand_voice" class="with-border" rows="4"><?php _esc($brand_voice) ?></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Content Goals") ?></h5>
+                                                <textarea name="content_goals" class="with-border" rows="4"><?php _esc($content_goals) ?></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="submit-field">
+                                                <h5><?php _e("Key Products or Services") ?></h5>
+                                                <textarea name="key_products" class="with-border" rows="4"><?php _esc($key_products) ?></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="submit-field">
+                                        <h5><?php _e("Differentiators") ?></h5>
+                                        <textarea name="differentiators" class="with-border" rows="4"><?php _esc($differentiators) ?></textarea>
+                                    </div>
+                                    <div class="submit-field">
+                                        <h5><?php _e("Competitor Websites or Instagram URLs") ?></h5>
+                                        <textarea name="competitors" class="with-border" rows="4" placeholder="https://competitor.com&#10;https://instagram.com/competitor"><?php _esc($competitors) ?></textarea>
+                                    </div>
+                                    <div class="submit-field">
+                                        <h5><?php _e("Competitor Notes") ?></h5>
+                                        <textarea name="competitor_notes" class="with-border" rows="4"><?php _esc($competitor_notes) ?></textarea>
+                                    </div>
+                                    <?php if(!empty($social_error)){ _esc($social_error); } ?>
+                                    <button type="submit" name="social-submit" class="button ripple-effect"><?php _e("Save Company Profile") ?></button>
+                                </form>
+                            </div>
+                        </div>
                         <?php if (get_option('enable_tax_billing', 1)) { ?>
                         <div class="dashboard-box">
                             <div class="headline">

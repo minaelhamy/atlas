@@ -13,6 +13,7 @@ require_once('functions/func.email.php');
 require_once('functions/func.admin.php');
 require_once('functions/func.users.php');
 require_once('functions/func.app.php');
+require_once('functions/func.social.php');
 require_once(APPPATH.'_links.php');
 
 /**

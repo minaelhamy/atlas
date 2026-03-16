@@ -1,7 +1,7 @@
 <?php
 include '../includes.php';
 
-$page_title = __('AI Chat Bots');
+$page_title = __('AI Agents');
 include '../header.php'; ?>
 
     <!-- Page Body Start-->

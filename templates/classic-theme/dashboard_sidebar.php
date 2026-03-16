@@ -31,7 +31,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                 <?php if ($config['enable_ai_images']) {
                                     if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                         <li class="<?php echo CURRENT_PAGE == 'app/all-images' ? 'active' : ''; ?>"><a
-                                                    href="<?php url("ALL_IMAGES") ?>"><?php _e("All AI Images") ?></a></li>
+                                                    href="<?php url("ALL_IMAGES") ?>"><?php _e("All Social Posts") ?></a></li>
                                     <?php }
                                 }
 
@@ -58,7 +58,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                 <li class="<?php echo CURRENT_PAGE == 'app/ai-images' ? 'active' : ''; ?>"><a
                                             href="<?php url("AI_IMAGES") ?>"><i
-                                                class="icon-feather-image"></i> <?php _e("AI Images") ?></a></li>
+                                                class="icon-feather-image"></i> <?php _e("Social Media Generator") ?></a></li>
                             <?php }
                         }
 
@@ -66,7 +66,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                 <li class="<?php echo CURRENT_PAGE == 'app/ai-chat' || CURRENT_PAGE == 'app/ai-chat-bots' ? 'active' : ''; ?>">
                                     <a href="<?php url("AI_CHAT_BOTS") ?>">
-                                        <i class="icon-feather-message-circle"></i> <?php _e("AI Chat") ?>
+                                        <i class="icon-feather-message-circle"></i> <?php _e("AI Agents") ?>
                                     </a></li>
                             <?php }
                         }

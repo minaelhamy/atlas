@@ -39,7 +39,7 @@
                             if ($is_login) {
                                 echo '<li><a href="' . url("DASHBOARD", 0) . '">' . __("Dashboard") . '</a></li>';
                                 echo '<li><a href="' . url("AI_TEMPLATES", 0) . '">' . __("Templates") . '</a></li>';
-                                echo '<li><a href="' . url("AI_IMAGES", 0) . '">' . __("AI Images") . '</a></li>';
+                                echo '<li><a href="' . url("AI_IMAGES", 0) . '">' . __("Social Media Generator") . '</a></li>';
                                 echo '<li><a href="' . url("LOGOUT", false) . '">' . __("Logout") . '</a></li>';
                             } else {
                                 echo '<li><a href="' . url("LOGIN", false) . '">' . __("Login") . '</a></li>';

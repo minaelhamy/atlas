@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("AI Chat"));
+overall_header(__("AI Agents"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("AI Chat"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("AI Chat") ?>
+                        <?php _e("AI Agents") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,13 +32,13 @@ overall_header(__("AI Chat"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("AI Chat") ?></li>
+                            <li><?php _e("AI Agents") ?></li>
                         </ul>
                     </nav>
                 </div>
                 <?php if ($membership_ai_chat && ($bot_id == null || in_array($bot_id, $membership_ai_chatbots))) { ?>
                     <div class="notification notice">
-                        <?php _e("Here you can chat with the AI. Ask your questions or just have fun.") ?>
+                        <?php _e("Ask your company-aware AI agents for strategy, positioning, content, and operational help.") ?>
                     </div>
                 <?php } else { ?>
                     <div class="notification small-notification error">

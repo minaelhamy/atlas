@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("AI Chat Bots"));
+overall_header(__("AI Agents"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("AI Chat Bots"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("AI Chat Bots") ?>
+                        <?php _e("AI Agents") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,13 +32,13 @@ overall_header(__("AI Chat Bots"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("AI Chat Bots") ?></li>
+                            <li><?php _e("AI Agents") ?></li>
                         </ul>
                     </nav>
                 </div>
                 <?php if ($membership_ai_chat) { ?>
                     <div class="notification notice">
-                        <?php _e("We provide a team of skilled AI experts who are prepared to assist you with a wide range of needs.") ?>
+                        <?php _e("Choose a company-aware agent to help with marketing, messaging, research, and founder operations.") ?>
                     </div>
                 <?php } else { ?>
                     <div class="notification small-notification error">
@@ -53,7 +53,7 @@ overall_header(__("AI Chat Bots"));
                 <div class="template-categories margin-bottom-30">
                     <ul>
                         <li class="active"><a href="javascript:void();" class="ai-templates-category"
-                                              data-category="all"><?php _e("All Chat Bots") ?></a></li>
+                                              data-category="all"><?php _e("All Agents") ?></a></li>
                         <?php
                         foreach ($chat_bots as $category) {
                             if(!empty($category['chat_bots'])){
@@ -84,7 +84,7 @@ overall_header(__("AI Chat Bots"));
                                          alt="<?php _esc($ai_chat_bot_name) ?>" class="rounded" width="100%">
                                     <div class="padding-top-20 padding-right-20 padding-left-20 padding-bottom-20">
                                         <h3><?php _esc($ai_chat_bot_name) ?></h3>
-                                        <small><?php _e('Default Bot'); ?></small>
+                                        <small><?php _e('Default Agent'); ?></small>
                                         <div class="margin-top-15">
                                             <a href="<?php url('AI_CHAT') ?>"
                                                class="button button-sliding-icon ripple-effect full-width"><?php _e('Chat Now') ?>
