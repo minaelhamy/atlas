@@ -157,15 +157,16 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             $downloadUrl = (!empty($videoUrl) && $post['post_type'] === 'reel') ? $videoUrl : $previewUrl;
                                             $downloadLabel = (!empty($videoUrl) && $post['post_type'] === 'reel') ? __('Download Reel') : __('Download Post');
                                             ?>
-                                            <div class="d-flex margin-top-15 flex-wrap">
-                                                <a href="<?php echo $downloadUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _esc($downloadLabel) ?></a>
-                                                <a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="<?php _esc($post['title']) ?>" data-caption="<?php _esc($captionExport) ?>"><?php _e('Download Caption') ?></a>
+                                            <div class="social-post-actions margin-top-15">
+                                                <a href="<?php echo $downloadUrl; ?>" class="social-action-btn" download title="<?php _esc($downloadLabel) ?>" aria-label="<?php _esc($downloadLabel) ?>"><i class="fa fa-download"></i></a>
+                                                <a href="#" class="social-action-btn download-caption" data-title="<?php _esc($post['title']) ?>" data-caption="<?php _esc($captionExport) ?>" title="<?php _e('Download Caption') ?>" aria-label="<?php _e('Download Caption') ?>"><i class="fa fa-file-text-o"></i></a>
                                                 <?php if (!empty($videoUrl) && $post['post_type'] === 'reel') { ?>
-                                                    <a href="<?php echo $videoUrl; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><?php _e('Open Reel Video') ?></a>
-                                                    <a href="<?php echo $videoUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Reel Video') ?></a>
-                                                    <a href="<?php echo $previewUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Cover') ?></a>
+                                                    <a href="<?php echo $videoUrl; ?>" class="social-action-btn" target="_blank" title="<?php _e('Open Reel Video') ?>" aria-label="<?php _e('Open Reel Video') ?>"><i class="fa fa-play"></i></a>
+                                                    <a href="<?php echo $videoUrl; ?>" class="social-action-btn" download title="<?php _e('Download Reel Video') ?>" aria-label="<?php _e('Download Reel Video') ?>"><i class="fa fa-film"></i></a>
+                                                    <a href="<?php echo $previewUrl; ?>" class="social-action-btn" download title="<?php _e('Download Cover') ?>" aria-label="<?php _e('Download Cover') ?>"><i class="fa fa-image"></i></a>
                                                 <?php } ?>
-                                                <a href="#" class="button red ripple-effect btn-sm quick-delete" data-id="<?php _esc($post['id']) ?>" data-action="delete_image"><?php _e('Delete') ?></a>
+                                                <a href="#" class="social-action-btn social-share-btn" title="<?php _e('Share') ?>" aria-label="<?php _e('Share') ?>"><i class="fa fa-share-alt"></i></a>
+                                                <a href="#" class="social-action-btn social-action-danger quick-delete" data-id="<?php _esc($post['id']) ?>" data-action="delete_image" title="<?php _e('Delete') ?>" aria-label="<?php _e('Delete') ?>"><i class="fa fa-trash-o"></i></a>
                                             </div>
                                         </div>
                                     </div>
@@ -216,6 +217,40 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
     }
     .social-post-card .social-post-body {
         background: #fff;
+    }
+    .social-post-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+    .social-action-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #7a705e;
+        color: #fff;
+        font-size: 15px;
+        flex: 0 0 auto;
+        transition: transform .15s ease, background-color .15s ease;
+    }
+    .social-action-btn:hover,
+    .social-action-btn:focus {
+        color: #fff;
+        background: #605747;
+        transform: translateY(-1px);
+    }
+    .social-action-danger {
+        background: #e53935;
+    }
+    .social-action-danger:hover,
+    .social-action-danger:focus {
+        background: #c62828;
     }
 </style>
 <?php

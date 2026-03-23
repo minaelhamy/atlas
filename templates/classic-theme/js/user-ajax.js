@@ -376,9 +376,9 @@ jQuery(function ($) {
                         var previewMediaHtml = isReel
                             ? '<video src="' + escape_html(reelVideoUrl) + '" autoplay muted loop playsinline controls preload="metadata"></video>'
                             : '<img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '">';
-                        var actionsHtml = '<div class="d-flex margin-top-15">' +
-                            '<a href="' + escape_html(primaryDownloadUrl) + '" class="button ripple-effect btn-sm margin-right-5" download>' + primaryDownloadLabel + '</a>' +
-                            '<a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '">Download Caption</a>';
+                        var actionsHtml = '<div class="social-post-actions margin-top-15">' +
+                            '<a href="' + escape_html(primaryDownloadUrl) + '" class="social-action-btn" download title="' + escape_html(primaryDownloadLabel) + '" aria-label="' + escape_html(primaryDownloadLabel) + '"><i class="fa fa-download"></i></a>' +
+                            '<a href="#" class="social-action-btn download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '" title="Download Caption" aria-label="Download Caption"><i class="fa fa-file-text-o"></i></a>';
 
                         if (Array.isArray(post.reel_script) && post.reel_script.length) {
                             infoHtml += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
@@ -409,12 +409,13 @@ jQuery(function ($) {
                         }
 
                         if (reelVideoUrl) {
-                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="button ripple-effect btn-sm margin-right-5" target="_blank">Open Reel Video</a>';
-                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Reel Video</a>';
-                            actionsHtml += '<a href="' + escape_html(post.preview_image) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Cover</a>';
+                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="social-action-btn" target="_blank" title="Open Reel Video" aria-label="Open Reel Video"><i class="fa fa-play"></i></a>';
+                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="social-action-btn" download title="Download Reel Video" aria-label="Download Reel Video"><i class="fa fa-film"></i></a>';
+                            actionsHtml += '<a href="' + escape_html(post.preview_image) + '" class="social-action-btn" download title="Download Cover" aria-label="Download Cover"><i class="fa fa-image"></i></a>';
                         }
 
-                        actionsHtml += '<a href="#" class="button red ripple-effect btn-sm quick-delete" data-id="' + escape_html(String(post.id)) + '" data-action="delete_image">Delete</a></div>';
+                        actionsHtml += '<a href="#" class="social-action-btn social-share-btn" title="Share" aria-label="Share"><i class="fa fa-share-alt"></i></a>';
+                        actionsHtml += '<a href="#" class="social-action-btn social-action-danger quick-delete" data-id="' + escape_html(String(post.id)) + '" data-action="delete_image" title="Delete" aria-label="Delete"><i class="fa fa-trash-o"></i></a></div>';
 
                         $("#generated_images_wrapper").prepend(
                             '<div class="col-xl-4 col-md-6 margin-bottom-30">' +
@@ -532,6 +533,20 @@ jQuery(function ($) {
         var title = $btn.data('title') || 'caption';
         var caption = $btn.data('caption') || '';
         download_text_file(slugify_filename(title) + '-caption.txt', caption);
+    });
+
+    $(document).on('click', '.social-share-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        Snackbar.show({
+            text: 'Share directly to your account (for paid members only)',
+            pos: 'bottom-center',
+            showAction: false,
+            actionText: 'Dismiss',
+            duration: 3000,
+            textColor: '#fff',
+            backgroundColor: '#383838'
+        });
     });
 
     function animate_value(id, start, end, duration) {

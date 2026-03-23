@@ -1986,7 +1986,7 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
         $variant['zones']['headline']['height'] = $headlineHeight;
         $variant['zones']['headline']['font_size'] = 100;
         $variant['zones']['headline']['min_font_size'] = 56;
-        $variant['zones']['headline']['line_height'] = 1.0;
+        $variant['zones']['headline']['line_height'] = 1.16;
         $variant['zones']['headline']['align'] = 'center';
 
         $variant['zones']['subheadline']['height'] = 0;
@@ -1996,12 +1996,12 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
         $variant['zones']['brand']['x'] = $contentX;
         $variant['zones']['brand']['width'] = $contentWidth;
         $variant['zones']['brand']['align'] = 'center';
-        $variant['zones']['brand']['y'] = 855;
+        $variant['zones']['brand']['y'] = 870;
 
         $variant['zones']['cta']['x'] = $contentX;
         $variant['zones']['cta']['width'] = $contentWidth;
         $variant['zones']['cta']['align'] = 'center';
-        $variant['zones']['cta']['y'] = 915;
+        $variant['zones']['cta']['y'] = 935;
     }
 
     $variant['zones']['label']['color'] = social_media_normalize_hex_color($design['accent_color'], $palette['accent']);
