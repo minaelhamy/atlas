@@ -39,11 +39,19 @@ overall_header(__("All Social Posts"));
                             </div>
                         <?php } ?>
                         <?php foreach ($images as $image) { ?>
+                            <?php
+                            $videoUrl = !empty($image['rendered_video']) ? _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video'] : '';
+                            $previewUrl = _esc($config['site_url'], 0) . 'storage/social_posts/' . $image['image'];
+                            ?>
                             <div class="col-xl-4 col-md-6 margin-bottom-30">
                                 <div class="dashboard-box social-post-card margin-top-0">
                                     <div class="content">
                                         <div class="social-post-preview">
-                                            <img src="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/' . $image['image']; ?>" alt="<?php _esc($image['title']) ?>">
+                                            <?php if (!empty($videoUrl) && $image['post_type'] === 'reel') { ?>
+                                                <video src="<?php echo $videoUrl; ?>" autoplay muted loop playsinline controls preload="metadata"></video>
+                                            <?php } else { ?>
+                                                <img src="<?php echo $previewUrl; ?>" alt="<?php _esc($image['title']) ?>">
+                                            <?php } ?>
                                         </div>
                                         <div class="social-post-body with-padding">
                                             <span class="dashboard-status-button yellow"><?php _esc(ucfirst($image['post_type'])) ?></span>
@@ -66,13 +74,15 @@ overall_header(__("All Social Posts"));
                                             if (!empty($image['hashtags'])) {
                                                 $captionExport .= "\n\n" . $image['hashtags'];
                                             }
+                                            $downloadUrl = (!empty($videoUrl) && $image['post_type'] === 'reel') ? $videoUrl : $previewUrl;
                                             ?>
                                             <div class="d-flex flex-wrap">
-                                                <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/' . $image['image']; ?>" class="button ripple-effect btn-sm margin-right-5" download><i class="fa fa-download"></i></a>
+                                                <a href="<?php echo $downloadUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><i class="fa fa-download"></i></a>
                                                 <a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="<?php _esc($image['title']) ?>" data-caption="<?php _esc($captionExport) ?>"><?php _e('Caption') ?></a>
                                                 <?php if (!empty($image['rendered_video'])) { ?>
                                                     <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><i class="fa fa-play"></i></a>
                                                     <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e("Video") ?></a>
+                                                    <a href="<?php echo $previewUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e("Cover") ?></a>
                                                 <?php } ?>
                                                 <a href="#" class="button red ripple-effect btn-sm quick-delete"
                                                    data-id="<?php _esc($image['id']) ?>"
@@ -133,6 +143,12 @@ overall_header(__("All Social Posts"));
         width: 100%;
         border-radius: 12px 12px 0 0;
         display: block;
+    }
+    .social-post-card .social-post-preview video {
+        width: 100%;
+        border-radius: 12px 12px 0 0;
+        display: block;
+        background: #000;
     }
     .social-post-card .social-post-body {
         background: #fff;

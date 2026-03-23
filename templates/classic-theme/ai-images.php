@@ -81,12 +81,18 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                             $meta = !empty($post['metadata']) && is_array($post['metadata']) ? $post['metadata'] : [];
                             $hashtags = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
                             $design = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
+                            $videoUrl = !empty($meta['rendered_video']) ? _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video'] : '';
+                            $previewUrl = _esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image'];
                             ?>
                             <div class="col-xl-4 col-md-6 margin-bottom-30">
                                 <div class="dashboard-box social-post-card margin-top-0">
                                     <div class="content">
                                         <div class="social-post-preview">
-                                            <img src="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image']; ?>" alt="<?php _esc($post['title']) ?>">
+                                            <?php if (!empty($videoUrl) && $post['post_type'] === 'reel') { ?>
+                                                <video src="<?php echo $videoUrl; ?>" autoplay muted loop playsinline controls preload="metadata"></video>
+                                            <?php } else { ?>
+                                                <img src="<?php echo $previewUrl; ?>" alt="<?php _esc($post['title']) ?>">
+                                            <?php } ?>
                                         </div>
                                         <div class="social-post-body with-padding">
                                             <span class="dashboard-status-button yellow"><?php _esc(ucfirst($post['post_type'])) ?></span>
@@ -121,13 +127,16 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             if (!empty($hashtags)) {
                                                 $captionExport .= "\n\n" . $hashtags;
                                             }
+                                            $downloadUrl = (!empty($videoUrl) && $post['post_type'] === 'reel') ? $videoUrl : $previewUrl;
+                                            $downloadLabel = (!empty($videoUrl) && $post['post_type'] === 'reel') ? __('Download Reel') : __('Download Post');
                                             ?>
                                             <div class="d-flex margin-top-15 flex-wrap">
-                                                <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Post') ?></a>
+                                                <a href="<?php echo $downloadUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _esc($downloadLabel) ?></a>
                                                 <a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="<?php _esc($post['title']) ?>" data-caption="<?php _esc($captionExport) ?>"><?php _e('Download Caption') ?></a>
                                                 <?php if (!empty($meta['rendered_video'])) { ?>
                                                     <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><?php _e('Open Reel Video') ?></a>
                                                     <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Reel Video') ?></a>
+                                                    <a href="<?php echo $previewUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e('Download Cover') ?></a>
                                                 <?php } ?>
                                                 <a href="#" class="button red ripple-effect btn-sm quick-delete" data-id="<?php _esc($post['id']) ?>" data-action="delete_image"><?php _e('Delete') ?></a>
                                             </div>
@@ -171,6 +180,12 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
         width: 100%;
         border-radius: 12px 12px 0 0;
         display: block;
+    }
+    .social-post-card .social-post-preview video {
+        width: 100%;
+        border-radius: 12px 12px 0 0;
+        display: block;
+        background: #000;
     }
     .social-post-card .social-post-body {
         background: #fff;

@@ -368,8 +368,14 @@ jQuery(function ($) {
                         var design = post.design && typeof post.design === 'object' ? post.design : {};
                         var captionText = String(post.caption || '') + (hashtags ? "\n\n" + String(post.hashtags.join(' ')) : '');
                         var infoHtml = '';
+                        var isReel = String(post.post_type || '') === 'reel' && !!post.rendered_video;
+                        var primaryDownloadUrl = isReel ? post.rendered_video : post.preview_image;
+                        var primaryDownloadLabel = isReel ? 'Download Reel' : 'Download Post';
+                        var previewMediaHtml = isReel
+                            ? '<video src="' + escape_html(post.rendered_video) + '" autoplay muted loop playsinline controls preload="metadata"></video>'
+                            : '<img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '">';
                         var actionsHtml = '<div class="d-flex margin-top-15">' +
-                            '<a href="' + escape_html(post.preview_image) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Post</a>' +
+                            '<a href="' + escape_html(primaryDownloadUrl) + '" class="button ripple-effect btn-sm margin-right-5" download>' + primaryDownloadLabel + '</a>' +
                             '<a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '">Download Caption</a>';
 
                         if (Array.isArray(post.slides) && post.slides.length) {
@@ -396,6 +402,7 @@ jQuery(function ($) {
                         if (post.rendered_video) {
                             actionsHtml += '<a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm margin-right-5" target="_blank">Open Reel Video</a>';
                             actionsHtml += '<a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Reel Video</a>';
+                            actionsHtml += '<a href="' + escape_html(post.preview_image) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Cover</a>';
                         }
 
                         actionsHtml += '<a href="#" class="button red ripple-effect btn-sm quick-delete" data-id="' + escape_html(String(post.id)) + '" data-action="delete_image">Delete</a></div>';
@@ -404,7 +411,7 @@ jQuery(function ($) {
                             '<div class="col-xl-4 col-md-6 margin-bottom-30">' +
                                 '<div class="dashboard-box social-post-card margin-top-0">' +
                                     '<div class="content">' +
-                                        '<div class="social-post-preview"><img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '"></div>' +
+                                        '<div class="social-post-preview">' + previewMediaHtml + '</div>' +
                                         '<div class="social-post-body with-padding">' +
                                             '<span class="dashboard-status-button yellow">' + escape_html(post.post_type.charAt(0).toUpperCase() + post.post_type.slice(1)) + '</span>' +
                                             '<h4 class="margin-top-15">' + escape_html(post.title) + '</h4>' +

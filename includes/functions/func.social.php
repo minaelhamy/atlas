@@ -1052,6 +1052,9 @@ function social_media_load_image_resource($path)
     if ($info['mime'] === 'image/gif') {
         return imagecreatefromgif($path);
     }
+    if ($info['mime'] === 'image/webp' && function_exists('imagecreatefromwebp')) {
+        return imagecreatefromwebp($path);
+    }
 
     return null;
 }
@@ -1616,25 +1619,13 @@ function social_media_open_asset_background($asset, $width, $height, $background
     }
 
     if ($assetPath && file_exists($assetPath)) {
-        $info = getimagesize($assetPath);
-        if (!empty($info['mime'])) {
-            if ($info['mime'] === 'image/jpeg') {
-                $source = imagecreatefromjpeg($assetPath);
-            } elseif ($info['mime'] === 'image/png') {
-                $source = imagecreatefrompng($assetPath);
-            } elseif ($info['mime'] === 'image/gif') {
-                $source = imagecreatefromgif($assetPath);
-            } else {
-                $source = null;
-            }
-
-            if ($source) {
-                $srcWidth = imagesx($source);
-                $srcHeight = imagesy($source);
-                imagecopyresampled($canvas, $source, 0, 0, 0, 0, $width, $height, $srcWidth, $srcHeight);
-                imagedestroy($source);
-                return $canvas;
-            }
+        $source = social_media_load_image_resource($assetPath);
+        if ($source) {
+            $srcWidth = imagesx($source);
+            $srcHeight = imagesy($source);
+            imagecopyresampled($canvas, $source, 0, 0, 0, 0, $width, $height, $srcWidth, $srcHeight);
+            imagedestroy($source);
+            return $canvas;
         }
     }
 
