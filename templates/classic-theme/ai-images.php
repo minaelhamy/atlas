@@ -35,7 +35,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 </div>
             <?php } else { ?>
                 <div class="notification notice">
-                    <?php _e("Each run generates 9 pieces: 3 posts, 3 carousels, and 3 reels. Covers are rendered automatically using your company profile and admin-managed assets."); ?>
+                    <?php _e("Each run generates 9 pieces: 6 posts and 3 reels. Covers are rendered automatically using your company profile and admin-managed assets."); ?>
                 </div>
             <?php } ?>
 
@@ -107,9 +107,6 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             <?php } ?>
                                             <?php if (!empty($hashtags)) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e('Hashtags') ?>:</strong> <?php _esc($hashtags) ?></p>
-                                            <?php } ?>
-                                            <?php if (!empty($meta['slides'])) { ?>
-                                                <p class="margin-bottom-10"><strong><?php _e('Carousel Flow') ?>:</strong> <?php _esc(implode(' | ', $meta['slides'])) ?></p>
                                             <?php } ?>
                                             <?php if (!empty($meta['reel_script'])) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e('Reel Script') ?>:</strong> <?php _esc(implode(' | ', $meta['reel_script'])) ?></p>

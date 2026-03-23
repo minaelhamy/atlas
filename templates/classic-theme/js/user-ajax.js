@@ -380,10 +380,6 @@ jQuery(function ($) {
                             '<a href="' + escape_html(primaryDownloadUrl) + '" class="button ripple-effect btn-sm margin-right-5" download>' + primaryDownloadLabel + '</a>' +
                             '<a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '">Download Caption</a>';
 
-                        if (Array.isArray(post.slides) && post.slides.length) {
-                            infoHtml += '<p class="margin-bottom-10"><strong>Carousel Flow:</strong> ' + escape_html(post.slides.join(' | ')) + '</p>';
-                        }
-
                         if (Array.isArray(post.reel_script) && post.reel_script.length) {
                             infoHtml += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
                         }

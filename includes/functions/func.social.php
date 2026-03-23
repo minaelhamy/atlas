@@ -348,14 +348,6 @@ function social_media_get_format_map()
             'headline_limit' => 70,
             'body_limit' => 180,
         ],
-        'carousel' => [
-            'label' => 'Carousel',
-            'width' => 1080,
-            'height' => 1350,
-            'asset_type' => 'image',
-            'headline_limit' => 80,
-            'body_limit' => 220,
-        ],
         'reel' => [
             'label' => 'Reel',
             'width' => 1080,
@@ -634,11 +626,10 @@ function social_media_generate_batch($user_id, $brief = '')
 
     $competitorText = json_encode($competitorSnapshots);
     $userPrompt = "Create exactly 9 social media ideas for this company.\n"
-        . "Need exactly 3 post, 3 carousel, and 3 reel items.\n"
+        . "Need exactly 6 post and 3 reel items.\n"
         . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords, design.\n"
-        . "Carousel items must include slides (5 short slides).\n"
         . "Reel items must include reel_script (hook, beats, cta) and an overlay_text under 55 chars.\n"
-        . "Post and carousel overlay_text must be short, punchy, and final-ready.\n"
+        . "Post overlay_text must be short, punchy, and final-ready.\n"
         . "Do not use placeholders or generic labels like 'founder insight', 'myth busting', 'case study', or 'trend reaction' as overlay_text.\n"
         . "overlay_text should read like the actual quote, claim, framework, or contrarian hook that will appear on the design.\n"
         . "caption must be publish-ready, useful, specific, and persuasive. It should sound like a real social caption, not an instruction to a marketer.\n"
@@ -820,46 +811,25 @@ function social_media_generate_fallback_batch($profile, $brief = '')
             'cta' => 'Comment with your biggest messaging challenge and we may turn it into the next post.',
         ],
         [
-            'title' => 'Carousel idea for ' . $company,
+            'title' => 'Framework post for ' . $company,
             'overlay' => 'A simple framework for better ' . strtolower($product),
             'hook' => 'This is the 5-step framework we would use to make your message land faster.',
             'caption' => 'If you are building awareness in ' . strtolower($industry) . ', keep the message simple: problem, cost of ignoring it, better approach, proof, then call to action. This structure consistently turns vague content into practical content.',
             'cta' => 'Save this framework for your next campaign.',
-            'slides' => [
-                'Start with the real problem',
-                'Show why it matters now',
-                'Call out the common mistake',
-                'Introduce the better approach',
-                'End with one clear action',
-            ],
         ],
         [
-            'title' => 'Myth busting for ' . $company,
+            'title' => 'Myth busting post for ' . $company,
             'overlay' => 'The biggest myth about ' . strtolower($product),
             'hook' => 'The myth sounds smart, but it usually slows growth.',
             'caption' => 'One of the biggest myths in ' . strtolower($industry) . ' is that more content automatically means more growth. In reality, focused content with a clear point of view outperforms generic volume almost every time.',
             'cta' => 'Send this to someone who is posting constantly but still not converting.',
-            'slides' => [
-                'The myth everyone repeats',
-                'Why it sounds believable',
-                'Where it breaks down',
-                'What works better instead',
-                'What to do this week',
-            ],
         ],
         [
-            'title' => 'Case study for ' . $company,
+            'title' => 'Case study post for ' . $company,
             'overlay' => 'What a better ' . strtolower($product) . ' message changes',
             'hook' => 'Small changes in positioning often lead to bigger trust and faster action.',
             'caption' => 'When a company stops describing features and starts framing the outcome, people understand the value faster. That one change can improve clicks, conversations, and conversions without changing the product itself.',
             'cta' => 'Follow for more examples of positioning that actually converts.',
-            'slides' => [
-                'Old message: feature-heavy',
-                'The real customer problem',
-                'The new positioning angle',
-                'What changed after the shift',
-                'How to apply it yourself',
-            ],
         ],
         [
             'title' => 'Trend reaction for ' . $company,
@@ -904,7 +874,7 @@ function social_media_generate_fallback_batch($profile, $brief = '')
             ],
         ],
     ];
-    $types = ['post', 'post', 'post', 'carousel', 'carousel', 'carousel', 'reel', 'reel', 'reel'];
+    $types = ['post', 'post', 'post', 'post', 'post', 'post', 'reel', 'reel', 'reel'];
     $items = [];
     $designDefaults = social_media_get_design_defaults();
     $fontKeys = array_keys(social_media_get_available_fonts());
@@ -943,7 +913,7 @@ function social_media_generate_fallback_batch($profile, $brief = '')
 
 function social_media_normalize_generated_items($items, $profile)
 {
-    $bucketed = ['post' => [], 'carousel' => [], 'reel' => []];
+    $bucketed = ['post' => [], 'reel' => []];
     $fontKeys = array_keys(social_media_get_available_fonts());
     $designDefaults = social_media_get_design_defaults();
 
@@ -962,7 +932,7 @@ function social_media_normalize_generated_items($items, $profile)
         $item['visual_brief'] = trim((string) ($item['visual_brief'] ?? ''));
         $item['keywords'] = social_media_normalize_list(isset($item['keywords']) ? $item['keywords'] : []);
         $item['hashtags'] = social_media_normalize_list(isset($item['hashtags']) ? $item['hashtags'] : []);
-        $item['slides'] = !empty($item['slides']) && is_array($item['slides']) ? array_values($item['slides']) : [];
+        $item['slides'] = [];
         $item['reel_script'] = !empty($item['reel_script']) && is_array($item['reel_script']) ? array_values($item['reel_script']) : [];
         $item['design'] = social_media_normalize_design(isset($item['design']) && is_array($item['design']) ? $item['design'] : [], $type, $fontKeys, $designDefaults);
 
@@ -970,19 +940,20 @@ function social_media_normalize_generated_items($items, $profile)
     }
 
     $normalized = [];
-    foreach (['post', 'carousel', 'reel'] as $type) {
-        while (count($bucketed[$type]) < 3) {
+    $targets = ['post' => 6, 'reel' => 3];
+    foreach ($targets as $type => $targetCount) {
+        while (count($bucketed[$type]) < $targetCount) {
             $fallback = social_media_generate_fallback_batch($profile);
             foreach ($fallback as $item) {
                 if ($item['post_type'] === $type) {
                     $bucketed[$type][] = $item;
-                    if (count($bucketed[$type]) >= 3) {
+                    if (count($bucketed[$type]) >= $targetCount) {
                         break;
                     }
                 }
             }
         }
-        $normalized = array_merge($normalized, array_slice($bucketed[$type], 0, 3));
+        $normalized = array_merge($normalized, array_slice($bucketed[$type], 0, $targetCount));
     }
 
     return $normalized;
@@ -1128,20 +1099,6 @@ function social_media_get_design_defaults()
             'accent_color' => '#FFB547',
             'background_tone' => 'dark',
             'asset_tags' => ['bold', 'clean'],
-        ],
-        'carousel' => [
-            'headline_font_key' => 'plus-jakarta-sans',
-            'body_font_key' => 'inter',
-            'headline_size' => 54,
-            'body_size' => 24,
-            'text_case' => 'title',
-            'text_align' => 'center',
-            'overlay_color' => '#101726',
-            'overlay_opacity' => 0.28,
-            'text_color' => '#FFFFFF',
-            'accent_color' => '#8AE0FF',
-            'background_tone' => 'minimal',
-            'asset_tags' => ['clean', 'editorial'],
         ],
         'reel' => [
             'headline_font_key' => 'league-spartan',
@@ -1606,7 +1563,7 @@ function social_media_build_manifest_variant($spec, $analysis, $bestZone, $forma
         'bottom' => (int) floor($height * 0.50),
     ];
     $baseY = $zoneYMap[$bestZone];
-    $headlineSize = $format === 'reel' ? 64 : ($format === 'carousel' ? 56 : 60);
+    $headlineSize = $format === 'reel' ? 92 : 100;
     $subheadlineSize = $format === 'reel' ? 28 : 26;
     $ctaSize = 24;
 
@@ -1638,13 +1595,13 @@ function social_media_build_manifest_variant($spec, $analysis, $bestZone, $forma
                 'x' => $padding,
                 'y' => $baseY + 54,
                 'width' => $width - ($padding * 2),
-                'height' => $format === 'reel' ? 340 : 270,
+                'height' => $format === 'reel' ? 360 : 300,
                 'font_size' => $headlineSize,
                 'min_font_size' => 28,
                 'line_height' => 1.12,
                 'color' => $analysis['suggested_text_color'],
                 'align' => 'left',
-                'max_lines' => $format === 'reel' ? 5 : 4,
+                'max_lines' => $format === 'reel' ? 5 : 3,
                 'shrink_to_fit' => true,
             ],
             'subheadline' => [
@@ -1977,7 +1934,7 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
     }
 
     if ($design['text_align'] === 'center') {
-        $contentWidth = (int) floor($variant['width'] * 0.76);
+        $contentWidth = (int) floor($variant['width'] * 0.84);
         $contentX = (int) floor(($variant['width'] - $contentWidth) / 2);
         $variant['zones']['label']['x'] = $contentX;
         $variant['zones']['label']['width'] = $contentWidth;
@@ -1999,16 +1956,16 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
             $variant['zones']['brand']['y'] = 1640;
             $variant['zones']['cta']['y'] = 1720;
         } elseif ($variant['height'] >= 1300) {
-            $variant['zones']['headline']['y'] = 250;
-            $variant['zones']['headline']['height'] = 290;
-            $variant['zones']['subheadline']['y'] = 590;
+            $variant['zones']['headline']['y'] = 270;
+            $variant['zones']['headline']['height'] = 320;
+            $variant['zones']['subheadline']['y'] = 640;
             $variant['zones']['subheadline']['height'] = 170;
             $variant['zones']['brand']['y'] = 1110;
             $variant['zones']['cta']['y'] = 1180;
         } else {
-            $variant['zones']['headline']['y'] = 220;
-            $variant['zones']['headline']['height'] = 260;
-            $variant['zones']['subheadline']['y'] = 520;
+            $variant['zones']['headline']['y'] = 250;
+            $variant['zones']['headline']['height'] = 330;
+            $variant['zones']['subheadline']['y'] = 620;
             $variant['zones']['subheadline']['height'] = 150;
             $variant['zones']['brand']['y'] = 840;
             $variant['zones']['cta']['y'] = 905;
@@ -2075,7 +2032,9 @@ function social_media_render_preview($post, $asset, $profile)
     $bodyFont = social_media_font_path($post['design']['body_font_key'], true);
     social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $labelFont);
     social_media_render_zone_text($canvas, social_media_transform_text_case($post['overlay_text'], $post['design']['text_case']), $variant['zones']['headline'], $headlineFont);
-    social_media_render_zone_text($canvas, social_media_transform_text_case($post['hook'], 'sentence'), $variant['zones']['subheadline'], $bodyFont);
+    if ($post['post_type'] === 'reel') {
+        social_media_render_zone_text($canvas, social_media_transform_text_case($post['hook'], 'sentence'), $variant['zones']['subheadline'], $bodyFont);
+    }
     social_media_render_zone_text($canvas, $brand, $variant['zones']['brand'], $bodyFont);
     social_media_render_zone_text($canvas, trim((string) $post['cta']), $variant['zones']['cta'], $bodyFont);
 
