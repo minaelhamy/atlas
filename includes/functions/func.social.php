@@ -1089,7 +1089,7 @@ function social_media_get_design_defaults()
         'post' => [
             'headline_font_key' => 'anton',
             'body_font_key' => 'dm-sans',
-            'headline_size' => 68,
+            'headline_size' => 100,
             'body_size' => 28,
             'text_case' => 'uppercase',
             'text_align' => 'center',
@@ -1853,7 +1853,7 @@ function social_media_hex_to_rgb($hex)
 
 function social_media_render_zone_text($canvas, $text, $zone, $fontPath)
 {
-    if (trim((string) $text) === '' || empty($zone)) {
+    if (trim((string) $text) === '' || empty($zone) || (!empty($zone['height']) && (int) $zone['height'] <= 0) || (!empty($zone['max_lines']) && (int) $zone['max_lines'] <= 0)) {
         return;
     }
 
@@ -1972,9 +1972,43 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
         }
     }
 
+    if ($variant['height'] === 1080) {
+        $contentWidth = (int) floor($variant['width'] * 0.82);
+        $contentX = (int) floor(($variant['width'] - $contentWidth) / 2);
+        $headlineHeight = 320;
+        $headlineY = (int) floor(($variant['height'] - $headlineHeight) / 2) - 70;
+
+        $variant['zones']['label']['height'] = 0;
+        $variant['zones']['label']['max_lines'] = 0;
+        $variant['zones']['headline']['x'] = $contentX;
+        $variant['zones']['headline']['width'] = $contentWidth;
+        $variant['zones']['headline']['y'] = max(120, $headlineY);
+        $variant['zones']['headline']['height'] = $headlineHeight;
+        $variant['zones']['headline']['font_size'] = 100;
+        $variant['zones']['headline']['min_font_size'] = 56;
+        $variant['zones']['headline']['line_height'] = 1.0;
+        $variant['zones']['headline']['align'] = 'center';
+
+        $variant['zones']['subheadline']['height'] = 0;
+        $variant['zones']['subheadline']['max_lines'] = 0;
+        $variant['zones']['subheadline']['y'] = $variant['height'] + 100;
+
+        $variant['zones']['brand']['x'] = $contentX;
+        $variant['zones']['brand']['width'] = $contentWidth;
+        $variant['zones']['brand']['align'] = 'center';
+        $variant['zones']['brand']['y'] = 855;
+
+        $variant['zones']['cta']['x'] = $contentX;
+        $variant['zones']['cta']['width'] = $contentWidth;
+        $variant['zones']['cta']['align'] = 'center';
+        $variant['zones']['cta']['y'] = 915;
+    }
+
     $variant['zones']['label']['color'] = social_media_normalize_hex_color($design['accent_color'], $palette['accent']);
     $variant['zones']['headline']['color'] = social_media_normalize_hex_color($design['text_color'], $palette['text']);
-    $variant['zones']['headline']['font_size'] = (int) $design['headline_size'];
+    if ($variant['height'] !== 1080) {
+        $variant['zones']['headline']['font_size'] = (int) $design['headline_size'];
+    }
     $variant['zones']['headline']['font_key'] = $design['headline_font_key'];
     $variant['zones']['headline']['text_case'] = $design['text_case'];
     $variant['zones']['subheadline']['color'] = social_media_normalize_hex_color($design['text_color'], $palette['text']);
@@ -2030,7 +2064,9 @@ function social_media_render_preview($post, $asset, $profile)
     $labelFont = social_media_font_path($post['design']['body_font_key']);
     $headlineFont = social_media_font_path($post['design']['headline_font_key']);
     $bodyFont = social_media_font_path($post['design']['body_font_key'], true);
-    social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $labelFont);
+    if ($post['post_type'] !== 'post') {
+        social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $labelFont);
+    }
     social_media_render_zone_text($canvas, social_media_transform_text_case($post['overlay_text'], $post['design']['text_case']), $variant['zones']['headline'], $headlineFont);
     if ($post['post_type'] === 'reel') {
         social_media_render_zone_text($canvas, social_media_transform_text_case($post['hook'], 'sentence'), $variant['zones']['subheadline'], $bodyFont);
