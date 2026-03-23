@@ -366,13 +366,15 @@ jQuery(function ($) {
                     $.each(response.posts, function(index, post) {
                         var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
                         var design = post.design && typeof post.design === 'object' ? post.design : {};
+                        var debug = post.debug && typeof post.debug === 'object' ? post.debug : {};
                         var captionText = String(post.caption || '') + (hashtags ? "\n\n" + String(post.hashtags.join(' ')) : '');
                         var infoHtml = '';
-                        var isReel = String(post.post_type || '') === 'reel' && !!post.rendered_video;
-                        var primaryDownloadUrl = isReel ? post.rendered_video : post.preview_image;
+                        var reelVideoUrl = post.rendered_video || post.source_video || '';
+                        var isReel = String(post.post_type || '') === 'reel' && !!reelVideoUrl;
+                        var primaryDownloadUrl = isReel ? reelVideoUrl : post.preview_image;
                         var primaryDownloadLabel = isReel ? 'Download Reel' : 'Download Post';
                         var previewMediaHtml = isReel
-                            ? '<video src="' + escape_html(post.rendered_video) + '" autoplay muted loop playsinline controls preload="metadata"></video>'
+                            ? '<video src="' + escape_html(reelVideoUrl) + '" autoplay muted loop playsinline controls preload="metadata"></video>'
                             : '<img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '">';
                         var actionsHtml = '<div class="d-flex margin-top-15">' +
                             '<a href="' + escape_html(primaryDownloadUrl) + '" class="button ripple-effect btn-sm margin-right-5" download>' + primaryDownloadLabel + '</a>' +
@@ -399,9 +401,20 @@ jQuery(function ($) {
                                 '</p>';
                         }
 
-                        if (post.rendered_video) {
-                            actionsHtml += '<a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm margin-right-5" target="_blank">Open Reel Video</a>';
-                            actionsHtml += '<a href="' + escape_html(post.rendered_video) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Reel Video</a>';
+                        if (debug.generation_source || (debug.openai && debug.openai.error)) {
+                            infoHtml += '<details class="margin-bottom-10"><summary><strong>Debug</strong></summary><div class="margin-top-10">';
+                            if (debug.generation_source) {
+                                infoHtml += '<p class="margin-bottom-5"><strong>Copy Source:</strong> ' + escape_html(String(debug.generation_source)) + '</p>';
+                            }
+                            if (debug.openai && debug.openai.error) {
+                                infoHtml += '<p class="margin-bottom-5"><strong>OpenAI Debug:</strong> ' + escape_html(String(debug.openai.attempt || '')) + ' - ' + escape_html(String(debug.openai.error)) + '</p>';
+                            }
+                            infoHtml += '</div></details>';
+                        }
+
+                        if (reelVideoUrl) {
+                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="button ripple-effect btn-sm margin-right-5" target="_blank">Open Reel Video</a>';
+                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Reel Video</a>';
                             actionsHtml += '<a href="' + escape_html(post.preview_image) + '" class="button ripple-effect btn-sm margin-right-5" download>Download Cover</a>';
                         }
 

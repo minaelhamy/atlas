@@ -40,7 +40,9 @@ overall_header(__("All Social Posts"));
                         <?php } ?>
                         <?php foreach ($images as $image) { ?>
                             <?php
-                            $videoUrl = !empty($image['rendered_video']) ? _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video'] : '';
+                            $videoUrl = !empty($image['rendered_video'])
+                                ? _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']
+                                : (!empty($image['source_video']) ? _esc($config['site_url'], 0) . 'storage/social_assets/' . $image['source_video'] : '');
                             $previewUrl = _esc($config['site_url'], 0) . 'storage/social_posts/' . $image['image'];
                             ?>
                             <div class="col-xl-4 col-md-6 margin-bottom-30">
@@ -68,6 +70,19 @@ overall_header(__("All Social Posts"));
                                                     <?php if (!empty($image['design']['background_tone'])) { ?>, <?php _esc($image['design']['background_tone']) ?><?php } ?>
                                                 </p>
                                             <?php } ?>
+                                            <?php if (!empty($image['debug'])) { ?>
+                                                <details class="margin-bottom-10">
+                                                    <summary><strong><?php _e('Debug') ?></strong></summary>
+                                                    <div class="margin-top-10">
+                                                        <?php if (!empty($image['debug']['generation_source'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Copy Source') ?>:</strong> <?php _esc($image['debug']['generation_source']) ?></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($image['debug']['openai']['error'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('OpenAI Debug') ?>:</strong> <?php _esc($image['debug']['openai']['attempt'] . ' - ' . $image['debug']['openai']['error']) ?></p>
+                                                        <?php } ?>
+                                                    </div>
+                                                </details>
+                                            <?php } ?>
                                             <p class="margin-bottom-15"><small><?php echo _esc($image['date'], 0) . ' <strong>' . _esc($image['time'], 0) . '</strong>' ?></small></p>
                                             <?php
                                             $captionExport = $image['description'];
@@ -79,9 +94,9 @@ overall_header(__("All Social Posts"));
                                             <div class="d-flex flex-wrap">
                                                 <a href="<?php echo $downloadUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><i class="fa fa-download"></i></a>
                                                 <a href="#" class="button ripple-effect btn-sm margin-right-5 download-caption" data-title="<?php _esc($image['title']) ?>" data-caption="<?php _esc($captionExport) ?>"><?php _e('Caption') ?></a>
-                                                <?php if (!empty($image['rendered_video'])) { ?>
-                                                    <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><i class="fa fa-play"></i></a>
-                                                    <a href="<?php echo _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $image['rendered_video']; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e("Video") ?></a>
+                                                <?php if (!empty($videoUrl) && $image['post_type'] === 'reel') { ?>
+                                                    <a href="<?php echo $videoUrl; ?>" class="button ripple-effect btn-sm margin-right-5" target="_blank"><i class="fa fa-play"></i></a>
+                                                    <a href="<?php echo $videoUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e("Video") ?></a>
                                                     <a href="<?php echo $previewUrl; ?>" class="button ripple-effect btn-sm margin-right-5" download><?php _e("Cover") ?></a>
                                                 <?php } ?>
                                                 <a href="#" class="button red ripple-effect btn-sm quick-delete"

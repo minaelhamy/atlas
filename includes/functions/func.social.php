@@ -1,5 +1,21 @@
 <?php
 
+function social_media_runtime_debug($key = null, $value = null)
+{
+    static $state = [];
+
+    if ($key === null) {
+        return $state;
+    }
+
+    if ($value === null) {
+        return isset($state[$key]) ? $state[$key] : null;
+    }
+
+    $state[$key] = $value;
+    return $value;
+}
+
 function social_media_bootstrap()
 {
     static $bootstrapped = false;
@@ -593,6 +609,7 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
 
 function social_media_generate_batch($user_id, $brief = '')
 {
+    social_media_runtime_debug('openai', null);
     $profile = social_media_get_profile($user_id);
     $companyContext = social_media_get_company_context_text($user_id);
     $historyContext = social_media_get_recent_chat_context($user_id);
@@ -632,6 +649,7 @@ function social_media_generate_batch($user_id, $brief = '')
     $items = social_media_normalize_generated_items($items, $profile);
     foreach ($items as &$item) {
         $item['_generation_source'] = $generationSource;
+        $item['_openai_debug'] = social_media_runtime_debug('openai');
     }
     unset($item);
     return $items;
@@ -643,7 +661,7 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
     $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
-    $response = $openAi->chat([
+    $payload = [
         'model' => normalize_openai_model(get_default_openai_chat_model()),
         'messages' => [
             ['role' => 'system', 'content' => $system],
@@ -653,23 +671,54 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
         'response_format' => ['type' => 'json_object'],
         'max_tokens' => 2200,
         'user' => $user_id,
-    ]);
+    ];
 
+    $response = $openAi->chat($payload);
     $decoded = json_decode($response, true);
+
+    if (!empty($decoded['error']['message'])) {
+        social_media_runtime_debug('openai', [
+            'attempt' => 'json_mode',
+            'error' => $decoded['error']['message'],
+        ]);
+        unset($payload['response_format']);
+        $payload['temperature'] = 0.6;
+        $response = $openAi->chat($payload);
+        $decoded = json_decode($response, true);
+    }
+
     if (!empty($decoded['error']['message'])) {
         error_log('Social media generation error: ' . $decoded['error']['message']);
+        social_media_runtime_debug('openai', [
+            'attempt' => 'plain_chat',
+            'error' => $decoded['error']['message'],
+        ]);
         return [];
     }
     if (empty($decoded['choices'][0]['message']['content'])) {
         error_log('Social media generation returned no content.');
+        social_media_runtime_debug('openai', [
+            'attempt' => 'plain_chat',
+            'error' => 'No content returned',
+        ]);
         return [];
     }
 
     $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
     if (empty($json['items']) || !is_array($json['items'])) {
         error_log('Social media generation returned invalid JSON payload.');
+        social_media_runtime_debug('openai', [
+            'attempt' => 'plain_chat',
+            'error' => 'Invalid JSON payload',
+            'raw_excerpt' => substr($decoded['choices'][0]['message']['content'], 0, 400),
+        ]);
         return [];
     }
+
+    social_media_runtime_debug('openai', [
+        'attempt' => 'success',
+        'error' => '',
+    ]);
 
     return $json['items'];
 }
@@ -1998,8 +2047,12 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
         $preview = is_array($previewResult) ? $previewResult['file_name'] : $previewResult;
         $renderDebug = is_array($previewResult) && !empty($previewResult['debug']) ? $previewResult['debug'] : [];
         $renderedVideo = '';
+        $sourceVideo = '';
         if ($item['post_type'] === 'reel' && !empty($asset['asset_type']) && $asset['asset_type'] === 'video') {
             $renderedVideo = social_media_render_reel_video($asset, $preview);
+            if (empty($renderedVideo) && !empty($asset['file_name'])) {
+                $sourceVideo = $asset['file_name'];
+            }
         }
 
         $record = ORM::for_table($config['db']['pre'] . 'social_media_posts')->create();
@@ -2023,10 +2076,13 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'design' => $item['design'],
             'asset' => $asset ?: [],
             'rendered_video' => $renderedVideo,
+            'source_video' => $sourceVideo,
             'debug' => [
                 'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
+                'openai' => !empty($item['_openai_debug']) ? $item['_openai_debug'] : [],
                 'render' => $renderDebug,
                 'rendered_video_exists' => !empty($renderedVideo),
+                'source_video_used' => !empty($sourceVideo),
             ],
         ]);
         $record->created_at = date('Y-m-d H:i:s');
@@ -2046,13 +2102,16 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'design' => $item['design'],
             'preview_image' => $config['site_url'] . 'storage/social_posts/' . $preview,
             'rendered_video' => !empty($renderedVideo) ? $config['site_url'] . 'storage/social_posts/videos/' . $renderedVideo : '',
+            'source_video' => !empty($sourceVideo) ? $config['site_url'] . 'storage/social_assets/' . $sourceVideo : '',
             'asset_preview' => !empty($asset['preview_name']) ? $config['site_url'] . 'storage/social_assets/' . $asset['preview_name'] : '',
             'asset_type' => !empty($asset['asset_type']) ? $asset['asset_type'] : '',
             'asset_title' => !empty($asset['title']) ? $asset['title'] : '',
             'debug' => [
                 'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
+                'openai' => !empty($item['_openai_debug']) ? $item['_openai_debug'] : [],
                 'render' => $renderDebug,
                 'rendered_video_exists' => !empty($renderedVideo),
+                'source_video_used' => !empty($sourceVideo),
             ],
         ];
     }
