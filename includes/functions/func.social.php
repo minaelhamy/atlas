@@ -624,11 +624,17 @@ function social_media_generate_batch($user_id, $brief = '')
         . "JSON shape: {\"items\":[...]}";
 
     $items = social_media_generate_batch_via_openai($system, $userPrompt, $user_id);
+    $generationSource = 'openai';
     if (empty($items)) {
         $items = social_media_generate_fallback_batch($profile, $brief);
+        $generationSource = 'fallback';
     }
-
-    return social_media_normalize_generated_items($items, $profile);
+    $items = social_media_normalize_generated_items($items, $profile);
+    foreach ($items as &$item) {
+        $item['_generation_source'] = $generationSource;
+    }
+    unset($item);
+    return $items;
 }
 
 function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
@@ -1720,6 +1726,12 @@ function social_media_open_asset_background($asset, $width, $height, $background
     $canvas = imagecreatetruecolor($width, $height);
     imagealphablending($canvas, true);
     imagesavealpha($canvas, true);
+    $debug = [
+        'attempted_paths' => [],
+        'used_path' => '',
+        'used_source' => false,
+        'fallback_gradient' => false,
+    ];
 
     $assetPaths = [];
     if (!empty($asset['file_name']) && $asset['asset_type'] === 'image') {
@@ -1730,6 +1742,7 @@ function social_media_open_asset_background($asset, $width, $height, $background
     }
 
     foreach ($assetPaths as $assetPath) {
+        $debug['attempted_paths'][] = $assetPath;
         if ($assetPath && file_exists($assetPath)) {
             $source = social_media_load_image_resource($assetPath);
             if ($source) {
@@ -1737,7 +1750,9 @@ function social_media_open_asset_background($asset, $width, $height, $background
                 $srcHeight = imagesy($source);
                 imagecopyresampled($canvas, $source, 0, 0, 0, 0, $width, $height, $srcWidth, $srcHeight);
                 imagedestroy($source);
-                return $canvas;
+                $debug['used_path'] = $assetPath;
+                $debug['used_source'] = true;
+                return ['canvas' => $canvas, 'debug' => $debug];
             }
         }
     }
@@ -1750,7 +1765,8 @@ function social_media_open_asset_background($asset, $width, $height, $background
     $bottom = imagecolorallocate($canvas, $bottomR, $bottomG, $bottomB);
     imagefilledrectangle($canvas, 0, 0, $width, $height / 2, $top);
     imagefilledrectangle($canvas, 0, $height / 2, $width, $height, $bottom);
-    return $canvas;
+    $debug['fallback_gradient'] = true;
+    return ['canvas' => $canvas, 'debug' => $debug];
 }
 
 function social_media_render_text_block($canvas, $text, $x, $y, $width, $fontSize, $color, $fontPath)
@@ -1893,7 +1909,9 @@ function social_media_render_preview($post, $asset, $profile)
     $variant = social_media_apply_design_to_variant($variant, $post['design'], $asset);
     $width = $variant['width'];
     $height = $variant['height'];
-    $canvas = social_media_open_asset_background($asset ?: [], $width, $height, !empty($variant['background_colors']) ? $variant['background_colors'] : []);
+    $backgroundResult = social_media_open_asset_background($asset ?: [], $width, $height, !empty($variant['background_colors']) ? $variant['background_colors'] : []);
+    $canvas = is_array($backgroundResult) && isset($backgroundResult['canvas']) ? $backgroundResult['canvas'] : $backgroundResult;
+    $backgroundDebug = is_array($backgroundResult) && isset($backgroundResult['debug']) ? $backgroundResult['debug'] : [];
 
     list($ovR, $ovG, $ovB) = social_media_hex_to_rgb($variant['overlay']['color']);
     $overlay = imagecolorallocatealpha($canvas, $ovR, $ovG, $ovB, (int) floor(127 * min(max($variant['overlay']['opacity'], 0), 1)));
@@ -1934,7 +1952,21 @@ function social_media_render_preview($post, $asset, $profile)
     imagejpeg($canvas, $targetDir . $fileName, 90);
     imagedestroy($canvas);
 
-    return $fileName;
+    return [
+        'file_name' => $fileName,
+        'debug' => [
+            'asset_id' => !empty($asset['id']) ? (int) $asset['id'] : 0,
+            'asset_title' => !empty($asset['title']) ? $asset['title'] : '',
+            'asset_type' => !empty($asset['asset_type']) ? $asset['asset_type'] : '',
+            'asset_file' => !empty($asset['file_name']) ? $asset['file_name'] : '',
+            'asset_preview' => !empty($asset['preview_name']) ? $asset['preview_name'] : '',
+            'background' => $backgroundDebug,
+            'fonts' => [
+                'headline' => $headlineFont,
+                'body' => $bodyFont,
+            ],
+        ],
+    ];
 }
 
 function social_media_get_manifest_variant($asset, $postType, $format)
@@ -1962,7 +1994,9 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
     foreach ($items as $item) {
         $keywords = array_merge($item['keywords'], social_media_normalize_list($profile['company_industry']));
         $asset = social_media_pick_asset_with_design($item['post_type'], $keywords, $item['design']);
-        $preview = social_media_render_preview($item, $asset, $profile);
+        $previewResult = social_media_render_preview($item, $asset, $profile);
+        $preview = is_array($previewResult) ? $previewResult['file_name'] : $previewResult;
+        $renderDebug = is_array($previewResult) && !empty($previewResult['debug']) ? $previewResult['debug'] : [];
         $renderedVideo = '';
         if ($item['post_type'] === 'reel' && !empty($asset['asset_type']) && $asset['asset_type'] === 'video') {
             $renderedVideo = social_media_render_reel_video($asset, $preview);
@@ -1989,6 +2023,11 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'design' => $item['design'],
             'asset' => $asset ?: [],
             'rendered_video' => $renderedVideo,
+            'debug' => [
+                'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
+                'render' => $renderDebug,
+                'rendered_video_exists' => !empty($renderedVideo),
+            ],
         ]);
         $record->created_at = date('Y-m-d H:i:s');
         $record->save();
@@ -2010,6 +2049,11 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'asset_preview' => !empty($asset['preview_name']) ? $config['site_url'] . 'storage/social_assets/' . $asset['preview_name'] : '',
             'asset_type' => !empty($asset['asset_type']) ? $asset['asset_type'] : '',
             'asset_title' => !empty($asset['title']) ? $asset['title'] : '',
+            'debug' => [
+                'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
+                'render' => $renderDebug,
+                'rendered_video_exists' => !empty($renderedVideo),
+            ],
         ];
     }
 

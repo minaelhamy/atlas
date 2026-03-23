@@ -81,6 +81,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                             $meta = !empty($post['metadata']) && is_array($post['metadata']) ? $post['metadata'] : [];
                             $hashtags = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
                             $design = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
+                            $debug = !empty($meta['debug']) && is_array($meta['debug']) ? $meta['debug'] : [];
                             $videoUrl = !empty($meta['rendered_video']) ? _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video'] : '';
                             $previewUrl = _esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image'];
                             ?>
@@ -121,6 +122,27 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                                     <?php if (!empty($design['headline_size'])) { ?>, <?php _esc($design['headline_size']) ?>px<?php } ?>
                                                     <?php if (!empty($design['background_tone'])) { ?>, <?php _esc($design['background_tone']) ?><?php } ?>
                                                 </p>
+                                            <?php } ?>
+                                            <?php if (!empty($debug)) { ?>
+                                                <details class="margin-bottom-10">
+                                                    <summary><strong><?php _e('Debug') ?></strong></summary>
+                                                    <div class="margin-top-10">
+                                                        <?php if (!empty($debug['generation_source'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Copy Source') ?>:</strong> <?php _esc($debug['generation_source']) ?></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($debug['render']['background']['used_source'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Background Source') ?>:</strong> <?php _e('Uploaded asset used') ?></p>
+                                                        <?php } elseif (!empty($debug['render']['background']['fallback_gradient'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Background Source') ?>:</strong> <?php _e('Fallback gradient used') ?></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($debug['render']['background']['used_path'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Used Path') ?>:</strong> <code><?php _esc($debug['render']['background']['used_path']) ?></code></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($debug['render']['background']['attempted_paths'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Attempted Paths') ?>:</strong> <code><?php _esc(implode(' | ', $debug['render']['background']['attempted_paths'])) ?></code></p>
+                                                        <?php } ?>
+                                                    </div>
+                                                </details>
                                             <?php } ?>
                                             <?php
                                             $captionExport = $post['caption'];
