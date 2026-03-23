@@ -52,6 +52,14 @@ overall_header(__("All Social Posts"));
                                             <?php if (!empty($image['hashtags'])) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e("Hashtags") ?>:</strong> <?php _esc($image['hashtags']) ?></p>
                                             <?php } ?>
+                                            <?php if (!empty($image['design'])) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e("Design") ?>:</strong>
+                                                    <?php _esc(!empty($image['design']['headline_font_key']) ? $image['design']['headline_font_key'] : '') ?>
+                                                    <?php if (!empty($image['design']['body_font_key'])) { ?> / <?php _esc($image['design']['body_font_key']) ?><?php } ?>
+                                                    <?php if (!empty($image['design']['headline_size'])) { ?>, <?php _esc($image['design']['headline_size']) ?>px<?php } ?>
+                                                    <?php if (!empty($image['design']['background_tone'])) { ?>, <?php _esc($image['design']['background_tone']) ?><?php } ?>
+                                                </p>
+                                            <?php } ?>
                                             <p class="margin-bottom-15"><small><?php echo _esc($image['date'], 0) . ' <strong>' . _esc($image['time'], 0) . '</strong>' ?></small></p>
                                             <?php
                                             $captionExport = $image['description'];

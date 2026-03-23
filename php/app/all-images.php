@@ -38,6 +38,7 @@ if (isset($current_user['id'])) {
         $images[$row['id']]['post_type'] = $row['post_type'];
         $images[$row['id']]['rendered_video'] = !empty($meta['rendered_video']) ? $meta['rendered_video'] : '';
         $images[$row['id']]['hashtags'] = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
+        $images[$row['id']]['design'] = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
         $images[$row['id']]['date'] = date('d M, Y', strtotime($row['created_at']));
         $images[$row['id']]['time'] = date('H:i:s', strtotime($row['created_at']));
     }

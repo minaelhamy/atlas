@@ -365,6 +365,7 @@ jQuery(function ($) {
                 if (response.success) {
                     $.each(response.posts, function(index, post) {
                         var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
+                        var design = post.design && typeof post.design === 'object' ? post.design : {};
                         var captionText = String(post.caption || '') + (hashtags ? "\n\n" + String(post.hashtags.join(' ')) : '');
                         var infoHtml = '';
                         var actionsHtml = '<div class="d-flex margin-top-15">' +
@@ -381,6 +382,15 @@ jQuery(function ($) {
 
                         if (post.asset_title) {
                             infoHtml += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
+                        }
+
+                        if (design.headline_font_key || design.background_tone) {
+                            infoHtml += '<p class="margin-bottom-10"><strong>Design:</strong> ' +
+                                escape_html(String(design.headline_font_key || '')) +
+                                (design.body_font_key ? ' / ' + escape_html(String(design.body_font_key)) : '') +
+                                (design.headline_size ? ', ' + escape_html(String(design.headline_size)) + 'px' : '') +
+                                (design.background_tone ? ', ' + escape_html(String(design.background_tone)) : '') +
+                                '</p>';
                         }
 
                         if (post.rendered_video) {

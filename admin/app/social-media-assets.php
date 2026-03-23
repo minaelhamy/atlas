@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST['delete_asset_id'])) {
 $page_title = __('Social Media Assets');
 $assets = social_media_get_assets(['status' => 'all']);
 $ffmpegReady = social_media_ffmpeg_path() !== '';
+$fontCatalog = social_media_get_available_fonts();
 
 include '../header.php'; ?>
 <div class="page-body-wrapper">
@@ -80,7 +81,7 @@ include '../header.php'; ?>
                     <div class="quick-card card">
                         <div class="card-header">
                             <h5><?php _e('Upload Asset') ?></h5>
-                            <span><?php _e('Use images for posts and carousels, and videos plus optional previews for reels.') ?></span>
+                            <span><?php _e('Use mostly empty backgrounds for posts/carousels and clean motion backgrounds for reels. Assets with baked-in text will be treated as low-priority references.') ?></span>
                         </div>
                         <div class="card-body">
                             <form method="post" enctype="multipart/form-data">
@@ -170,12 +171,18 @@ include '../header.php'; ?>
                                         <p><strong><?php _e('Suggested Text Color') ?>:</strong> <?php _esc($editAsset['analysis']['suggested_text_color']) ?></p>
                                         <p><strong><?php _e('Overlay Opacity') ?>:</strong> <?php _esc($editAsset['analysis']['overlay_opacity']) ?></p>
                                         <p><strong><?php _e('Source Dimensions') ?>:</strong> <?php _esc($editAsset['analysis']['source_width'] . 'x' . $editAsset['analysis']['source_height']) ?></p>
+                                        <p><strong><?php _e('Background Tone') ?>:</strong> <?php _esc($editAsset['analysis']['background_tone']) ?></p>
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong><?php _e('Brightness') ?>:</strong> <?php _esc(json_encode($editAsset['analysis']['brightness'])) ?></p>
                                         <p><strong><?php _e('Clutter') ?>:</strong> <?php _esc(json_encode($editAsset['analysis']['clutter'])) ?></p>
+                                        <p><strong><?php _e('Template Kind') ?>:</strong> <?php _esc($editAsset['analysis']['template_kind']) ?></p>
+                                        <p><strong><?php _e('Empty Layout Score') ?>:</strong> <?php _esc($editAsset['analysis']['empty_layout_score']) ?></p>
                                     </div>
                                 </div>
+                                <?php if (!empty($editAsset['analysis']['dominant_colors'])) { ?>
+                                    <p><strong><?php _e('Dominant Colors') ?>:</strong> <?php _esc(implode(', ', $editAsset['analysis']['dominant_colors'])) ?></p>
+                                <?php } ?>
                                 <?php if (!empty($editAsset['analysis']['ocr_text'])) { ?>
                                     <div class="alert alert-light"><?php _esc($editAsset['analysis']['ocr_text']) ?></div>
                                 <?php } ?>
@@ -196,11 +203,13 @@ include '../header.php'; ?>
                                         <th><?php _e('Title') ?></th>
                                         <th><?php _e('Type') ?></th>
                                         <th><?php _e('Post Type') ?></th>
-                                        <th><?php _e('Tags') ?></th>
-                                        <th><?php _e('Best Zone') ?></th>
-                                        <th><?php _e('Status') ?></th>
-                                        <th><?php _e('Action') ?></th>
-                                    </tr>
+                                            <th><?php _e('Tags') ?></th>
+                                            <th><?php _e('Best Zone') ?></th>
+                                            <th><?php _e('Tone') ?></th>
+                                            <th><?php _e('Kind') ?></th>
+                                            <th><?php _e('Status') ?></th>
+                                            <th><?php _e('Action') ?></th>
+                                        </tr>
                                     </thead>
                                     <tbody>
                                     <?php foreach ($assets as $asset) { ?>
@@ -217,6 +226,8 @@ include '../header.php'; ?>
                                             <td><?php _esc(ucfirst($asset['post_type'])) ?></td>
                                             <td><?php _esc($asset['tags']) ?></td>
                                             <td><?php _esc(!empty($asset['analysis']['best_text_zone']) ? ucfirst($asset['analysis']['best_text_zone']) : '-') ?></td>
+                                            <td><?php _esc(!empty($asset['analysis']['background_tone']) ? ucfirst($asset['analysis']['background_tone']) : '-') ?></td>
+                                            <td><?php _esc(!empty($asset['analysis']['template_kind']) ? ucfirst($asset['analysis']['template_kind']) : '-') ?></td>
                                             <td><?php echo !empty($asset['status']) ? '<span class="badge badge-success">' . __('Active') . '</span>' : '<span class="badge badge-secondary">' . __('Inactive') . '</span>'; ?></td>
                                             <td>
                                                 <a href="<?php echo ADMINURL; ?>app/social-media-assets.php?edit=<?php echo (int) $asset['id']; ?>" class="btn btn-sm btn-primary"><?php _e('Edit') ?></a>
@@ -235,12 +246,29 @@ include '../header.php'; ?>
                     </div>
                     <div class="quick-card card">
                         <div class="card-header">
+                            <h5><?php _e('Font Library') ?></h5>
+                            <span><?php _e('These are the renderable social fonts Atlas sends to the AI. The model can only choose from this approved list.') ?></span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <?php foreach ($fontCatalog as $key => $font) { ?>
+                                    <div class="col-md-6 mb-2">
+                                        <strong><?php _esc($font['label']) ?></strong>
+                                        <div><code><?php _esc($key) ?></code></div>
+                                        <small><?php _esc($font['style']) ?></small>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-card card">
+                        <div class="card-header">
                             <h5><?php _e('How Selection Works') ?></h5>
                         </div>
                         <div class="card-body">
-                            <p class="mb-2"><?php _e('1. OpenAI creates 3 posts, 3 carousels, and 3 reels with hooks, captions, and keywords based on company context, competitors, and recent agent history.') ?></p>
-                            <p class="mb-2"><?php _e('2. The generator filters assets by post type and asset type, then scores tag matches against the generated keywords and company industry.') ?></p>
-                            <p class="mb-2"><?php _e('3. Atlas renders the final cover automatically: logo, headline, supporting hook, and CTA are placed on top of the selected asset.') ?></p>
+                            <p class="mb-2"><?php _e('1. OpenAI creates 3 posts, 3 carousels, and 3 reels with hooks, captions, keywords, font keys, text sizes, alignment, and palette instructions based on company context, competitors, and recent agent history.') ?></p>
+                            <p class="mb-2"><?php _e('2. The generator filters assets by post type and asset type, then scores tag overlap, background tone, and whether the asset is a clean background or a text-heavy reference.') ?></p>
+                            <p class="mb-2"><?php _e('3. Atlas renders the final cover automatically: logo, headline, supporting hook, brand line, and CTA are placed using the selected fonts and design palette.') ?></p>
                             <p class="mb-0"><?php echo $ffmpegReady ? __('4. ffmpeg is available, so reel outputs can be rendered as real MP4 files when a video asset is selected.') : __('4. ffmpeg is not available in this environment, so reels will fall back to branded covers plus script metadata.'); ?></p>
                         </div>
                     </div>

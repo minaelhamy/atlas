@@ -80,6 +80,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                         <?php foreach ($social_posts as $post) {
                             $meta = !empty($post['metadata']) && is_array($post['metadata']) ? $post['metadata'] : [];
                             $hashtags = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
+                            $design = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
                             ?>
                             <div class="col-xl-4 col-md-6 margin-bottom-30">
                                 <div class="dashboard-box social-post-card margin-top-0">
@@ -106,6 +107,14 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             <?php } ?>
                                             <?php if (!empty($meta['asset']['title'])) { ?>
                                                 <p class="margin-bottom-0"><strong><?php _e('Asset') ?>:</strong> <?php _esc($meta['asset']['title']) ?></p>
+                                            <?php } ?>
+                                            <?php if (!empty($design['headline_font_key']) || !empty($design['background_tone'])) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e('Design') ?>:</strong>
+                                                    <?php _esc(!empty($design['headline_font_key']) ? $design['headline_font_key'] : ''); ?>
+                                                    <?php if (!empty($design['body_font_key'])) { ?> / <?php _esc($design['body_font_key']) ?><?php } ?>
+                                                    <?php if (!empty($design['headline_size'])) { ?>, <?php _esc($design['headline_size']) ?>px<?php } ?>
+                                                    <?php if (!empty($design['background_tone'])) { ?>, <?php _esc($design['background_tone']) ?><?php } ?>
+                                                </p>
                                             <?php } ?>
                                             <?php
                                             $captionExport = $post['caption'];

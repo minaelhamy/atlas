@@ -524,22 +524,95 @@ function social_media_pick_asset($post_type, $keywords = [])
     return $bestAsset ?: $assets[array_rand($assets)];
 }
 
+function social_media_pick_asset_with_design($post_type, $keywords = [], $design = [])
+{
+    $asset = social_media_pick_asset($post_type, $keywords);
+    $formats = social_media_get_format_map();
+    $asset_type = $formats[$post_type]['asset_type'];
+    $assets = social_media_get_assets([
+        'post_type' => $post_type,
+        'asset_type' => $asset_type,
+    ]);
+
+    if (empty($assets) && $asset_type === 'video') {
+        $assets = social_media_get_assets([
+            'post_type' => $post_type,
+        ]);
+    }
+
+    if (empty($assets)) {
+        return $asset;
+    }
+
+    $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
+    $desiredTone = !empty($design['background_tone']) ? strtolower(trim((string) $design['background_tone'])) : '';
+    $bestAsset = null;
+    $bestScore = -999;
+
+    foreach ($assets as $candidate) {
+        $score = 0;
+        $tags = social_media_normalize_list(isset($candidate['tags']) ? $candidate['tags'] : '');
+        foreach ($keywords as $keyword) {
+            if (in_array(strtolower($keyword), array_map('strtolower', $tags), true)) {
+                $score += 2;
+            }
+        }
+        foreach ($designTags as $tag) {
+            if (in_array(strtolower($tag), array_map('strtolower', $tags), true)) {
+                $score += 2;
+            }
+        }
+        if ($candidate['post_type'] === $post_type) {
+            $score += 1;
+        }
+        if (!empty($candidate['analysis']['background_tone']) && $desiredTone !== '' && $candidate['analysis']['background_tone'] === $desiredTone) {
+            $score += 2;
+        }
+        if (!empty($candidate['analysis']['template_kind']) && $candidate['analysis']['template_kind'] === 'background') {
+            $score += 4;
+        } else {
+            $score -= 3;
+        }
+        if (isset($candidate['analysis']['empty_layout_score'])) {
+            $score += (float) $candidate['analysis']['empty_layout_score'] * 4;
+        }
+        if (empty($candidate['analysis']['ocr_text'])) {
+            $score += 2;
+        } else {
+            $score -= min(4, strlen($candidate['analysis']['ocr_text']) / 60);
+        }
+
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $bestAsset = $candidate;
+        }
+    }
+
+    return $bestAsset ?: $asset;
+}
+
 function social_media_generate_batch($user_id, $brief = '')
 {
     $profile = social_media_get_profile($user_id);
     $companyContext = social_media_get_company_context_text($user_id);
     $historyContext = social_media_get_recent_chat_context($user_id);
     $competitorSnapshots = social_media_get_competitor_snapshots($profile);
+    $fontCatalog = social_media_get_font_prompt_catalog();
+    $paletteCatalog = social_media_get_palette_prompt_catalog();
 
     $system = "You are Atlas Social Strategist. Generate practical, brand-aware social media packages for founders. Return valid JSON only.";
 
     $competitorText = json_encode($competitorSnapshots);
     $userPrompt = "Create exactly 9 social media ideas for this company.\n"
         . "Need exactly 3 post, 3 carousel, and 3 reel items.\n"
-        . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords.\n"
+        . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords, design.\n"
         . "Carousel items must include slides (5 short slides).\n"
         . "Reel items must include reel_script (hook, beats, cta) and an overlay_text under 55 chars.\n"
         . "Post and carousel overlay_text must be short and punchy.\n"
+        . "The design object must include: headline_font_key, body_font_key, headline_size, body_size, text_case, text_align, overlay_color, overlay_opacity, text_color, accent_color, background_tone, asset_tags.\n"
+        . "Only use font keys from this approved list:\n{$fontCatalog}\n\n"
+        . "Use these palette directions and background tones when choosing colors:\n{$paletteCatalog}\n\n"
+        . "Pick typography that fits the idea: bold sans for direct hooks, editorial serif for thoughtful content, condensed display for strong statements, clean grotesk for educational posts.\n"
         . "Company context:\n{$companyContext}\n\n"
         . "Recent company history from agents:\n{$historyContext}\n\n"
         . "Competitor research:\n{$competitorText}\n\n"
@@ -613,9 +686,22 @@ function social_media_generate_fallback_batch($profile, $brief = '')
     ];
     $types = ['post', 'post', 'post', 'carousel', 'carousel', 'carousel', 'reel', 'reel', 'reel'];
     $items = [];
+    $designDefaults = social_media_get_design_defaults();
+    $fontKeys = array_keys(social_media_get_available_fonts());
+    $paletteKeys = array_keys(social_media_get_design_palette_library());
 
     foreach ($types as $index => $type) {
         $theme = $themes[$index];
+        $design = $designDefaults[$type];
+        $design['headline_font_key'] = $fontKeys[$index % max(count($fontKeys), 1)];
+        $design['body_font_key'] = $fontKeys[($index + 7) % max(count($fontKeys), 1)];
+        $paletteKey = $paletteKeys[$index % max(count($paletteKeys), 1)];
+        $palette = social_media_get_design_palette_library()[$paletteKey];
+        $design['background_palette'] = $paletteKey;
+        $design['background_tone'] = $palette['tone'];
+        $design['overlay_color'] = $palette['overlay'];
+        $design['text_color'] = $palette['text'];
+        $design['accent_color'] = $palette['accent'];
         $items[] = [
             'post_type' => $type,
             'title' => $theme . ' for ' . $company,
@@ -626,6 +712,7 @@ function social_media_generate_fallback_batch($profile, $brief = '')
             'hashtags' => ['#' . preg_replace('/\s+/', '', ucwords($industry)), '#Founders', '#Marketing'],
             'visual_brief' => 'Bold branded layout with high contrast copy and space for logo.',
             'keywords' => [$industry, $theme, $company],
+            'design' => $design,
             'slides' => $type === 'carousel' ? [
                 'Hook',
                 'Why it matters',
@@ -647,6 +734,8 @@ function social_media_generate_fallback_batch($profile, $brief = '')
 function social_media_normalize_generated_items($items, $profile)
 {
     $bucketed = ['post' => [], 'carousel' => [], 'reel' => []];
+    $fontKeys = array_keys(social_media_get_available_fonts());
+    $designDefaults = social_media_get_design_defaults();
 
     foreach ($items as $item) {
         $type = isset($item['post_type']) ? strtolower(trim($item['post_type'])) : 'post';
@@ -665,6 +754,7 @@ function social_media_normalize_generated_items($items, $profile)
         $item['hashtags'] = social_media_normalize_list(isset($item['hashtags']) ? $item['hashtags'] : []);
         $item['slides'] = !empty($item['slides']) && is_array($item['slides']) ? array_values($item['slides']) : [];
         $item['reel_script'] = !empty($item['reel_script']) && is_array($item['reel_script']) ? array_values($item['reel_script']) : [];
+        $item['design'] = social_media_normalize_design(isset($item['design']) && is_array($item['design']) ? $item['design'] : [], $type, $fontKeys, $designDefaults);
 
         $bucketed[$type][] = $item;
     }
@@ -688,8 +778,243 @@ function social_media_normalize_generated_items($items, $profile)
     return $normalized;
 }
 
-function social_media_font_path()
+function social_media_get_font_registry()
 {
+    $base = ROOTPATH . '/storage/social_fonts/';
+
+    return [
+        'anton' => ['label' => 'Anton', 'file' => $base . 'Anton-Regular.ttf', 'style' => 'loud condensed headline'],
+        'bebas-neue' => ['label' => 'Bebas Neue', 'file' => $base . 'BebasNeue-Regular.ttf', 'style' => 'poster condensed uppercase'],
+        'league-spartan' => ['label' => 'League Spartan', 'file' => $base . 'LeagueSpartan%5Bwght%5D.ttf', 'style' => 'bold geometric'],
+        'montserrat' => ['label' => 'Montserrat', 'file' => $base . 'Montserrat%5Bwght%5D.ttf', 'style' => 'clean startup sans'],
+        'poppins' => ['label' => 'Poppins', 'file' => $base . 'Poppins-Bold.ttf', 'body_file' => $base . 'Poppins-Regular.ttf', 'style' => 'friendly rounded sans'],
+        'dm-sans' => ['label' => 'DM Sans', 'file' => $base . 'DMSans%5Bopsz%2Cwght%5D.ttf', 'style' => 'modern neutral sans'],
+        'manrope' => ['label' => 'Manrope', 'file' => $base . 'Manrope%5Bwght%5D.ttf', 'style' => 'sleek modern sans'],
+        'space-grotesk' => ['label' => 'Space Grotesk', 'file' => $base . 'SpaceGrotesk%5Bwght%5D.ttf', 'style' => 'tech editorial grotesk'],
+        'sora' => ['label' => 'Sora', 'file' => $base . 'Sora%5Bwght%5D.ttf', 'style' => 'sharp futuristic sans'],
+        'outfit' => ['label' => 'Outfit', 'file' => $base . 'Outfit%5Bwght%5D.ttf', 'style' => 'clean geometric UI'],
+        'archivo-black' => ['label' => 'Archivo Black', 'file' => $base . 'ArchivoBlack-Regular.ttf', 'style' => 'heavy statement sans'],
+        'oswald' => ['label' => 'Oswald', 'file' => $base . 'Oswald%5Bwght%5D.ttf', 'style' => 'narrow display sans'],
+        'barlow-condensed' => ['label' => 'Barlow Condensed', 'file' => $base . 'BarlowCondensed-Bold.ttf', 'body_file' => $base . 'BarlowCondensed-Regular.ttf', 'style' => 'sports editorial condensed'],
+        'libre-baskerville' => ['label' => 'Libre Baskerville', 'file' => $base . 'LibreBaskerville-Regular.ttf', 'style' => 'classic editorial serif'],
+        'playfair-display' => ['label' => 'Playfair Display', 'file' => $base . 'PlayfairDisplay%5Bwght%5D.ttf', 'style' => 'luxury editorial serif'],
+        'cormorant-garamond' => ['label' => 'Cormorant Garamond', 'file' => $base . 'CormorantGaramond-Regular.ttf', 'style' => 'fashion serif'],
+        'abril-fatface' => ['label' => 'Abril Fatface', 'file' => $base . 'AbrilFatface-Regular.ttf', 'style' => 'bold magazine serif'],
+        'lora' => ['label' => 'Lora', 'file' => $base . 'Lora%5Bwght%5D.ttf', 'style' => 'readable content serif'],
+        'prata' => ['label' => 'Prata', 'file' => $base . 'Prata-Regular.ttf', 'style' => 'dramatic luxe serif'],
+        'raleway' => ['label' => 'Raleway', 'file' => $base . 'Raleway%5Bwght%5D.ttf', 'style' => 'elegant thin sans'],
+        'urbanist' => ['label' => 'Urbanist', 'file' => $base . 'Urbanist%5Bwght%5D.ttf', 'style' => 'clean polished sans'],
+        'plus-jakarta-sans' => ['label' => 'Plus Jakarta Sans', 'file' => $base . 'PlusJakartaSans%5Bwght%5D.ttf', 'style' => 'premium startup sans'],
+        'inter' => ['label' => 'Inter', 'file' => $base . 'Inter%5Bopsz%2Cwght%5D.ttf', 'style' => 'neutral ui sans'],
+        'archivo' => ['label' => 'Archivo', 'file' => $base . 'Archivo%5Bwdth%2Cwght%5D.ttf', 'style' => 'bold newsroom sans'],
+        'rubik' => ['label' => 'Rubik', 'file' => $base . 'Rubik%5Bwght%5D.ttf', 'style' => 'rounded geometric sans'],
+        'nunito-sans' => ['label' => 'Nunito Sans', 'file' => $base . 'NunitoSans%5BYTLC%2Copsz%2Cwdth%2Cwght%5D.ttf', 'style' => 'soft approachable sans'],
+        'work-sans' => ['label' => 'Work Sans', 'file' => $base . 'WorkSans%5Bwght%5D.ttf', 'style' => 'practical sans'],
+        'josefin-sans' => ['label' => 'Josefin Sans', 'file' => $base . 'JosefinSans%5Bwght%5D.ttf', 'style' => 'retro elegant sans'],
+        'mulish' => ['label' => 'Mulish', 'file' => $base . 'Mulish%5Bwght%5D.ttf', 'style' => 'clean readable sans'],
+        'figtree' => ['label' => 'Figtree', 'file' => $base . 'Figtree%5Bwght%5D.ttf', 'style' => 'friendly modern sans'],
+        'epilogue' => ['label' => 'Epilogue', 'file' => $base . 'Epilogue%5Bwght%5D.ttf', 'style' => 'strong balanced sans'],
+        'ibm-plex-sans' => ['label' => 'IBM Plex Sans', 'file' => $base . 'IBMPlexSans-Bold.ttf', 'body_file' => $base . 'IBMPlexSans-Regular.ttf', 'style' => 'technical humanist sans'],
+        'karla' => ['label' => 'Karla', 'file' => $base . 'Karla%5Bwght%5D.ttf', 'style' => 'compact editorial sans'],
+        'cabin' => ['label' => 'Cabin', 'file' => $base . 'Cabin%5Bwght%5D.ttf', 'style' => 'friendly sturdy sans'],
+        'bricolage-grotesque' => ['label' => 'Bricolage Grotesque', 'file' => $base . 'BricolageGrotesque%5Bopsz%2Cwdth%2Cwght%5D.ttf', 'style' => 'expressive modern grotesk'],
+        'syne' => ['label' => 'Syne', 'file' => $base . 'Syne%5Bwght%5D.ttf', 'style' => 'experimental display'],
+        'fraunces' => ['label' => 'Fraunces', 'file' => $base . 'Fraunces%5Bopsz%2CSOFT%2CWONK%2Cwght%5D.ttf', 'style' => 'quirky editorial serif'],
+        'jost' => ['label' => 'Jost', 'file' => $base . 'Jost%5Bwght%5D.ttf', 'style' => 'clean geometric sans'],
+    ];
+}
+
+function social_media_is_font_file($path)
+{
+    if (empty($path) || !file_exists($path) || !is_file($path)) {
+        return false;
+    }
+
+    $handle = @fopen($path, 'rb');
+    if (!$handle) {
+        return false;
+    }
+
+    $sample = fread($handle, 128);
+    fclose($handle);
+    if ($sample === false) {
+        return false;
+    }
+
+    $lower = strtolower($sample);
+    if (strpos($lower, '<!doctype html') !== false || strpos($lower, '<html') !== false) {
+        return false;
+    }
+
+    $signature = substr($sample, 0, 4);
+    return in_array($signature, ["\x00\x01\x00\x00", 'OTTO', 'true', 'ttcf'], true);
+}
+
+function social_media_get_available_fonts()
+{
+    static $available = null;
+
+    if ($available !== null) {
+        return $available;
+    }
+
+    $available = [];
+    foreach (social_media_get_font_registry() as $key => $font) {
+        if (!empty($font['file']) && social_media_is_font_file($font['file'])) {
+            $available[$key] = $font;
+        }
+    }
+
+    return $available;
+}
+
+function social_media_get_font_prompt_catalog()
+{
+    $lines = [];
+    foreach (social_media_get_available_fonts() as $key => $font) {
+        $lines[] = $key . ' = ' . $font['label'] . ' (' . $font['style'] . ')';
+    }
+    return implode("\n", $lines);
+}
+
+function social_media_get_design_palette_library()
+{
+    return [
+        'midnight-amber' => ['label' => 'Midnight Amber', 'background' => '#08111C', 'overlay' => '#08111C', 'text' => '#F5F7FA', 'accent' => '#FFB547', 'tone' => 'dark'],
+        'ink-stone' => ['label' => 'Ink Stone', 'background' => '#101726', 'overlay' => '#101726', 'text' => '#F2F4F8', 'accent' => '#8AE0FF', 'tone' => 'dark'],
+        'sand-charcoal' => ['label' => 'Sand Charcoal', 'background' => '#1B1A17', 'overlay' => '#1B1A17', 'text' => '#F9F3E8', 'accent' => '#DAB785', 'tone' => 'earthy'],
+        'cream-ink' => ['label' => 'Cream Ink', 'background' => '#F7F2E9', 'overlay' => '#F7F2E9', 'text' => '#17202A', 'accent' => '#CA7C1D', 'tone' => 'light'],
+        'sage-graphite' => ['label' => 'Sage Graphite', 'background' => '#E7EFE8', 'overlay' => '#16221D', 'text' => '#0D1512', 'accent' => '#3E7C59', 'tone' => 'soft'],
+        'electric-cobalt' => ['label' => 'Electric Cobalt', 'background' => '#0E1F5B', 'overlay' => '#08143B', 'text' => '#FFFFFF', 'accent' => '#7ED7FF', 'tone' => 'vivid'],
+        'rosewood' => ['label' => 'Rosewood', 'background' => '#301A22', 'overlay' => '#301A22', 'text' => '#FFF3F5', 'accent' => '#F28CA5', 'tone' => 'editorial'],
+        'forest-lime' => ['label' => 'Forest Lime', 'background' => '#12261E', 'overlay' => '#12261E', 'text' => '#F4FBF6', 'accent' => '#B9FF6A', 'tone' => 'bold'],
+        'mono-slate' => ['label' => 'Mono Slate', 'background' => '#20242D', 'overlay' => '#20242D', 'text' => '#F6F8FB', 'accent' => '#D1D7E0', 'tone' => 'minimal'],
+        'sunset-coral' => ['label' => 'Sunset Coral', 'background' => '#FCE9E4', 'overlay' => '#7A2E2E', 'text' => '#231616', 'accent' => '#E75B55', 'tone' => 'warm'],
+    ];
+}
+
+function social_media_get_palette_prompt_catalog()
+{
+    $lines = [];
+    foreach (social_media_get_design_palette_library() as $key => $palette) {
+        $lines[] = $key . ' = ' . $palette['label'] . ' (' . $palette['tone'] . ', bg ' . $palette['background'] . ', accent ' . $palette['accent'] . ')';
+    }
+    return implode("\n", $lines);
+}
+
+function social_media_get_design_defaults()
+{
+    return [
+        'post' => [
+            'headline_font_key' => 'anton',
+            'body_font_key' => 'dm-sans',
+            'headline_size' => 68,
+            'body_size' => 28,
+            'text_case' => 'uppercase',
+            'text_align' => 'left',
+            'overlay_color' => '#08111C',
+            'overlay_opacity' => 0.34,
+            'text_color' => '#FFFFFF',
+            'accent_color' => '#FFB547',
+            'background_tone' => 'dark',
+            'asset_tags' => ['bold', 'clean'],
+        ],
+        'carousel' => [
+            'headline_font_key' => 'plus-jakarta-sans',
+            'body_font_key' => 'inter',
+            'headline_size' => 54,
+            'body_size' => 24,
+            'text_case' => 'title',
+            'text_align' => 'left',
+            'overlay_color' => '#101726',
+            'overlay_opacity' => 0.28,
+            'text_color' => '#FFFFFF',
+            'accent_color' => '#8AE0FF',
+            'background_tone' => 'minimal',
+            'asset_tags' => ['clean', 'editorial'],
+        ],
+        'reel' => [
+            'headline_font_key' => 'league-spartan',
+            'body_font_key' => 'dm-sans',
+            'headline_size' => 72,
+            'body_size' => 24,
+            'text_case' => 'uppercase',
+            'text_align' => 'left',
+            'overlay_color' => '#08111C',
+            'overlay_opacity' => 0.22,
+            'text_color' => '#FFFFFF',
+            'accent_color' => '#FFB547',
+            'background_tone' => 'dark',
+            'asset_tags' => ['motion', 'bold'],
+        ],
+    ];
+}
+
+function social_media_normalize_hex_color($color, $fallback)
+{
+    $color = trim((string) $color);
+    if (preg_match('/^#?[0-9a-fA-F]{6}$/', $color)) {
+        return '#' . strtoupper(ltrim($color, '#'));
+    }
+    if (preg_match('/^#?[0-9a-fA-F]{3}$/', $color)) {
+        $value = strtoupper(ltrim($color, '#'));
+        return '#' . $value[0] . $value[0] . $value[1] . $value[1] . $value[2] . $value[2];
+    }
+    return $fallback;
+}
+
+function social_media_normalize_design($design, $type, $fontKeys, $defaultsMap)
+{
+    $defaults = isset($defaultsMap[$type]) ? $defaultsMap[$type] : reset($defaultsMap);
+    $normalized = array_merge($defaults, is_array($design) ? $design : []);
+    $palettes = social_media_get_design_palette_library();
+    $paletteKey = isset($normalized['background_tone']) ? strtolower(trim((string) $normalized['background_tone'])) : '';
+
+    if (isset($palettes[$paletteKey])) {
+        $palette = $palettes[$paletteKey];
+        $normalized['background_palette'] = $paletteKey;
+        $normalized['background_tone'] = $palette['tone'];
+        $normalized['overlay_color'] = social_media_normalize_hex_color(isset($normalized['overlay_color']) ? $normalized['overlay_color'] : $palette['overlay'], $palette['overlay']);
+        $normalized['text_color'] = social_media_normalize_hex_color(isset($normalized['text_color']) ? $normalized['text_color'] : $palette['text'], $palette['text']);
+        $normalized['accent_color'] = social_media_normalize_hex_color(isset($normalized['accent_color']) ? $normalized['accent_color'] : $palette['accent'], $palette['accent']);
+    } else {
+        $normalized['overlay_color'] = social_media_normalize_hex_color(isset($normalized['overlay_color']) ? $normalized['overlay_color'] : $defaults['overlay_color'], $defaults['overlay_color']);
+        $normalized['text_color'] = social_media_normalize_hex_color(isset($normalized['text_color']) ? $normalized['text_color'] : $defaults['text_color'], $defaults['text_color']);
+        $normalized['accent_color'] = social_media_normalize_hex_color(isset($normalized['accent_color']) ? $normalized['accent_color'] : $defaults['accent_color'], $defaults['accent_color']);
+        $normalized['background_tone'] = $defaults['background_tone'];
+        $normalized['background_palette'] = !empty($defaults['background_palette']) ? $defaults['background_palette'] : '';
+    }
+
+    if (empty($fontKeys)) {
+        $fontKeys = ['fallback'];
+    }
+    if (empty($normalized['headline_font_key']) || !in_array($normalized['headline_font_key'], $fontKeys, true)) {
+        $normalized['headline_font_key'] = in_array($defaults['headline_font_key'], $fontKeys, true) ? $defaults['headline_font_key'] : $fontKeys[0];
+    }
+    if (empty($normalized['body_font_key']) || !in_array($normalized['body_font_key'], $fontKeys, true)) {
+        $normalized['body_font_key'] = in_array($defaults['body_font_key'], $fontKeys, true) ? $defaults['body_font_key'] : $fontKeys[0];
+    }
+
+    $normalized['headline_size'] = max(28, min(120, (int) $normalized['headline_size']));
+    $normalized['body_size'] = max(16, min(48, (int) $normalized['body_size']));
+    $normalized['overlay_opacity'] = min(0.72, max(0.08, (float) $normalized['overlay_opacity']));
+    $normalized['text_case'] = in_array($normalized['text_case'], ['uppercase', 'title', 'sentence', 'lowercase'], true) ? $normalized['text_case'] : $defaults['text_case'];
+    $normalized['text_align'] = in_array($normalized['text_align'], ['left', 'center', 'right'], true) ? $normalized['text_align'] : $defaults['text_align'];
+    $normalized['asset_tags'] = social_media_normalize_list(isset($normalized['asset_tags']) ? $normalized['asset_tags'] : []);
+
+    return $normalized;
+}
+
+function social_media_font_path($fontKey = '', $useBodyFile = false)
+{
+    $available = social_media_get_available_fonts();
+    if ($fontKey !== '' && !empty($available[$fontKey])) {
+        if ($useBodyFile && !empty($available[$fontKey]['body_file']) && social_media_is_font_file($available[$fontKey]['body_file'])) {
+            return $available[$fontKey]['body_file'];
+        }
+        return $available[$fontKey]['file'];
+    }
+
     $paths = [
         '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
@@ -816,6 +1141,10 @@ function social_media_analyze_asset($asset)
         'suggested_text_color' => '#FFFFFF',
         'overlay_opacity' => 0.36,
         'ocr_text' => '',
+        'dominant_colors' => ['#08111C', '#15253A', '#F5F7FA'],
+        'background_tone' => 'dark',
+        'template_kind' => 'background',
+        'empty_layout_score' => 0.5,
         'analysis_version' => 1,
     ];
 
@@ -848,7 +1177,13 @@ function social_media_analyze_asset($asset)
         $analysis['best_text_zone'] = $zoneMetrics['best_zone'];
         $analysis['suggested_text_color'] = $zoneMetrics['text_color'];
         $analysis['overlay_opacity'] = $zoneMetrics['overlay_opacity'];
+        $analysis['dominant_colors'] = $zoneMetrics['dominant_colors'];
+        $analysis['background_tone'] = $zoneMetrics['background_tone'];
         $analysis['ocr_text'] = social_media_ocr_image($previewPath);
+        $ocrWeight = strlen(trim($analysis['ocr_text'])) > 16 ? 0.55 : 0.0;
+        $avgClutter = array_sum($analysis['clutter']) / max(count($analysis['clutter']), 1);
+        $analysis['empty_layout_score'] = max(0, min(1, 1 - min(1, ($avgClutter * 1.45) + $ocrWeight)));
+        $analysis['template_kind'] = $analysis['empty_layout_score'] >= 0.58 ? 'background' : 'reference';
     }
 
     return $analysis;
@@ -908,6 +1243,8 @@ function social_media_measure_asset_zones($imagePath)
             'best_zone' => 'center',
             'text_color' => '#FFFFFF',
             'overlay_opacity' => 0.36,
+            'dominant_colors' => ['#08111C', '#15253A', '#F5F7FA'],
+            'background_tone' => 'dark',
         ];
     }
 
@@ -926,6 +1263,9 @@ function social_media_measure_asset_zones($imagePath)
     $clutter = [];
     $bestZone = 'center';
     $bestScore = null;
+    $colorBuckets = [];
+    $satSum = 0;
+    $satCount = 0;
 
     foreach ($segments as $zone => $range) {
         $sum = 0;
@@ -940,6 +1280,15 @@ function social_media_measure_asset_zones($imagePath)
                 $lum = (0.299 * $r) + (0.587 * $g) + (0.114 * $b);
                 $sum += $lum;
                 $count++;
+                $max = max($r, $g, $b);
+                $min = min($r, $g, $b);
+                $satSum += ($max === 0) ? 0 : (($max - $min) / $max);
+                $satCount++;
+                $bucket = sprintf('#%02X%02X%02X', (int) min(255, round($r / 32) * 32), (int) min(255, round($g / 32) * 32), (int) min(255, round($b / 32) * 32));
+                if (!isset($colorBuckets[$bucket])) {
+                    $colorBuckets[$bucket] = 0;
+                }
+                $colorBuckets[$bucket]++;
 
                 if ($x > 0) {
                     $prev = imagecolorat($sample, $x - 1, $y);
@@ -965,6 +1314,24 @@ function social_media_measure_asset_zones($imagePath)
     $zoneBrightness = $brightness[$bestZone];
     $textColor = $zoneBrightness > 155 ? '#0B1220' : '#FFFFFF';
     $overlayOpacity = $zoneBrightness > 155 ? 0.22 : 0.40;
+    arsort($colorBuckets);
+    $dominantColors = array_slice(array_keys($colorBuckets), 0, 3);
+    while (count($dominantColors) < 3) {
+        $dominantColors[] = end($dominantColors) ?: '#08111C';
+    }
+    $avgBrightness = array_sum($brightness) / max(count($brightness), 1);
+    $avgSaturation = $satCount ? $satSum / $satCount : 0;
+    if ($avgBrightness > 180) {
+        $backgroundTone = 'light';
+    } elseif ($avgBrightness < 80 && $avgSaturation < 0.22) {
+        $backgroundTone = 'dark';
+    } elseif ($avgSaturation > 0.42) {
+        $backgroundTone = 'vivid';
+    } elseif ($avgSaturation < 0.18) {
+        $backgroundTone = 'minimal';
+    } else {
+        $backgroundTone = 'soft';
+    }
 
     return [
         'brightness' => $brightness,
@@ -972,6 +1339,8 @@ function social_media_measure_asset_zones($imagePath)
         'best_zone' => $bestZone,
         'text_color' => $textColor,
         'overlay_opacity' => $overlayOpacity,
+        'dominant_colors' => $dominantColors,
+        'background_tone' => $backgroundTone,
     ];
 }
 
@@ -1008,6 +1377,8 @@ function social_media_generate_template_manifest($asset, $analysis)
         'render_preset' => !empty($asset['render_preset']) ? $asset['render_preset'] : 'auto',
         'variants' => $variants,
         'ocr_text' => $analysis['ocr_text'],
+        'background_tone' => !empty($analysis['background_tone']) ? $analysis['background_tone'] : 'dark',
+        'dominant_colors' => !empty($analysis['dominant_colors']) ? $analysis['dominant_colors'] : ['#08111C', '#15253A', '#F5F7FA'],
     ];
 }
 
@@ -1231,7 +1602,7 @@ function social_media_fit_text_to_zone($text, $zone, $fontPath)
     ];
 }
 
-function social_media_open_asset_background($asset, $width, $height)
+function social_media_open_asset_background($asset, $width, $height, $backgroundColors = [])
 {
     $canvas = imagecreatetruecolor($width, $height);
     imagealphablending($canvas, true);
@@ -1267,8 +1638,12 @@ function social_media_open_asset_background($asset, $width, $height)
         }
     }
 
-    $top = imagecolorallocate($canvas, 30, 38, 56);
-    $bottom = imagecolorallocate($canvas, 8, 12, 20);
+    $fallbackTop = !empty($backgroundColors[0]) ? $backgroundColors[0] : (!empty($asset['analysis']['dominant_colors'][0]) ? $asset['analysis']['dominant_colors'][0] : '#1E2638');
+    $fallbackBottom = !empty($backgroundColors[1]) ? $backgroundColors[1] : (!empty($asset['analysis']['dominant_colors'][1]) ? $asset['analysis']['dominant_colors'][1] : '#08111C');
+    list($topR, $topG, $topB) = social_media_hex_to_rgb($fallbackTop);
+    list($bottomR, $bottomG, $bottomB) = social_media_hex_to_rgb($fallbackBottom);
+    $top = imagecolorallocate($canvas, $topR, $topG, $topB);
+    $bottom = imagecolorallocate($canvas, $bottomR, $bottomG, $bottomB);
     imagefilledrectangle($canvas, 0, 0, $width, $height / 2, $top);
     imagefilledrectangle($canvas, 0, $height / 2, $width, $height, $bottom);
     return $canvas;
@@ -1339,20 +1714,86 @@ function social_media_render_zone_text($canvas, $text, $zone, $fontPath)
     }
 }
 
+function social_media_transform_text_case($text, $mode)
+{
+    $text = trim((string) $text);
+    switch ($mode) {
+        case 'uppercase':
+            return function_exists('mb_strtoupper') ? mb_strtoupper($text, 'UTF-8') : strtoupper($text);
+        case 'lowercase':
+            return function_exists('mb_strtolower') ? mb_strtolower($text, 'UTF-8') : strtolower($text);
+        case 'title':
+            return function_exists('mb_convert_case') ? mb_convert_case($text, MB_CASE_TITLE, 'UTF-8') : ucwords(strtolower($text));
+        default:
+            return $text;
+    }
+}
+
+function social_media_get_palette_by_tone($tone)
+{
+    $palettes = social_media_get_design_palette_library();
+    if (!empty($palettes[$tone])) {
+        return $palettes[$tone];
+    }
+
+    foreach ($palettes as $palette) {
+        if ($palette['tone'] === $tone) {
+            return $palette;
+        }
+    }
+
+    return reset($palettes);
+}
+
+function social_media_apply_design_to_variant($variant, $design, $asset)
+{
+    $palette = social_media_get_palette_by_tone(isset($design['background_tone']) ? $design['background_tone'] : 'dark');
+    $dominant = !empty($asset['analysis']['dominant_colors']) ? $asset['analysis']['dominant_colors'] : [$palette['background'], $palette['overlay']];
+    $variant['overlay']['color'] = social_media_normalize_hex_color(isset($design['overlay_color']) ? $design['overlay_color'] : $palette['overlay'], $palette['overlay']);
+    $variant['overlay']['opacity'] = min(0.72, max(0.08, isset($design['overlay_opacity']) ? (float) $design['overlay_opacity'] : 0.32));
+    $variant['background_colors'] = [
+        social_media_normalize_hex_color(isset($dominant[0]) ? $dominant[0] : $palette['background'], $palette['background']),
+        social_media_normalize_hex_color(isset($dominant[1]) ? $dominant[1] : $palette['overlay'], $palette['overlay']),
+    ];
+
+    foreach (['headline', 'subheadline', 'brand', 'cta'] as $zoneName) {
+        if (!empty($variant['zones'][$zoneName])) {
+            $variant['zones'][$zoneName]['align'] = $design['text_align'];
+        }
+    }
+
+    $variant['zones']['label']['color'] = social_media_normalize_hex_color($design['accent_color'], $palette['accent']);
+    $variant['zones']['headline']['color'] = social_media_normalize_hex_color($design['text_color'], $palette['text']);
+    $variant['zones']['headline']['font_size'] = (int) $design['headline_size'];
+    $variant['zones']['headline']['font_key'] = $design['headline_font_key'];
+    $variant['zones']['headline']['text_case'] = $design['text_case'];
+    $variant['zones']['subheadline']['color'] = social_media_normalize_hex_color($design['text_color'], $palette['text']);
+    $variant['zones']['subheadline']['font_size'] = (int) $design['body_size'];
+    $variant['zones']['subheadline']['font_key'] = $design['body_font_key'];
+    $variant['zones']['subheadline']['text_case'] = 'sentence';
+    $variant['zones']['brand']['color'] = social_media_normalize_hex_color($design['text_color'], $palette['text']);
+    $variant['zones']['brand']['font_key'] = $design['body_font_key'];
+    $variant['zones']['cta']['color'] = social_media_normalize_hex_color($design['accent_color'], $palette['accent']);
+    $variant['zones']['cta']['font_key'] = $design['body_font_key'];
+    $variant['zones']['cta']['font_size'] = max(18, (int) $design['body_size'] - 2);
+
+    return $variant;
+}
+
 function social_media_render_preview($post, $asset, $profile)
 {
     $formats = social_media_get_format_map();
     $format = $formats[$post['post_type']];
     $asset = $asset ? social_media_prepare_asset_record($asset) : [];
     $variant = social_media_get_manifest_variant($asset, $post['post_type'], $format);
+    $variant = social_media_apply_design_to_variant($variant, $post['design'], $asset);
     $width = $variant['width'];
     $height = $variant['height'];
-    $canvas = social_media_open_asset_background($asset ?: [], $width, $height);
+    $canvas = social_media_open_asset_background($asset ?: [], $width, $height, !empty($variant['background_colors']) ? $variant['background_colors'] : []);
 
     list($ovR, $ovG, $ovB) = social_media_hex_to_rgb($variant['overlay']['color']);
     $overlay = imagecolorallocatealpha($canvas, $ovR, $ovG, $ovB, (int) floor(127 * min(max($variant['overlay']['opacity'], 0), 1)));
     imagefilledrectangle($canvas, 0, 0, $width, $height, $overlay);
-    $fontPath = social_media_font_path();
 
     if (!empty($profile['company_logo'])) {
         $logoPath = ROOTPATH . '/storage/company/' . $profile['company_logo'];
@@ -1374,11 +1815,14 @@ function social_media_render_preview($post, $asset, $profile)
     }
 
     $brand = !empty($profile['company_name']) ? $profile['company_name'] : 'Atlas';
-    social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $fontPath);
-    social_media_render_zone_text($canvas, $post['overlay_text'], $variant['zones']['headline'], $fontPath);
-    social_media_render_zone_text($canvas, $post['hook'], $variant['zones']['subheadline'], $fontPath);
-    social_media_render_zone_text($canvas, $brand, $variant['zones']['brand'], $fontPath);
-    social_media_render_zone_text($canvas, trim((string) $post['cta']), $variant['zones']['cta'], $fontPath);
+    $labelFont = social_media_font_path($post['design']['body_font_key']);
+    $headlineFont = social_media_font_path($post['design']['headline_font_key']);
+    $bodyFont = social_media_font_path($post['design']['body_font_key'], true);
+    social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $labelFont);
+    social_media_render_zone_text($canvas, social_media_transform_text_case($post['overlay_text'], $post['design']['text_case']), $variant['zones']['headline'], $headlineFont);
+    social_media_render_zone_text($canvas, social_media_transform_text_case($post['hook'], 'sentence'), $variant['zones']['subheadline'], $bodyFont);
+    social_media_render_zone_text($canvas, $brand, $variant['zones']['brand'], $bodyFont);
+    social_media_render_zone_text($canvas, trim((string) $post['cta']), $variant['zones']['cta'], $bodyFont);
 
     $targetDir = ROOTPATH . '/storage/social_posts/';
     social_media_make_directory($targetDir);
@@ -1413,7 +1857,7 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
 
     foreach ($items as $item) {
         $keywords = array_merge($item['keywords'], social_media_normalize_list($profile['company_industry']));
-        $asset = social_media_pick_asset($item['post_type'], $keywords);
+        $asset = social_media_pick_asset_with_design($item['post_type'], $keywords, $item['design']);
         $preview = social_media_render_preview($item, $asset, $profile);
         $renderedVideo = '';
         if ($item['post_type'] === 'reel' && !empty($asset['asset_type']) && $asset['asset_type'] === 'video') {
@@ -1438,6 +1882,7 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'visual_brief' => $item['visual_brief'],
             'slides' => $item['slides'],
             'reel_script' => $item['reel_script'],
+            'design' => $item['design'],
             'asset' => $asset ?: [],
             'rendered_video' => $renderedVideo,
         ]);
@@ -1455,6 +1900,7 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'visual_brief' => $item['visual_brief'],
             'slides' => $item['slides'],
             'reel_script' => $item['reel_script'],
+            'design' => $item['design'],
             'preview_image' => $config['site_url'] . 'storage/social_posts/' . $preview,
             'rendered_video' => !empty($renderedVideo) ? $config['site_url'] . 'storage/social_posts/videos/' . $renderedVideo : '',
             'asset_preview' => !empty($asset['preview_name']) ? $config['site_url'] . 'storage/social_assets/' . $asset['preview_name'] : '',
