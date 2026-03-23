@@ -608,7 +608,11 @@ function social_media_generate_batch($user_id, $brief = '')
         . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords, design.\n"
         . "Carousel items must include slides (5 short slides).\n"
         . "Reel items must include reel_script (hook, beats, cta) and an overlay_text under 55 chars.\n"
-        . "Post and carousel overlay_text must be short and punchy.\n"
+        . "Post and carousel overlay_text must be short, punchy, and final-ready.\n"
+        . "Do not use placeholders or generic labels like 'founder insight', 'myth busting', 'case study', or 'trend reaction' as overlay_text.\n"
+        . "overlay_text should read like the actual quote, claim, framework, or contrarian hook that will appear on the design.\n"
+        . "caption must be publish-ready, useful, specific, and persuasive. It should sound like a real social caption, not an instruction to a marketer.\n"
+        . "The CTA must be direct and natural, not generic.\n"
         . "The design object must include: headline_font_key, body_font_key, headline_size, body_size, text_case, text_align, overlay_color, overlay_opacity, text_color, accent_color, background_tone, asset_tags.\n"
         . "Only use font keys from this approved list:\n{$fontCatalog}\n\n"
         . "Use these palette directions and background tones when choosing colors:\n{$paletteCatalog}\n\n"
@@ -639,17 +643,25 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
             ['role' => 'system', 'content' => $system],
             ['role' => 'user', 'content' => $userPrompt],
         ],
-        'temperature' => 0.9,
+        'temperature' => 0.7,
+        'response_format' => ['type' => 'json_object'],
+        'max_tokens' => 2200,
         'user' => $user_id,
     ]);
 
     $decoded = json_decode($response, true);
+    if (!empty($decoded['error']['message'])) {
+        error_log('Social media generation error: ' . $decoded['error']['message']);
+        return [];
+    }
     if (empty($decoded['choices'][0]['message']['content'])) {
+        error_log('Social media generation returned no content.');
         return [];
     }
 
     $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
     if (empty($json['items']) || !is_array($json['items'])) {
+        error_log('Social media generation returned invalid JSON payload.');
         return [];
     }
 
@@ -659,6 +671,8 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
 function social_media_extract_json($text)
 {
     $text = trim((string) $text);
+    $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+    $text = preg_replace('/\s*```$/', '', $text);
     $decoded = json_decode($text, true);
     if (is_array($decoded)) {
         return $decoded;
@@ -679,10 +693,116 @@ function social_media_generate_fallback_batch($profile, $brief = '')
     $company = !empty($profile['company_name']) ? $profile['company_name'] : 'your company';
     $industry = !empty($profile['company_industry']) ? $profile['company_industry'] : 'your market';
     $audience = !empty($profile['target_audience']) ? $profile['target_audience'] : 'your audience';
+    $product = !empty($profile['key_products']) ? trim(strtok($profile['key_products'], ",\n")) : $industry;
+    $differentiator = !empty($profile['differentiators']) ? trim(strtok($profile['differentiators'], ".\n")) : 'a more useful approach';
+    $companyTone = !empty($profile['brand_voice']) ? $profile['brand_voice'] : 'clear, confident, practical';
+    $briefSummary = trim(preg_replace('/\s+/', ' ', strtok((string) $brief, "\n")));
     $themes = [
-        'Founder insight', 'Pain-point education', 'Customer transformation',
-        'Behind the scenes', 'Myth busting', 'Competitive positioning',
-        'How-to framework', 'Case study', 'Trend reaction'
+        [
+            'title' => 'Founder take for ' . $company,
+            'overlay' => 'What most ' . strtolower($audience) . ' get wrong about ' . strtolower($product),
+            'hook' => 'Most ' . strtolower($audience) . ' do not need more options. They need better guidance on ' . strtolower($product) . '.',
+            'caption' => $company . ' believes the real opportunity in ' . strtolower($industry) . ' is not selling harder, it is making decisions easier. Here is one practical thing founders and customers should understand about ' . strtolower($product) . ': ' . $differentiator . '.',
+            'cta' => 'Follow for more sharp founder insights and send us a DM if you want help applying this.',
+        ],
+        [
+            'title' => 'Educational post for ' . $company,
+            'overlay' => '3 signs your ' . strtolower($product) . ' strategy needs work',
+            'hook' => 'If your current approach feels noisy, these are usually the first three signs something is off.',
+            'caption' => 'A strong ' . strtolower($product) . ' strategy should feel simple, useful, and repeatable. If people feel confused, if results depend on constant discounting, or if the value is hard to explain in one sentence, the strategy needs tightening.',
+            'cta' => 'Save this post and share it with a founder who is refining their offer.',
+        ],
+        [
+            'title' => 'Customer transformation for ' . $company,
+            'overlay' => 'The shift that makes ' . strtolower($product) . ' easier to buy',
+            'hook' => 'When brands focus on clarity instead of noise, customers move faster.',
+            'caption' => 'The biggest transformation we see is this: once a company explains why its solution matters in plain language, customers stop hesitating. Better messaging around ' . strtolower($product) . ' creates trust, and trust creates action.',
+            'cta' => 'Comment with your biggest messaging challenge and we may turn it into the next post.',
+        ],
+        [
+            'title' => 'Carousel idea for ' . $company,
+            'overlay' => 'A simple framework for better ' . strtolower($product),
+            'hook' => 'This is the 5-step framework we would use to make your message land faster.',
+            'caption' => 'If you are building awareness in ' . strtolower($industry) . ', keep the message simple: problem, cost of ignoring it, better approach, proof, then call to action. This structure consistently turns vague content into practical content.',
+            'cta' => 'Save this framework for your next campaign.',
+            'slides' => [
+                'Start with the real problem',
+                'Show why it matters now',
+                'Call out the common mistake',
+                'Introduce the better approach',
+                'End with one clear action',
+            ],
+        ],
+        [
+            'title' => 'Myth busting for ' . $company,
+            'overlay' => 'The biggest myth about ' . strtolower($product),
+            'hook' => 'The myth sounds smart, but it usually slows growth.',
+            'caption' => 'One of the biggest myths in ' . strtolower($industry) . ' is that more content automatically means more growth. In reality, focused content with a clear point of view outperforms generic volume almost every time.',
+            'cta' => 'Send this to someone who is posting constantly but still not converting.',
+            'slides' => [
+                'The myth everyone repeats',
+                'Why it sounds believable',
+                'Where it breaks down',
+                'What works better instead',
+                'What to do this week',
+            ],
+        ],
+        [
+            'title' => 'Case study for ' . $company,
+            'overlay' => 'What a better ' . strtolower($product) . ' message changes',
+            'hook' => 'Small changes in positioning often lead to bigger trust and faster action.',
+            'caption' => 'When a company stops describing features and starts framing the outcome, people understand the value faster. That one change can improve clicks, conversations, and conversions without changing the product itself.',
+            'cta' => 'Follow for more examples of positioning that actually converts.',
+            'slides' => [
+                'Old message: feature-heavy',
+                'The real customer problem',
+                'The new positioning angle',
+                'What changed after the shift',
+                'How to apply it yourself',
+            ],
+        ],
+        [
+            'title' => 'Trend reaction for ' . $company,
+            'overlay' => 'Why this trend matters for ' . strtolower($audience),
+            'hook' => 'Trends only matter if they change customer behavior or expectations.',
+            'caption' => 'The best way to react to a trend is not to copy the surface. It is to ask what expectation has changed and how your product should respond. That is how you stay relevant without looking reactive.',
+            'cta' => 'Comment “trend” if you want more fast reaction breakdowns.',
+            'reel_script' => [
+                'Hook: name the trend and why it matters',
+                'Beat 1: explain the customer behavior shift',
+                'Beat 2: explain the mistake most brands make',
+                'Beat 3: show the smarter response',
+                'CTA: invite comments or DMs',
+            ],
+        ],
+        [
+            'title' => 'Case study reel for ' . $company,
+            'overlay' => 'A better way to talk about ' . strtolower($product),
+            'hook' => 'Most brands explain what they do. Better brands explain what changes for the customer.',
+            'caption' => 'If your audience does not immediately understand why your solution matters, the problem is usually positioning, not effort. Tighten the message, simplify the proof, and the content becomes easier to trust and share.',
+            'cta' => 'DM us if you want help rewriting your positioning.',
+            'reel_script' => [
+                'Hook: call out the messaging mistake',
+                'Beat 1: explain why it hurts trust',
+                'Beat 2: show the stronger framing',
+                'Beat 3: connect it to customer action',
+                'CTA: ask for a DM or follow',
+            ],
+        ],
+        [
+            'title' => 'How-to reel for ' . $company,
+            'overlay' => 'How to make your content convert',
+            'hook' => 'Better content starts with a sharper point, not more words.',
+            'caption' => 'Here is the rule: lead with one strong point, support it with one useful insight, and end with one direct action. That structure makes content easier to remember and far more likely to convert.',
+            'cta' => 'Save this and use it in your next content sprint.',
+            'reel_script' => [
+                'Hook: explain the conversion problem',
+                'Beat 1: start with one sharp point',
+                'Beat 2: support it with one useful example',
+                'Beat 3: end with one clear CTA',
+                'CTA: ask viewers to save or follow',
+            ],
+        ],
     ];
     $types = ['post', 'post', 'post', 'carousel', 'carousel', 'carousel', 'reel', 'reel', 'reel'];
     $items = [];
@@ -704,27 +824,17 @@ function social_media_generate_fallback_batch($profile, $brief = '')
         $design['accent_color'] = $palette['accent'];
         $items[] = [
             'post_type' => $type,
-            'title' => $theme . ' for ' . $company,
-            'hook' => $theme . ': what ' . $audience . ' needs to know about ' . $industry,
-            'overlay_text' => $theme,
-            'caption' => "Teach {$audience} something specific about {$company}. {$brief}",
-            'cta' => 'Send us a DM for the full playbook.',
-            'hashtags' => ['#' . preg_replace('/\s+/', '', ucwords($industry)), '#Founders', '#Marketing'],
-            'visual_brief' => 'Bold branded layout with high contrast copy and space for logo.',
-            'keywords' => [$industry, $theme, $company],
+            'title' => $theme['title'],
+            'hook' => $theme['hook'],
+            'overlay_text' => $theme['overlay'],
+            'caption' => $theme['caption'] . ($briefSummary !== '' ? ' This supports the campaign focus on ' . rtrim($briefSummary, '.') . '.' : ''),
+            'cta' => $theme['cta'],
+            'hashtags' => ['#' . preg_replace('/\s+/', '', ucwords($industry)), '#' . preg_replace('/\s+/', '', ucwords($company)), '#Marketing'],
+            'visual_brief' => 'Use a polished branded layout with a clear focal point, generous spacing, and typography that matches a ' . $companyTone . ' tone.',
+            'keywords' => [$industry, $product, $company, $differentiator],
             'design' => $design,
-            'slides' => $type === 'carousel' ? [
-                'Hook',
-                'Why it matters',
-                'Common mistake',
-                'Better framework',
-                'Call to action',
-            ] : [],
-            'reel_script' => $type === 'reel' ? [
-                'Hook in first 2 seconds',
-                '3 fast insight beats',
-                'CTA to comment or DM',
-            ] : [],
+            'slides' => !empty($theme['slides']) ? $theme['slides'] : [],
+            'reel_script' => !empty($theme['reel_script']) ? $theme['reel_script'] : [],
         ];
     }
 
@@ -1611,21 +1721,24 @@ function social_media_open_asset_background($asset, $width, $height, $background
     imagealphablending($canvas, true);
     imagesavealpha($canvas, true);
 
-    $assetPath = '';
+    $assetPaths = [];
     if (!empty($asset['file_name']) && $asset['asset_type'] === 'image') {
-        $assetPath = ROOTPATH . '/storage/social_assets/' . $asset['file_name'];
-    } elseif (!empty($asset['preview_name'])) {
-        $assetPath = ROOTPATH . '/storage/social_assets/' . $asset['preview_name'];
+        $assetPaths[] = ROOTPATH . '/storage/social_assets/' . $asset['file_name'];
+    }
+    if (!empty($asset['preview_name'])) {
+        $assetPaths[] = ROOTPATH . '/storage/social_assets/' . $asset['preview_name'];
     }
 
-    if ($assetPath && file_exists($assetPath)) {
-        $source = social_media_load_image_resource($assetPath);
-        if ($source) {
-            $srcWidth = imagesx($source);
-            $srcHeight = imagesy($source);
-            imagecopyresampled($canvas, $source, 0, 0, 0, 0, $width, $height, $srcWidth, $srcHeight);
-            imagedestroy($source);
-            return $canvas;
+    foreach ($assetPaths as $assetPath) {
+        if ($assetPath && file_exists($assetPath)) {
+            $source = social_media_load_image_resource($assetPath);
+            if ($source) {
+                $srcWidth = imagesx($source);
+                $srcHeight = imagesy($source);
+                imagecopyresampled($canvas, $source, 0, 0, 0, 0, $width, $height, $srcWidth, $srcHeight);
+                imagedestroy($source);
+                return $canvas;
+            }
         }
     }
 
