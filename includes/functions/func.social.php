@@ -582,7 +582,7 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
             $score -= min(4, strlen($candidate['analysis']['ocr_text']) / 60);
         }
 
-        if ($score > $bestScore) {
+        if ($score > $bestScore || ($score === $bestScore && (!empty($candidate['id']) && !empty($bestAsset['id']) ? (int) $candidate['id'] > (int) $bestAsset['id'] : !empty($candidate['id'])))) {
             $bestScore = $score;
             $bestAsset = $candidate;
         }
@@ -780,7 +780,7 @@ function social_media_normalize_generated_items($items, $profile)
 
 function social_media_get_font_registry()
 {
-    $base = ROOTPATH . '/storage/social_fonts/';
+    $base = ROOTPATH . '/includes/assets/social-fonts/';
 
     return [
         'anton' => ['label' => 'Anton', 'file' => $base . 'Anton-Regular.ttf', 'style' => 'loud condensed headline'],
