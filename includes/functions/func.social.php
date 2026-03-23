@@ -540,7 +540,7 @@ function social_media_pick_asset($post_type, $keywords = [])
     return $bestAsset ?: $assets[array_rand($assets)];
 }
 
-function social_media_pick_asset_with_design($post_type, $keywords = [], $design = [])
+function social_media_pick_asset_with_design($post_type, $keywords = [], $design = [], $excludedAssetIds = [])
 {
     $asset = social_media_pick_asset($post_type, $keywords);
     $formats = social_media_get_format_map();
@@ -558,6 +558,19 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
 
     if (empty($assets)) {
         return $asset;
+    }
+
+    $excludedAssetIds = array_map('intval', (array) $excludedAssetIds);
+    $preferredAssets = [];
+    foreach ($assets as $candidate) {
+        $candidateId = !empty($candidate['id']) ? (int) $candidate['id'] : 0;
+        if ($candidateId > 0 && in_array($candidateId, $excludedAssetIds, true)) {
+            continue;
+        }
+        $preferredAssets[] = $candidate;
+    }
+    if (!empty($preferredAssets)) {
+        $assets = $preferredAssets;
     }
 
     $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
@@ -661,66 +674,98 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
     $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
-    $payload = [
-        'model' => normalize_openai_model(get_default_openai_chat_model()),
-        'messages' => [
-            ['role' => 'system', 'content' => $system],
-            ['role' => 'user', 'content' => $userPrompt],
-        ],
-        'temperature' => 0.7,
-        'response_format' => ['type' => 'json_object'],
-        'max_tokens' => 2200,
-        'user' => $user_id,
-    ];
+    $modelsToTry = social_media_get_chat_model_candidates();
+    $lastError = '';
+    $lastAttempt = '';
 
-    $response = $openAi->chat($payload);
-    $decoded = json_decode($response, true);
+    foreach ($modelsToTry as $modelToTry) {
+        $payload = [
+            'model' => $modelToTry,
+            'messages' => [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+            'temperature' => 0.7,
+            'response_format' => ['type' => 'json_object'],
+            'max_tokens' => 2200,
+            'user' => $user_id,
+        ];
 
-    if (!empty($decoded['error']['message'])) {
-        social_media_runtime_debug('openai', [
-            'attempt' => 'json_mode',
-            'error' => $decoded['error']['message'],
-        ]);
-        unset($payload['response_format']);
-        $payload['temperature'] = 0.6;
         $response = $openAi->chat($payload);
         $decoded = json_decode($response, true);
+
+        if (!empty($decoded['error']['message'])) {
+            $lastError = $decoded['error']['message'];
+            $lastAttempt = 'json_mode';
+            unset($payload['response_format']);
+            $payload['temperature'] = 0.6;
+            $response = $openAi->chat($payload);
+            $decoded = json_decode($response, true);
+        }
+
+        if (!empty($decoded['error']['message'])) {
+            $lastError = $decoded['error']['message'];
+            $lastAttempt = 'plain_chat';
+            continue;
+        }
+
+        if (empty($decoded['choices'][0]['message']['content'])) {
+            $lastError = 'No content returned';
+            $lastAttempt = 'plain_chat';
+            continue;
+        }
+
+        $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
+        if (empty($json['items']) || !is_array($json['items'])) {
+            $lastError = 'Invalid JSON payload';
+            $lastAttempt = 'plain_chat';
+            social_media_runtime_debug('openai', [
+                'attempt' => $lastAttempt,
+                'model' => $modelToTry,
+                'error' => $lastError,
+                'raw_excerpt' => substr($decoded['choices'][0]['message']['content'], 0, 400),
+            ]);
+            continue;
+        }
+
+        social_media_runtime_debug('openai', [
+            'attempt' => 'success',
+            'model' => $modelToTry,
+            'error' => '',
+        ]);
+
+        return $json['items'];
     }
 
-    if (!empty($decoded['error']['message'])) {
-        error_log('Social media generation error: ' . $decoded['error']['message']);
-        social_media_runtime_debug('openai', [
-            'attempt' => 'plain_chat',
-            'error' => $decoded['error']['message'],
-        ]);
-        return [];
-    }
-    if (empty($decoded['choices'][0]['message']['content'])) {
-        error_log('Social media generation returned no content.');
-        social_media_runtime_debug('openai', [
-            'attempt' => 'plain_chat',
-            'error' => 'No content returned',
-        ]);
-        return [];
-    }
-
-    $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
-    if (empty($json['items']) || !is_array($json['items'])) {
-        error_log('Social media generation returned invalid JSON payload.');
-        social_media_runtime_debug('openai', [
-            'attempt' => 'plain_chat',
-            'error' => 'Invalid JSON payload',
-            'raw_excerpt' => substr($decoded['choices'][0]['message']['content'], 0, 400),
-        ]);
-        return [];
-    }
-
+    error_log('Social media generation error: ' . $lastError);
     social_media_runtime_debug('openai', [
-        'attempt' => 'success',
-        'error' => '',
+        'attempt' => $lastAttempt,
+        'model' => !empty($modelsToTry) ? end($modelsToTry) : '',
+        'error' => $lastError,
     ]);
+    return [];
+}
 
-    return $json['items'];
+function social_media_get_chat_model_candidates()
+{
+    $preferred = normalize_openai_model(get_default_openai_chat_model());
+    $candidates = [
+        $preferred,
+        'gpt-4o-mini',
+        'gpt-4o',
+        'gpt-4.1-mini',
+        'gpt-4.1',
+    ];
+
+    $normalized = [];
+    foreach ($candidates as $candidate) {
+        $candidate = normalize_openai_model($candidate);
+        if (!in_array($candidate, $normalized, true)) {
+            $normalized[] = $candidate;
+        }
+    }
+
+    return $normalized;
 }
 
 function social_media_extract_json($text)
@@ -2039,10 +2084,14 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
     $profile = social_media_get_profile($user_id);
     $batchKey = uniqid('batch_');
     $stored = [];
+    $usedAssetIds = [];
 
     foreach ($items as $item) {
         $keywords = array_merge($item['keywords'], social_media_normalize_list($profile['company_industry']));
-        $asset = social_media_pick_asset_with_design($item['post_type'], $keywords, $item['design']);
+        $asset = social_media_pick_asset_with_design($item['post_type'], $keywords, $item['design'], $usedAssetIds);
+        if (!empty($asset['id'])) {
+            $usedAssetIds[] = (int) $asset['id'];
+        }
         $previewResult = social_media_render_preview($item, $asset, $profile);
         $preview = is_array($previewResult) ? $previewResult['file_name'] : $previewResult;
         $renderDebug = is_array($previewResult) && !empty($previewResult['debug']) ? $previewResult['debug'] : [];
