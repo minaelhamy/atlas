@@ -626,9 +626,8 @@ function social_media_generate_batch($user_id, $brief = '')
 
     $competitorText = json_encode($competitorSnapshots);
     $userPrompt = "Create exactly 9 social media ideas for this company.\n"
-        . "Need exactly 6 post and 3 reel items.\n"
+        . "Need exactly 9 post items.\n"
         . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords, design.\n"
-        . "Reel items must include reel_script (hook, beats, cta) and an overlay_text under 55 chars.\n"
         . "Post overlay_text must be short, punchy, and final-ready.\n"
         . "Do not use placeholders or generic labels like 'founder insight', 'myth busting', 'case study', or 'trend reaction' as overlay_text.\n"
         . "overlay_text should read like the actual quote, claim, framework, or contrarian hook that will appear on the design.\n"
@@ -832,49 +831,28 @@ function social_media_generate_fallback_batch($profile, $brief = '')
             'cta' => 'Follow for more examples of positioning that actually converts.',
         ],
         [
-            'title' => 'Trend reaction for ' . $company,
+            'title' => 'Trend reaction post for ' . $company,
             'overlay' => 'Why this trend matters for ' . strtolower($audience),
             'hook' => 'Trends only matter if they change customer behavior or expectations.',
             'caption' => 'The best way to react to a trend is not to copy the surface. It is to ask what expectation has changed and how your product should respond. That is how you stay relevant without looking reactive.',
             'cta' => 'Comment “trend” if you want more fast reaction breakdowns.',
-            'reel_script' => [
-                'Hook: name the trend and why it matters',
-                'Beat 1: explain the customer behavior shift',
-                'Beat 2: explain the mistake most brands make',
-                'Beat 3: show the smarter response',
-                'CTA: invite comments or DMs',
-            ],
         ],
         [
-            'title' => 'Case study reel for ' . $company,
+            'title' => 'Case study post for ' . $company,
             'overlay' => 'A better way to talk about ' . strtolower($product),
             'hook' => 'Most brands explain what they do. Better brands explain what changes for the customer.',
             'caption' => 'If your audience does not immediately understand why your solution matters, the problem is usually positioning, not effort. Tighten the message, simplify the proof, and the content becomes easier to trust and share.',
             'cta' => 'DM us if you want help rewriting your positioning.',
-            'reel_script' => [
-                'Hook: call out the messaging mistake',
-                'Beat 1: explain why it hurts trust',
-                'Beat 2: show the stronger framing',
-                'Beat 3: connect it to customer action',
-                'CTA: ask for a DM or follow',
-            ],
         ],
         [
-            'title' => 'How-to reel for ' . $company,
+            'title' => 'How-to post for ' . $company,
             'overlay' => 'How to make your content convert',
             'hook' => 'Better content starts with a sharper point, not more words.',
             'caption' => 'Here is the rule: lead with one strong point, support it with one useful insight, and end with one direct action. That structure makes content easier to remember and far more likely to convert.',
             'cta' => 'Save this and use it in your next content sprint.',
-            'reel_script' => [
-                'Hook: explain the conversion problem',
-                'Beat 1: start with one sharp point',
-                'Beat 2: support it with one useful example',
-                'Beat 3: end with one clear CTA',
-                'CTA: ask viewers to save or follow',
-            ],
         ],
     ];
-    $types = ['post', 'post', 'post', 'post', 'post', 'post', 'reel', 'reel', 'reel'];
+    $types = ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post'];
     $items = [];
     $designDefaults = social_media_get_design_defaults();
     $fontKeys = array_keys(social_media_get_available_fonts());
@@ -913,7 +891,7 @@ function social_media_generate_fallback_batch($profile, $brief = '')
 
 function social_media_normalize_generated_items($items, $profile)
 {
-    $bucketed = ['post' => [], 'reel' => []];
+    $bucketed = ['post' => []];
     $fontKeys = array_keys(social_media_get_available_fonts());
     $designDefaults = social_media_get_design_defaults();
 
@@ -933,14 +911,14 @@ function social_media_normalize_generated_items($items, $profile)
         $item['keywords'] = social_media_normalize_list(isset($item['keywords']) ? $item['keywords'] : []);
         $item['hashtags'] = social_media_normalize_list(isset($item['hashtags']) ? $item['hashtags'] : []);
         $item['slides'] = [];
-        $item['reel_script'] = !empty($item['reel_script']) && is_array($item['reel_script']) ? array_values($item['reel_script']) : [];
+        $item['reel_script'] = [];
         $item['design'] = social_media_normalize_design(isset($item['design']) && is_array($item['design']) ? $item['design'] : [], $type, $fontKeys, $designDefaults);
 
         $bucketed[$type][] = $item;
     }
 
     $normalized = [];
-    $targets = ['post' => 6, 'reel' => 3];
+    $targets = ['post' => 9];
     foreach ($targets as $type => $targetCount) {
         while (count($bucketed[$type]) < $targetCount) {
             $fallback = social_media_generate_fallback_batch($profile);
@@ -1986,7 +1964,7 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
         $variant['zones']['headline']['height'] = $headlineHeight;
         $variant['zones']['headline']['font_size'] = 100;
         $variant['zones']['headline']['min_font_size'] = 56;
-        $variant['zones']['headline']['line_height'] = 1.16;
+        $variant['zones']['headline']['line_height'] = 1.24;
         $variant['zones']['headline']['align'] = 'center';
 
         $variant['zones']['subheadline']['height'] = 0;

@@ -81,7 +81,7 @@ include '../header.php'; ?>
                     <div class="quick-card card">
                         <div class="card-header">
                             <h5><?php _e('Upload Asset') ?></h5>
-                            <span><?php _e('Use mostly empty backgrounds for posts and clean motion backgrounds for reels. Assets with baked-in text will be treated as low-priority references.') ?></span>
+                            <span><?php _e('Use mostly empty backgrounds for posts. Assets with baked-in text will be treated as low-priority references.') ?></span>
                         </div>
                         <div class="card-body">
                             <form method="post" enctype="multipart/form-data">
@@ -265,7 +265,7 @@ include '../header.php'; ?>
                             <h5><?php _e('How Selection Works') ?></h5>
                         </div>
                         <div class="card-body">
-                            <p class="mb-2"><?php _e('1. OpenAI creates 6 posts and 3 reels with hooks, captions, keywords, font keys, text sizes, alignment, and palette instructions based on company context, competitors, and recent agent history.') ?></p>
+                            <p class="mb-2"><?php _e('1. OpenAI creates 9 posts with hooks, captions, keywords, font keys, text sizes, alignment, and palette instructions based on company context, competitors, and recent agent history.') ?></p>
                             <p class="mb-2"><?php _e('2. The generator filters assets by post type and asset type, then scores tag overlap, background tone, and whether the asset is a clean background or a text-heavy reference.') ?></p>
                             <p class="mb-2"><?php _e('3. Atlas renders the final cover automatically: logo, headline, supporting hook, brand line, and CTA are placed using the selected fonts and design palette.') ?></p>
                             <p class="mb-0"><?php echo $ffmpegReady ? __('4. ffmpeg is available, so reel outputs can be rendered as real MP4 files when a video asset is selected.') : __('4. ffmpeg is not available in this environment, so reels will fall back to branded covers plus script metadata.'); ?></p>

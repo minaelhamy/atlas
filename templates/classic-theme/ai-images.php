@@ -35,7 +35,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 </div>
             <?php } else { ?>
                 <div class="notification notice">
-                    <?php _e("Each run generates 9 pieces: 6 posts and 3 reels. Covers are rendered automatically using your company profile and admin-managed assets."); ?>
+                    <?php _e("Each run generates 9 posts. Covers are rendered automatically using your company profile and admin-managed assets."); ?>
                 </div>
             <?php } ?>
 
