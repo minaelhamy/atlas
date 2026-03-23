@@ -1121,7 +1121,7 @@ function social_media_get_design_defaults()
             'headline_size' => 68,
             'body_size' => 28,
             'text_case' => 'uppercase',
-            'text_align' => 'left',
+            'text_align' => 'center',
             'overlay_color' => '#08111C',
             'overlay_opacity' => 0.34,
             'text_color' => '#FFFFFF',
@@ -1135,7 +1135,7 @@ function social_media_get_design_defaults()
             'headline_size' => 54,
             'body_size' => 24,
             'text_case' => 'title',
-            'text_align' => 'left',
+            'text_align' => 'center',
             'overlay_color' => '#101726',
             'overlay_opacity' => 0.28,
             'text_color' => '#FFFFFF',
@@ -1149,7 +1149,7 @@ function social_media_get_design_defaults()
             'headline_size' => 72,
             'body_size' => 24,
             'text_case' => 'uppercase',
-            'text_align' => 'left',
+            'text_align' => 'center',
             'overlay_color' => '#08111C',
             'overlay_opacity' => 0.22,
             'text_color' => '#FFFFFF',
@@ -1973,6 +1973,45 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
     foreach (['headline', 'subheadline', 'brand', 'cta'] as $zoneName) {
         if (!empty($variant['zones'][$zoneName])) {
             $variant['zones'][$zoneName]['align'] = $design['text_align'];
+        }
+    }
+
+    if ($design['text_align'] === 'center') {
+        $contentWidth = (int) floor($variant['width'] * 0.76);
+        $contentX = (int) floor(($variant['width'] - $contentWidth) / 2);
+        $variant['zones']['label']['x'] = $contentX;
+        $variant['zones']['label']['width'] = $contentWidth;
+        $variant['zones']['label']['align'] = 'center';
+        $variant['zones']['headline']['x'] = $contentX;
+        $variant['zones']['headline']['width'] = $contentWidth;
+        $variant['zones']['subheadline']['x'] = $contentX;
+        $variant['zones']['subheadline']['width'] = $contentWidth;
+        $variant['zones']['brand']['x'] = $contentX;
+        $variant['zones']['brand']['width'] = $contentWidth;
+        $variant['zones']['cta']['x'] = $contentX;
+        $variant['zones']['cta']['width'] = $contentWidth;
+
+        if ($variant['height'] >= 1800) {
+            $variant['zones']['headline']['y'] = 520;
+            $variant['zones']['headline']['height'] = 360;
+            $variant['zones']['subheadline']['y'] = 920;
+            $variant['zones']['subheadline']['height'] = 180;
+            $variant['zones']['brand']['y'] = 1640;
+            $variant['zones']['cta']['y'] = 1720;
+        } elseif ($variant['height'] >= 1300) {
+            $variant['zones']['headline']['y'] = 250;
+            $variant['zones']['headline']['height'] = 290;
+            $variant['zones']['subheadline']['y'] = 590;
+            $variant['zones']['subheadline']['height'] = 170;
+            $variant['zones']['brand']['y'] = 1110;
+            $variant['zones']['cta']['y'] = 1180;
+        } else {
+            $variant['zones']['headline']['y'] = 220;
+            $variant['zones']['headline']['height'] = 260;
+            $variant['zones']['subheadline']['y'] = 520;
+            $variant['zones']['subheadline']['height'] = 150;
+            $variant['zones']['brand']['y'] = 840;
+            $variant['zones']['cta']['y'] = 905;
         }
     }
 
