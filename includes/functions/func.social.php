@@ -589,6 +589,346 @@ function social_media_safe_fetch_url($url)
     return @file_get_contents($url);
 }
 
+function social_media_http_get_json($url, $headers = [])
+{
+    $body = '';
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'AtlasSocialBot/1.0');
+        if (!empty($headers)) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+        $body = curl_exec($ch);
+        curl_close($ch);
+    } else {
+        $contextHeaders = "User-Agent: AtlasSocialBot/1.0\r\n";
+        if (!empty($headers)) {
+            $contextHeaders .= implode("\r\n", $headers) . "\r\n";
+        }
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => $contextHeaders,
+                'timeout' => 15,
+            ],
+        ]);
+        $body = @file_get_contents($url, false, $context);
+    }
+
+    $decoded = json_decode((string) $body, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function social_media_download_remote_file($url)
+{
+    $url = trim((string) $url);
+    if ($url === '' || !preg_match('/^https?:\/\//i', $url)) {
+        return '';
+    }
+
+    $pathInfo = parse_url($url, PHP_URL_PATH);
+    $extension = strtolower(pathinfo((string) $pathInfo, PATHINFO_EXTENSION));
+    if ($extension === '') {
+        $extension = 'jpg';
+    }
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+        $extension = 'jpg';
+    }
+
+    $target = rtrim(sys_get_temp_dir(), '/\\') . '/atlas-social-' . md5($url) . '.' . $extension;
+    if (file_exists($target) && filesize($target) > 0) {
+        return $target;
+    }
+
+    $body = '';
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'AtlasSocialBot/1.0');
+        $body = curl_exec($ch);
+        curl_close($ch);
+    } else {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => "User-Agent: AtlasSocialBot/1.0\r\n",
+                'timeout' => 20,
+            ],
+        ]);
+        $body = @file_get_contents($url, false, $context);
+    }
+
+    if (!is_string($body) || $body === '') {
+        return '';
+    }
+
+    file_put_contents($target, $body);
+    return file_exists($target) ? $target : '';
+}
+
+function social_media_remote_asset_sources()
+{
+    $env = get_env_setting('SOCIAL_REMOTE_ASSET_SOURCES', 'unsplash,pexels,pixabay');
+    $providers = array_map('trim', explode(',', strtolower((string) $env)));
+    return array_values(array_unique(array_filter($providers)));
+}
+
+function social_media_remote_asset_keys()
+{
+    return [
+        'unsplash' => trim((string) get_env_setting('UNSPLASH_ACCESS_KEY', '')),
+        'pexels' => trim((string) get_env_setting('PEXELS_API_KEY', '')),
+        'pixabay' => trim((string) get_env_setting('PIXABAY_API_KEY', '')),
+    ];
+}
+
+function social_media_remote_assets_enabled()
+{
+    if (!get_env_setting('SOCIAL_REMOTE_ASSETS_ENABLED', true)) {
+        return false;
+    }
+
+    foreach (social_media_remote_asset_keys() as $key) {
+        if ($key !== '') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function social_media_build_asset_search_queries($keywords = [], $design = [])
+{
+    $keywords = social_media_normalize_list($keywords);
+    $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
+    $pool = array_values(array_unique(array_filter(array_merge($keywords, $designTags))));
+    $queries = [];
+
+    if (!empty($pool)) {
+        $queries[] = implode(' ', array_slice($pool, 0, 3));
+        if (count($pool) > 3) {
+            $queries[] = implode(' ', array_slice($pool, 3, 3));
+        }
+        if (count($pool) > 1) {
+            $queries[] = $pool[0] . ' ' . end($pool);
+        }
+    }
+
+    $queries[] = 'creative brand background';
+    return array_values(array_unique(array_filter(array_map('trim', $queries))));
+}
+
+function social_media_guess_background_tone($color)
+{
+    $color = social_media_normalize_hex_color($color, '#223046');
+    list($r, $g, $b) = social_media_hex_to_rgb($color);
+    $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+    if ($brightness < 90) {
+        return 'dark';
+    }
+    if ($brightness > 180) {
+        return 'light';
+    }
+    return 'warm';
+}
+
+function social_media_remote_asset_record($provider, $id, $title, $imageUrl, $previewUrl, $width, $height, $tags = [], $color = '#223046', $pageUrl = '', $author = '')
+{
+    $tone = social_media_guess_background_tone($color);
+
+    return [
+        'id' => null,
+        'remote_id' => $provider . ':' . $id,
+        'title' => $title,
+        'asset_type' => 'image',
+        'post_type' => 'post',
+        'file_name' => '',
+        'preview_name' => '',
+        'remote_url' => $imageUrl,
+        'remote_preview_url' => $previewUrl ?: $imageUrl,
+        'remote_page_url' => $pageUrl,
+        'remote_author' => $author,
+        'remote_provider' => $provider,
+        'tags' => implode(', ', social_media_normalize_list($tags)),
+        'text_position' => 'center',
+        'status' => 1,
+        'width' => $width,
+        'height' => $height,
+        'analysis' => [
+            'source_width' => (int) $width,
+            'source_height' => (int) $height,
+            'best_text_zone' => 'center',
+            'suggested_text_color' => $tone === 'light' ? '#111827' : '#FFFFFF',
+            'overlay_opacity' => $tone === 'light' ? 0.18 : 0.34,
+            'ocr_text' => '',
+            'dominant_colors' => [$color, $tone === 'light' ? '#F5F2EC' : '#08111C'],
+            'background_tone' => $tone,
+            'template_kind' => 'background',
+            'empty_layout_score' => 0.85,
+            'analysis_version' => 1,
+        ],
+        'manifest' => [],
+    ];
+}
+
+function social_media_search_unsplash($query, $limit = 8)
+{
+    $key = trim((string) get_env_setting('UNSPLASH_ACCESS_KEY', ''));
+    if ($key === '') {
+        return [];
+    }
+
+    $url = 'https://api.unsplash.com/search/photos?query=' . rawurlencode($query) . '&per_page=' . max(1, min(30, (int) $limit)) . '&orientation=squarish&content_filter=high';
+    $data = social_media_http_get_json($url, [
+        'Authorization: Client-ID ' . $key,
+        'Accept-Version: v1',
+    ]);
+
+    $assets = [];
+    foreach (($data['results'] ?? []) as $item) {
+        if (empty($item['id']) || empty($item['urls']['regular'])) {
+            continue;
+        }
+        $assets[] = social_media_remote_asset_record(
+            'unsplash',
+            $item['id'],
+            !empty($item['alt_description']) ? $item['alt_description'] : 'Unsplash photo',
+            $item['urls']['regular'],
+            !empty($item['urls']['small']) ? $item['urls']['small'] : $item['urls']['regular'],
+            !empty($item['width']) ? (int) $item['width'] : 0,
+            !empty($item['height']) ? (int) $item['height'] : 0,
+            array_filter([
+                !empty($item['alt_description']) ? $item['alt_description'] : '',
+                !empty($item['description']) ? $item['description'] : '',
+            ]),
+            !empty($item['color']) ? $item['color'] : '#223046',
+            !empty($item['links']['html']) ? $item['links']['html'] : '',
+            !empty($item['user']['name']) ? $item['user']['name'] : ''
+        );
+    }
+
+    return $assets;
+}
+
+function social_media_search_pexels($query, $limit = 8)
+{
+    $key = trim((string) get_env_setting('PEXELS_API_KEY', ''));
+    if ($key === '') {
+        return [];
+    }
+
+    $url = 'https://api.pexels.com/v1/search?query=' . rawurlencode($query) . '&per_page=' . max(1, min(30, (int) $limit)) . '&orientation=square';
+    $data = social_media_http_get_json($url, [
+        'Authorization: ' . $key,
+    ]);
+
+    $assets = [];
+    foreach (($data['photos'] ?? []) as $item) {
+        if (empty($item['id']) || empty($item['src']['large2x'])) {
+            continue;
+        }
+        $assets[] = social_media_remote_asset_record(
+            'pexels',
+            $item['id'],
+            !empty($item['alt']) ? $item['alt'] : 'Pexels photo',
+            $item['src']['large2x'],
+            !empty($item['src']['medium']) ? $item['src']['medium'] : $item['src']['large2x'],
+            !empty($item['width']) ? (int) $item['width'] : 0,
+            !empty($item['height']) ? (int) $item['height'] : 0,
+            array_filter([
+                !empty($item['alt']) ? $item['alt'] : '',
+                !empty($item['photographer']) ? $item['photographer'] : '',
+            ]),
+            !empty($item['avg_color']) ? $item['avg_color'] : '#223046',
+            !empty($item['url']) ? $item['url'] : '',
+            !empty($item['photographer']) ? $item['photographer'] : ''
+        );
+    }
+
+    return $assets;
+}
+
+function social_media_search_pixabay($query, $limit = 8)
+{
+    $key = trim((string) get_env_setting('PIXABAY_API_KEY', ''));
+    if ($key === '') {
+        return [];
+    }
+
+    $url = 'https://pixabay.com/api/?key=' . rawurlencode($key)
+        . '&q=' . rawurlencode($query)
+        . '&image_type=photo&safesearch=true&per_page=' . max(3, min(50, (int) $limit));
+    $data = social_media_http_get_json($url);
+
+    $assets = [];
+    foreach (($data['hits'] ?? []) as $item) {
+        if (empty($item['id']) || empty($item['largeImageURL'])) {
+            continue;
+        }
+        $assets[] = social_media_remote_asset_record(
+            'pixabay',
+            $item['id'],
+            !empty($item['tags']) ? $item['tags'] : 'Pixabay photo',
+            $item['largeImageURL'],
+            !empty($item['webformatURL']) ? $item['webformatURL'] : $item['largeImageURL'],
+            !empty($item['imageWidth']) ? (int) $item['imageWidth'] : 0,
+            !empty($item['imageHeight']) ? (int) $item['imageHeight'] : 0,
+            social_media_normalize_list(!empty($item['tags']) ? $item['tags'] : ''),
+            '#223046',
+            !empty($item['pageURL']) ? $item['pageURL'] : '',
+            !empty($item['user']) ? $item['user'] : ''
+        );
+    }
+
+    return $assets;
+}
+
+function social_media_search_remote_assets($post_type, $keywords = [], $design = [])
+{
+    if ($post_type !== 'post' || !social_media_remote_assets_enabled()) {
+        return [];
+    }
+
+    $queries = social_media_build_asset_search_queries($keywords, $design);
+    $providers = social_media_remote_asset_sources();
+    $assets = [];
+
+    foreach ($queries as $query) {
+        foreach ($providers as $provider) {
+            if ($provider === 'unsplash') {
+                $assets = array_merge($assets, social_media_search_unsplash($query, 6));
+            } elseif ($provider === 'pexels') {
+                $assets = array_merge($assets, social_media_search_pexels($query, 6));
+            } elseif ($provider === 'pixabay') {
+                $assets = array_merge($assets, social_media_search_pixabay($query, 6));
+            }
+        }
+        if (count($assets) >= 18) {
+            break;
+        }
+    }
+
+    $unique = [];
+    foreach ($assets as $asset) {
+        $key = social_media_asset_unique_key($asset);
+        if (!isset($unique[$key])) {
+            $unique[$key] = $asset;
+        }
+    }
+
+    return array_values($unique);
+}
+
 function social_media_get_format_map()
 {
     return [
@@ -789,10 +1129,12 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
     $asset = social_media_pick_asset($post_type, $keywords);
     $formats = social_media_get_format_map();
     $asset_type = $formats[$post_type]['asset_type'];
-    $assets = social_media_get_assets([
+    $assets = social_media_search_remote_assets($post_type, $keywords, $design);
+    $localAssets = social_media_get_assets([
         'post_type' => $post_type,
         'asset_type' => $asset_type,
     ]);
+    $assets = array_merge($assets, $localAssets);
 
     if (empty($assets) && $asset_type === 'video') {
         $assets = social_media_get_assets([
@@ -804,11 +1146,13 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
         return $asset;
     }
 
-    $excludedAssetIds = array_map('intval', (array) $excludedAssetIds);
+    $excludedAssetIds = array_values(array_filter((array) $excludedAssetIds, function ($value) {
+        return $value !== null && $value !== '';
+    }));
     $preferredAssets = [];
     foreach ($assets as $candidate) {
-        $candidateId = !empty($candidate['id']) ? (int) $candidate['id'] : 0;
-        if ($candidateId > 0 && in_array($candidateId, $excludedAssetIds, true)) {
+        $candidateKey = social_media_asset_unique_key($candidate);
+        if ($candidateKey !== '' && in_array($candidateKey, $excludedAssetIds, true)) {
             continue;
         }
         $preferredAssets[] = $candidate;
@@ -1502,6 +1846,9 @@ function social_media_tesseract_path()
 
 function social_media_asset_source_path($asset)
 {
+    if (!empty($asset['remote_url'])) {
+        return social_media_download_remote_file($asset['remote_url']);
+    }
     if (!empty($asset['file_name'])) {
         return ROOTPATH . '/storage/social_assets/' . $asset['file_name'];
     }
@@ -1510,8 +1857,28 @@ function social_media_asset_source_path($asset)
 
 function social_media_asset_preview_path($asset)
 {
+    if (!empty($asset['remote_preview_url'])) {
+        return social_media_download_remote_file($asset['remote_preview_url']);
+    }
     if (!empty($asset['preview_name'])) {
         return ROOTPATH . '/storage/social_assets/' . $asset['preview_name'];
+    }
+    return '';
+}
+
+function social_media_asset_unique_key($asset)
+{
+    if (!empty($asset['remote_id'])) {
+        return (string) $asset['remote_id'];
+    }
+    if (!empty($asset['id'])) {
+        return 'local:' . (string) $asset['id'];
+    }
+    if (!empty($asset['file_name'])) {
+        return 'file:' . (string) $asset['file_name'];
+    }
+    if (!empty($asset['remote_url'])) {
+        return 'url:' . md5((string) $asset['remote_url']);
     }
     return '';
 }
@@ -2017,11 +2384,13 @@ function social_media_open_asset_background($asset, $width, $height, $background
     ];
 
     $assetPaths = [];
-    if (!empty($asset['file_name']) && $asset['asset_type'] === 'image') {
-        $assetPaths[] = ROOTPATH . '/storage/social_assets/' . $asset['file_name'];
+    $sourcePath = social_media_asset_source_path($asset);
+    $previewPath = social_media_asset_preview_path($asset);
+    if ($sourcePath && !empty($asset['asset_type']) && $asset['asset_type'] === 'image') {
+        $assetPaths[] = $sourcePath;
     }
-    if (!empty($asset['preview_name'])) {
-        $assetPaths[] = ROOTPATH . '/storage/social_assets/' . $asset['preview_name'];
+    if ($previewPath) {
+        $assetPaths[] = $previewPath;
     }
 
     foreach ($assetPaths as $assetPath) {
@@ -2355,8 +2724,9 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
     foreach ($items as $item) {
         $keywords = array_merge($item['keywords'], social_media_normalize_list($profile['company_industry']));
         $asset = social_media_pick_asset_with_design($item['post_type'], $keywords, $item['design'], $usedAssetIds);
-        if (!empty($asset['id'])) {
-            $usedAssetIds[] = (int) $asset['id'];
+        $assetKey = social_media_asset_unique_key($asset);
+        if ($assetKey !== '') {
+            $usedAssetIds[] = $assetKey;
         }
         $previewResult = social_media_render_preview($item, $asset, $profile);
         $preview = is_array($previewResult) ? $previewResult['file_name'] : $previewResult;
