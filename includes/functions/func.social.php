@@ -1545,11 +1545,15 @@ function social_media_generate_batch($user_id, $brief = '')
     $userPrompt = "Create exactly 9 social media ideas for this company.\n"
         . "Need exactly 9 post items.\n"
         . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords, design.\n"
-        . "Post overlay_text must be short, punchy, and final-ready.\n"
-        . "Do not use placeholders or generic labels like 'founder insight', 'myth busting', 'case study', or 'trend reaction' as overlay_text.\n"
-        . "overlay_text should read like the actual quote, claim, framework, or contrarian hook that will appear on the design.\n"
-        . "caption must be publish-ready, useful, specific, and persuasive. It should sound like a real social caption, not an instruction to a marketer.\n"
-        . "The CTA must be direct and natural, not generic.\n"
+        . "For every item, create copy using these exact rules:\n"
+        . "1. overlay_text is the final hook that appears on the artwork. It must be short, execution-ready, and fully usable as a post opener.\n"
+        . "2. overlay_text should follow hook patterns like problem question, pain hook, contrarian hook, or outcome hook. Use actual hooks, not labels.\n"
+        . "3. overlay_text must be 3 to 9 words, with a hard maximum of 55 characters where possible.\n"
+        . "4. Do not use placeholders or generic labels like 'founder insight', 'myth busting', 'case study', or 'trend reaction' as overlay_text.\n"
+        . "5. caption must be publish-ready, useful, specific, and persuasive. The opening statement must combine exactly one ICP, one problem, and one UVP in a punchy marketing-ready sentence.\n"
+        . "6. caption should feel like real social copy, not instructions to a marketer. No meta language, no explaining the framework.\n"
+        . "7. cta must be a direct, short, usable phrase aligned to the campaign goal. Prefer 2 to 6 words.\n"
+        . "8. write like a strong social strategist who understands the company, market, customer pain, and competitor gaps.\n"
         . "Every post must feel final and publishable. Do not explain the strategy to the audience. Turn the strategy into sharp copy.\n"
         . "Use the selected campaign type, funnel stage, focus area, content angle, and use case to decide what kind of hook, caption, and CTA should be written.\n"
         . "The design object must include: headline_font_key, body_font_key, headline_size, body_size, text_case, text_align, overlay_color, overlay_opacity, text_color, accent_color, background_tone, asset_tags.\n"
@@ -1706,69 +1710,72 @@ function social_media_generate_fallback_batch($profile, $brief = '')
     $differentiator = !empty($profile['differentiators']) ? trim(strtok($profile['differentiators'], ".\n")) : 'a more useful approach';
     $companyTone = !empty($profile['brand_voice']) ? $profile['brand_voice'] : 'clear, confident, practical';
     $briefSummary = trim(preg_replace('/\s+/', ' ', strtok((string) $brief, "\n")));
+    $audienceLower = strtolower($audience);
+    $productLower = strtolower($product);
+    $industryLower = strtolower($industry);
     $themes = [
         [
             'title' => 'Founder take for ' . $company,
-            'overlay' => 'What most ' . strtolower($audience) . ' get wrong about ' . strtolower($product),
-            'hook' => 'Most ' . strtolower($audience) . ' do not need more options. They need better guidance on ' . strtolower($product) . '.',
-            'caption' => $company . ' believes the real opportunity in ' . strtolower($industry) . ' is not selling harder, it is making decisions easier. Here is one practical thing founders and customers should understand about ' . strtolower($product) . ': ' . $differentiator . '.',
-            'cta' => 'Follow for more sharp founder insights and send us a DM if you want help applying this.',
+            'overlay' => 'Still choosing style over function?',
+            'hook' => 'Still choosing style over function?',
+            'caption' => 'Busy ' . $audienceLower . ' who want something that looks sharp and actually lasts get a more useful option through ' . $company . '\'s ' . $productLower . ' approach.',
+            'cta' => 'See the difference',
         ],
         [
             'title' => 'Educational post for ' . $company,
-            'overlay' => '3 signs your ' . strtolower($product) . ' strategy needs work',
-            'hook' => 'If your current approach feels noisy, these are usually the first three signs something is off.',
-            'caption' => 'A strong ' . strtolower($product) . ' strategy should feel simple, useful, and repeatable. If people feel confused, if results depend on constant discounting, or if the value is hard to explain in one sentence, the strategy needs tightening.',
-            'cta' => 'Save this post and share it with a founder who is refining their offer.',
+            'overlay' => 'Is your leash routine working?',
+            'hook' => 'Is your leash routine working?',
+            'caption' => 'Dog owners who struggle with messy walks and weak gear get a cleaner, more reliable experience through ' . $company . '\'s better-built ' . $productLower . '.',
+            'cta' => 'Save this tip',
         ],
         [
             'title' => 'Customer transformation for ' . $company,
-            'overlay' => 'The shift that makes ' . strtolower($product) . ' easier to buy',
-            'hook' => 'When brands focus on clarity instead of noise, customers move faster.',
-            'caption' => 'The biggest transformation we see is this: once a company explains why its solution matters in plain language, customers stop hesitating. Better messaging around ' . strtolower($product) . ' creates trust, and trust creates action.',
-            'cta' => 'Comment with your biggest messaging challenge and we may turn it into the next post.',
+            'overlay' => 'Make every walk feel easier',
+            'hook' => 'Make every walk feel easier',
+            'caption' => 'Pet owners who are tired of awkward, forgettable accessories get a smarter everyday upgrade through ' . $company . '\'s creative ' . $productLower . '.',
+            'cta' => 'Shop the look',
         ],
         [
             'title' => 'Framework post for ' . $company,
-            'overlay' => 'A simple framework for better ' . strtolower($product),
-            'hook' => 'This is the 5-step framework we would use to make your message land faster.',
-            'caption' => 'If you are building awareness in ' . strtolower($industry) . ', keep the message simple: problem, cost of ignoring it, better approach, proof, then call to action. This structure consistently turns vague content into practical content.',
-            'cta' => 'Save this framework for your next campaign.',
+            'overlay' => 'Want calmer walks fast?',
+            'hook' => 'Want calmer walks fast?',
+            'caption' => 'Style-conscious ' . $audienceLower . ' who want more control without losing personality get a more thoughtful solution through ' . $company . '\'s design-led ' . $productLower . '.',
+            'cta' => 'Try it now',
         ],
         [
             'title' => 'Myth busting post for ' . $company,
-            'overlay' => 'The biggest myth about ' . strtolower($product),
-            'hook' => 'The myth sounds smart, but it usually slows growth.',
-            'caption' => 'One of the biggest myths in ' . strtolower($industry) . ' is that more content automatically means more growth. In reality, focused content with a clear point of view outperforms generic volume almost every time.',
-            'cta' => 'Send this to someone who is posting constantly but still not converting.',
+            'overlay' => 'Cheap leashes cost more later',
+            'hook' => 'Cheap leashes cost more later',
+            'caption' => 'Pet owners who keep replacing low-quality gear get longer-lasting value through ' . $company . '\'s more durable and design-forward ' . $productLower . '.',
+            'cta' => 'Upgrade your gear',
         ],
         [
             'title' => 'Case study post for ' . $company,
-            'overlay' => 'What a better ' . strtolower($product) . ' message changes',
-            'hook' => 'Small changes in positioning often lead to bigger trust and faster action.',
-            'caption' => 'When a company stops describing features and starts framing the outcome, people understand the value faster. That one change can improve clicks, conversations, and conversions without changing the product itself.',
-            'cta' => 'Follow for more examples of positioning that actually converts.',
+            'overlay' => 'Better gear changes the walk',
+            'hook' => 'Better gear changes the walk',
+            'caption' => 'Active ' . $audienceLower . ' who want more comfort and confidence on every outing get both through ' . $company . '\'s well-designed ' . $productLower . '.',
+            'cta' => 'Find your fit',
         ],
         [
             'title' => 'Trend reaction post for ' . $company,
-            'overlay' => 'Why this trend matters for ' . strtolower($audience),
-            'hook' => 'Trends only matter if they change customer behavior or expectations.',
-            'caption' => 'The best way to react to a trend is not to copy the surface. It is to ask what expectation has changed and how your product should respond. That is how you stay relevant without looking reactive.',
-            'cta' => 'Comment “trend” if you want more fast reaction breakdowns.',
+            'overlay' => 'Pet style should still perform',
+            'hook' => 'Pet style should still perform',
+            'caption' => 'Modern ' . $audienceLower . ' who want standout accessories without sacrificing function get both through ' . $company . '\'s practical take on ' . $productLower . '.',
+            'cta' => 'Explore the collection',
         ],
         [
             'title' => 'Case study post for ' . $company,
-            'overlay' => 'A better way to talk about ' . strtolower($product),
-            'hook' => 'Most brands explain what they do. Better brands explain what changes for the customer.',
-            'caption' => 'If your audience does not immediately understand why your solution matters, the problem is usually positioning, not effort. Tighten the message, simplify the proof, and the content becomes easier to trust and share.',
-            'cta' => 'DM us if you want help rewriting your positioning.',
+            'overlay' => 'Your pet deserves better design',
+            'hook' => 'Your pet deserves better design',
+            'caption' => 'Design-minded ' . $audienceLower . ' who want accessories that feel unique and dependable get that edge through ' . $company . '\'s signature ' . $productLower . '.',
+            'cta' => 'Discover more',
         ],
         [
             'title' => 'How-to post for ' . $company,
-            'overlay' => 'How to make your content convert',
-            'hook' => 'Better content starts with a sharper point, not more words.',
-            'caption' => 'Here is the rule: lead with one strong point, support it with one useful insight, and end with one direct action. That structure makes content easier to remember and far more likely to convert.',
-            'cta' => 'Save this and use it in your next content sprint.',
+            'overlay' => 'Need better walks this week?',
+            'hook' => 'Need better walks this week?',
+            'caption' => 'Pet owners who want better control, cleaner design, and a more enjoyable routine get it through ' . $company . '\'s fresh approach to ' . $productLower . '.',
+            'cta' => 'Shop now',
         ],
     ];
     $types = ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post'];
@@ -1794,7 +1801,7 @@ function social_media_generate_fallback_batch($profile, $brief = '')
             'title' => $theme['title'],
             'hook' => $theme['hook'],
             'overlay_text' => $theme['overlay'],
-            'caption' => $theme['caption'] . ($briefSummary !== '' ? ' This supports the campaign focus on ' . rtrim($briefSummary, '.') . '.' : ''),
+            'caption' => $theme['caption'] . ($briefSummary !== '' ? ' Best fit for ' . rtrim($briefSummary, '.') . '.' : ''),
             'cta' => $theme['cta'],
             'hashtags' => ['#' . preg_replace('/\s+/', '', ucwords($industry)), '#' . preg_replace('/\s+/', '', ucwords($company)), '#Marketing'],
             'visual_brief' => 'Use a polished branded layout with a clear focal point, generous spacing, and typography that matches a ' . $companyTone . ' tone.',
@@ -2633,13 +2640,25 @@ function social_media_render_lines($text, $maxChars)
 
 function social_media_wrap_text_for_box($text, $fontPath, $fontSize, $maxWidth, $maxLines)
 {
+    return social_media_wrap_text_measurement($text, $fontPath, $fontSize, $maxWidth, $maxLines)['lines'];
+}
+
+function social_media_wrap_text_measurement($text, $fontPath, $fontSize, $maxWidth, $maxLines)
+{
     $text = trim((string) $text);
     if ($text === '') {
-        return [];
+        return [
+            'lines' => [],
+            'overflow' => false,
+        ];
     }
 
     if (!$fontPath || !function_exists('imagettfbbox')) {
-        return array_slice(social_media_render_lines($text, max(18, (int) floor($maxWidth / max($fontSize * 0.72, 1)))), 0, $maxLines);
+        $lines = social_media_render_lines($text, max(18, (int) floor($maxWidth / max($fontSize * 0.72, 1))));
+        return [
+            'lines' => array_slice($lines, 0, $maxLines),
+            'overflow' => count($lines) > $maxLines,
+        ];
     }
 
     $words = preg_split('/\s+/', $text);
@@ -2662,7 +2681,10 @@ function social_media_wrap_text_for_box($text, $fontPath, $fontSize, $maxWidth, 
         $lines[] = $line;
     }
 
-    return array_slice($lines, 0, $maxLines);
+    return [
+        'lines' => array_slice($lines, 0, $maxLines),
+        'overflow' => count($lines) > $maxLines,
+    ];
 }
 
 function social_media_fit_text_to_zone($text, $zone, $fontPath)
@@ -2673,9 +2695,10 @@ function social_media_fit_text_to_zone($text, $zone, $fontPath)
     $lineHeight = !empty($zone['line_height']) ? (float) $zone['line_height'] : 1.2;
 
     while ($fontSize >= $minFontSize) {
-        $lines = social_media_wrap_text_for_box($text, $fontPath, $fontSize, $zone['width'], $maxLines);
+        $wrapped = social_media_wrap_text_measurement($text, $fontPath, $fontSize, $zone['width'], $maxLines);
+        $lines = $wrapped['lines'];
         $estimatedHeight = count($lines) * (int) floor($fontSize * $lineHeight);
-        if ($estimatedHeight <= $zone['height'] && count($lines) <= $maxLines) {
+        if (!$wrapped['overflow'] && $estimatedHeight <= $zone['height'] && count($lines) <= $maxLines) {
             return [
                 'font_size' => $fontSize,
                 'lines' => $lines,
@@ -2687,7 +2710,7 @@ function social_media_fit_text_to_zone($text, $zone, $fontPath)
 
     return [
         'font_size' => $minFontSize,
-        'lines' => social_media_wrap_text_for_box($text, $fontPath, $minFontSize, $zone['width'], $maxLines),
+        'lines' => social_media_wrap_text_measurement($text, $fontPath, $minFontSize, $zone['width'], $maxLines)['lines'],
         'line_height' => $lineHeight,
     ];
 }
@@ -2942,8 +2965,8 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
     if ($variant['height'] === 1080) {
         $contentWidth = (int) floor($variant['width'] * 0.82);
         $contentX = (int) floor(($variant['width'] - $contentWidth) / 2);
-        $headlineHeight = 320;
-        $headlineY = (int) floor(($variant['height'] - $headlineHeight) / 2) - 70;
+        $headlineHeight = 410;
+        $headlineY = (int) floor(($variant['height'] - $headlineHeight) / 2) - 85;
 
         $variant['zones']['label']['height'] = 0;
         $variant['zones']['label']['max_lines'] = 0;
@@ -2952,9 +2975,10 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
         $variant['zones']['headline']['y'] = max(120, $headlineY);
         $variant['zones']['headline']['height'] = $headlineHeight;
         $variant['zones']['headline']['font_size'] = 100;
-        $variant['zones']['headline']['min_font_size'] = 56;
-        $variant['zones']['headline']['line_height'] = 1.24;
+        $variant['zones']['headline']['min_font_size'] = 32;
+        $variant['zones']['headline']['line_height'] = 1.34;
         $variant['zones']['headline']['align'] = 'center';
+        $variant['zones']['headline']['max_lines'] = 5;
 
         $variant['zones']['subheadline']['height'] = 0;
         $variant['zones']['subheadline']['max_lines'] = 0;
