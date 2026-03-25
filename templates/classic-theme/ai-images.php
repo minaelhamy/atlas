@@ -116,6 +116,12 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                         <button type="submit" name="submit" class="button ripple-effect" <?php echo $profileReady ? '' : 'disabled'; ?>>
                             <?php _e("Generate 9 Posts") ?> <i class="icon-feather-arrow-right"></i>
                         </button>
+                        <div class="social-generator-progress margin-top-15" style="display:none;">
+                            <div class="social-generator-progress-bar-wrap" style="height:10px;background:#ece7dc;border-radius:999px;overflow:hidden;">
+                                <div class="social-generator-progress-bar" style="width:0%;height:100%;background:#8a7a63;transition:width .25s ease;"></div>
+                            </div>
+                            <div class="social-generator-progress-text margin-top-10" style="font-size:14px;font-weight:600;color:#6b5d4a;">0%</div>
+                        </div>
                     </div>
                 </div>
             </form>

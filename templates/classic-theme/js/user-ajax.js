@@ -24,6 +24,20 @@ jQuery(function ($) {
             .replace(/^-+|-+$/g, '') || 'caption';
     }
 
+    function set_generation_progress($form, value) {
+        var safeValue = Math.max(0, Math.min(100, Math.round(value || 0)));
+        $form.find('.social-generator-progress').stop(true, true).fadeIn(120);
+        $form.find('.social-generator-progress-bar').css('width', safeValue + '%');
+        $form.find('.social-generator-progress-text').text(safeValue + '%');
+    }
+
+    function reset_generation_progress($form) {
+        $form.find('.social-generator-progress').stop(true, true).fadeOut(180, function () {
+            $form.find('.social-generator-progress-bar').css('width', '0%');
+            $form.find('.social-generator-progress-text').text('0%');
+        });
+    }
+
     // email resend
     $('.resend').on('click', function (e) { 						// Button which will activate our modal
         var the_id = $(this).attr('id');						//get the id
@@ -350,6 +364,21 @@ jQuery(function ($) {
         var $btn = $(this).find('.button'),
             $error = $(this).find('.form-error');
         $btn.addClass('button-progress').prop('disabled', true);
+        set_generation_progress($form, 4);
+
+        var progressValue = 4;
+        var progressTimer = window.setInterval(function () {
+            if (progressValue < 28) {
+                progressValue += 6;
+            } else if (progressValue < 58) {
+                progressValue += 4;
+            } else if (progressValue < 82) {
+                progressValue += 2;
+            } else if (progressValue < 93) {
+                progressValue += 1;
+            }
+            set_generation_progress($form, progressValue);
+        }, 320);
 
         $error.slideUp();
         $.ajax({
@@ -361,6 +390,8 @@ jQuery(function ($) {
             contentType: false,
             processData: false,
             success: function (response) {
+                window.clearInterval(progressTimer);
+                set_generation_progress($form, 100);
                 $btn.removeClass('button-progress').prop('disabled', false);
                 if (response.success) {
                     $.each(response.posts, function(index, post) {
@@ -455,9 +486,19 @@ jQuery(function ($) {
                     $('.simplebar-scroll-content').animate({
                         scrollTop: $("#generated_images_wrapper").offset().top
                     }, 500);
+                    window.setTimeout(function () {
+                        reset_generation_progress($form);
+                    }, 500);
                 } else {
+                    reset_generation_progress($form);
                     $error.html(response.error).slideDown().focus();
                 }
+            },
+            error: function () {
+                window.clearInterval(progressTimer);
+                $btn.removeClass('button-progress').prop('disabled', false);
+                reset_generation_progress($form);
+                $error.html('Unable to generate posts right now. Please try again.').slideDown().focus();
             }
         });
     });

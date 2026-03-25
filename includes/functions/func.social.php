@@ -949,6 +949,46 @@ function social_media_build_asset_search_queries($keywords = [], $design = [])
     return array_values(array_unique(array_filter(array_map('trim', $queries))));
 }
 
+function social_media_build_provider_search_queries($provider, $keywords = [], $design = [])
+{
+    $queries = social_media_build_asset_search_queries($keywords, $design);
+    if ($provider !== 'pixabay') {
+        return $queries;
+    }
+
+    $tokens = [];
+    foreach (array_merge((array) $keywords, social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : [])) as $keyword) {
+        $tokens = array_merge($tokens, social_media_keyword_tokens($keyword));
+    }
+    $tokens = array_values(array_unique($tokens));
+    $families = social_media_detect_keyword_family($tokens);
+    $pixabayQueries = [];
+
+    if (in_array('dog', $families, true)) {
+        $pixabayQueries[] = 'dog leash dog owner park';
+        $pixabayQueries[] = 'dog walking leash outdoors';
+        $pixabayQueries[] = 'puppy collar pet accessory';
+    } elseif (in_array('cat', $families, true)) {
+        $pixabayQueries[] = 'cat collar pet owner home';
+        $pixabayQueries[] = 'cat accessory indoor pet';
+    }
+
+    if (!empty($tokens)) {
+        $pixabayQueries[] = implode(' ', array_slice($tokens, 0, 4));
+        if (count($tokens) > 4) {
+            $pixabayQueries[] = implode(' ', array_slice($tokens, 4, 4));
+        }
+    }
+
+    foreach ($queries as $query) {
+        if (stripos($query, 'creative brand background') === false) {
+            $pixabayQueries[] = $query;
+        }
+    }
+
+    return array_values(array_unique(array_filter(array_map('trim', $pixabayQueries))));
+}
+
 function social_media_keyword_tokens($value)
 {
     $value = strtolower(trim((string) $value));
@@ -1171,9 +1211,17 @@ function social_media_search_pixabay($query, $limit = 8)
         return [];
     }
 
+    $families = social_media_detect_keyword_family(social_media_keyword_tokens($query));
+    $category = '';
+    if (!empty($families)) {
+        $category = '&category=animals';
+    }
+
     $url = 'https://pixabay.com/api/?key=' . rawurlencode($key)
         . '&q=' . rawurlencode($query)
-        . '&image_type=photo&safesearch=true&per_page=' . max(3, min(50, (int) $limit));
+        . '&image_type=photo&safesearch=true&editors_choice=true&order=popular'
+        . $category
+        . '&min_width=1000&min_height=1000&per_page=' . max(3, min(50, (int) $limit));
     $data = social_media_http_get_json($url);
 
     $assets = [];
@@ -1199,6 +1247,39 @@ function social_media_search_pixabay($query, $limit = 8)
     return $assets;
 }
 
+function social_media_filter_remote_assets($assets, $provider, $keywords = [], $design = [])
+{
+    if (empty($assets)) {
+        return [];
+    }
+
+    $filtered = [];
+    $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
+
+    foreach ($assets as $asset) {
+        $relevance = social_media_relevance_signal($asset, $keywords, $designTags);
+
+        if (!empty($relevance['families_wanted']) && empty($relevance['families_found'])) {
+            continue;
+        }
+        if ($relevance['family_penalty'] > 0) {
+            continue;
+        }
+        if ($provider === 'pixabay') {
+            if ($relevance['match_count'] < 2) {
+                continue;
+            }
+            if (strpos($relevance['text'], 'abstract') !== false || strpos($relevance['text'], 'pattern') !== false) {
+                continue;
+            }
+        }
+
+        $filtered[] = $asset;
+    }
+
+    return !empty($filtered) ? $filtered : $assets;
+}
+
 function social_media_search_remote_assets($post_type, $keywords = [], $design = [])
 {
     if ($post_type !== 'post' || !social_media_remote_assets_enabled()) {
@@ -1209,18 +1290,25 @@ function social_media_search_remote_assets($post_type, $keywords = [], $design =
     $providers = social_media_remote_asset_sources();
     $assets = [];
 
-    foreach ($queries as $query) {
-        foreach ($providers as $provider) {
+    foreach ($providers as $provider) {
+        $providerQueries = social_media_build_provider_search_queries($provider, $keywords, $design);
+        foreach ($providerQueries as $query) {
+            $providerAssets = [];
             if ($provider === 'unsplash') {
-                $assets = array_merge($assets, social_media_search_unsplash($query, 6));
+                $providerAssets = social_media_search_unsplash($query, 6);
             } elseif ($provider === 'pexels') {
-                $assets = array_merge($assets, social_media_search_pexels($query, 6));
+                $providerAssets = social_media_search_pexels($query, 6);
             } elseif ($provider === 'pixabay') {
-                $assets = array_merge($assets, social_media_search_pixabay($query, 6));
+                $providerAssets = social_media_search_pixabay($query, 6);
             }
-        }
-        if (count($assets) >= 18) {
-            break;
+
+            if (!empty($providerAssets)) {
+                $assets = array_merge($assets, social_media_filter_remote_assets($providerAssets, $provider, $keywords, $design));
+            }
+
+            if (count($assets) >= 18) {
+                break 2;
+            }
         }
     }
 
