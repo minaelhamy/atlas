@@ -728,6 +728,91 @@ function social_media_build_asset_search_queries($keywords = [], $design = [])
     return array_values(array_unique(array_filter(array_map('trim', $queries))));
 }
 
+function social_media_keyword_tokens($value)
+{
+    $value = strtolower(trim((string) $value));
+    if ($value === '') {
+        return [];
+    }
+
+    preg_match_all('/[a-z0-9]{3,}/', $value, $matches);
+    return array_values(array_unique($matches[0]));
+}
+
+function social_media_keyword_families()
+{
+    return [
+        'dog' => ['dog', 'dogs', 'puppy', 'puppies', 'canine', 'leash', 'collar'],
+        'cat' => ['cat', 'cats', 'kitten', 'kittens', 'feline'],
+        'bird' => ['bird', 'birds', 'avian', 'parrot'],
+        'horse' => ['horse', 'horses', 'equine'],
+    ];
+}
+
+function social_media_detect_keyword_family($tokens)
+{
+    $tokens = array_map('strtolower', (array) $tokens);
+    $families = social_media_keyword_families();
+    $matched = [];
+
+    foreach ($families as $family => $variants) {
+        foreach ($variants as $variant) {
+            if (in_array($variant, $tokens, true)) {
+                $matched[] = $family;
+                break;
+            }
+        }
+    }
+
+    return array_values(array_unique($matched));
+}
+
+function social_media_candidate_text_blob($candidate)
+{
+    return strtolower(trim(implode(' ', array_filter([
+        !empty($candidate['title']) ? $candidate['title'] : '',
+        !empty($candidate['tags']) ? $candidate['tags'] : '',
+        !empty($candidate['remote_author']) ? $candidate['remote_author'] : '',
+        !empty($candidate['analysis']['ocr_text']) ? $candidate['analysis']['ocr_text'] : '',
+    ]))));
+}
+
+function social_media_relevance_signal($candidate, $keywords = [], $designTags = [])
+{
+    $text = social_media_candidate_text_blob($candidate);
+    $keywordTokens = [];
+    foreach (array_merge((array) $keywords, (array) $designTags) as $keyword) {
+        $keywordTokens = array_merge($keywordTokens, social_media_keyword_tokens($keyword));
+    }
+    $keywordTokens = array_values(array_unique($keywordTokens));
+    $matchCount = 0;
+    $familiesWanted = social_media_detect_keyword_family($keywordTokens);
+    $familiesFound = social_media_detect_keyword_family(social_media_keyword_tokens($text));
+    $familyPenalty = 0;
+
+    foreach ($keywordTokens as $token) {
+        if (strpos($text, $token) !== false) {
+            $matchCount++;
+        }
+    }
+
+    if (!empty($familiesWanted) && !empty($familiesFound)) {
+        foreach ($familiesFound as $family) {
+            if (!in_array($family, $familiesWanted, true)) {
+                $familyPenalty += 10;
+            }
+        }
+    }
+
+    return [
+        'text' => $text,
+        'match_count' => $matchCount,
+        'families_wanted' => $familiesWanted,
+        'families_found' => $familiesFound,
+        'family_penalty' => $familyPenalty,
+    ];
+}
+
 function social_media_guess_background_tone($color)
 {
     $color = social_media_normalize_hex_color($color, '#223046');
@@ -1175,6 +1260,7 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
     foreach ($assets as $candidate) {
         $score = 0;
         $tags = social_media_normalize_list(isset($candidate['tags']) ? $candidate['tags'] : '');
+        $relevance = social_media_relevance_signal($candidate, $keywords, $designTags);
         foreach ($keywords as $keyword) {
             if (in_array(strtolower($keyword), array_map('strtolower', $tags), true)) {
                 $score += 2;
@@ -1203,6 +1289,14 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
             $score += 2;
         } else {
             $score -= min(4, strlen($candidate['analysis']['ocr_text']) / 60);
+        }
+        $score += $relevance['match_count'] * 3;
+        $score -= $relevance['family_penalty'];
+        if (!empty($candidate['remote_provider']) && !empty($relevance['families_wanted']) && empty($relevance['families_found']) && $relevance['match_count'] === 0) {
+            $score -= 8;
+        }
+        if (!empty($candidate['remote_provider']) && strpos($relevance['text'], 'abstract') !== false) {
+            $score -= 4;
         }
 
         if ($score > $bestScore || ($score === $bestScore && (!empty($candidate['id']) && !empty($bestAsset['id']) ? (int) $candidate['id'] > (int) $bestAsset['id'] : !empty($candidate['id'])))) {
@@ -2473,6 +2567,26 @@ function social_media_hex_to_rgb($hex)
     ];
 }
 
+function social_media_relative_luminance($hex)
+{
+    list($r, $g, $b) = social_media_hex_to_rgb($hex);
+    $channels = [$r / 255, $g / 255, $b / 255];
+    foreach ($channels as &$channel) {
+        $channel = ($channel <= 0.03928) ? ($channel / 12.92) : pow(($channel + 0.055) / 1.055, 2.4);
+    }
+    unset($channel);
+    return (0.2126 * $channels[0]) + (0.7152 * $channels[1]) + (0.0722 * $channels[2]);
+}
+
+function social_media_contrast_ratio($colorA, $colorB)
+{
+    $l1 = social_media_relative_luminance($colorA);
+    $l2 = social_media_relative_luminance($colorB);
+    $lighter = max($l1, $l2);
+    $darker = min($l1, $l2);
+    return ($lighter + 0.05) / ($darker + 0.05);
+}
+
 function social_media_render_zone_text($canvas, $text, $zone, $fontPath)
 {
     if (trim((string) $text) === '' || empty($zone) || (!empty($zone['height']) && (int) $zone['height'] <= 0) || (!empty($zone['max_lines']) && (int) $zone['max_lines'] <= 0)) {
@@ -2542,10 +2656,20 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
 {
     $palette = social_media_get_palette_by_tone(isset($design['background_tone']) ? $design['background_tone'] : 'dark');
     $dominant = !empty($asset['analysis']['dominant_colors']) ? $asset['analysis']['dominant_colors'] : [$palette['background'], $palette['overlay']];
+    $suggestedTextColor = !empty($asset['analysis']['suggested_text_color']) ? social_media_normalize_hex_color($asset['analysis']['suggested_text_color'], $palette['text']) : $palette['text'];
+    $designTextColor = social_media_normalize_hex_color(isset($design['text_color']) ? $design['text_color'] : $palette['text'], $palette['text']);
+    $primaryBackground = social_media_normalize_hex_color(isset($dominant[0]) ? $dominant[0] : $palette['background'], $palette['background']);
+    if (social_media_contrast_ratio($designTextColor, $primaryBackground) < 3.8) {
+        $design['text_color'] = $suggestedTextColor;
+        if (social_media_contrast_ratio(social_media_normalize_hex_color(isset($design['accent_color']) ? $design['accent_color'] : $palette['accent'], $palette['accent']), $primaryBackground) < 2.8) {
+            $design['accent_color'] = $suggestedTextColor;
+        }
+        $design['overlay_opacity'] = max(isset($design['overlay_opacity']) ? (float) $design['overlay_opacity'] : 0.32, !empty($asset['analysis']['overlay_opacity']) ? (float) $asset['analysis']['overlay_opacity'] : 0.32, 0.3);
+    }
     $variant['overlay']['color'] = social_media_normalize_hex_color(isset($design['overlay_color']) ? $design['overlay_color'] : $palette['overlay'], $palette['overlay']);
     $variant['overlay']['opacity'] = min(0.72, max(0.08, isset($design['overlay_opacity']) ? (float) $design['overlay_opacity'] : 0.32));
     $variant['background_colors'] = [
-        social_media_normalize_hex_color(isset($dominant[0]) ? $dominant[0] : $palette['background'], $palette['background']),
+        $primaryBackground,
         social_media_normalize_hex_color(isset($dominant[1]) ? $dominant[1] : $palette['overlay'], $palette['overlay']),
     ];
 
