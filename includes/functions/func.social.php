@@ -994,7 +994,13 @@ function social_media_prepare_asset_record($asset)
         return $asset;
     }
 
-    if (empty($asset['analysis_json']) || empty($asset['manifest_json'])) {
+    if (!empty($asset['remote_id'])) {
+        $asset['analysis'] = !empty($asset['analysis']) && is_array($asset['analysis']) ? $asset['analysis'] : [];
+        $asset['manifest'] = !empty($asset['manifest']) && is_array($asset['manifest']) ? $asset['manifest'] : [];
+        return $asset;
+    }
+
+    if (!empty($asset['id']) && (empty($asset['analysis_json']) || empty($asset['manifest_json']))) {
         social_media_refresh_asset_analysis($asset['id']);
         global $config;
         $asset = ORM::for_table($config['db']['pre'] . 'social_media_assets')->find_array($asset['id']);
