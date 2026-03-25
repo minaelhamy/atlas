@@ -387,6 +387,9 @@ jQuery(function ($) {
                         if (post.asset_title) {
                             infoHtml += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
                         }
+                        if (post.asset && post.asset.remote_provider) {
+                            infoHtml += '<p class="margin-bottom-0"><strong>Asset Source:</strong> ' + escape_html(String(post.asset.remote_provider)) + '</p>';
+                        }
 
                         if (design.headline_font_key || design.background_tone) {
                             infoHtml += '<p class="margin-bottom-10"><strong>Design:</strong> ' +
@@ -404,6 +407,15 @@ jQuery(function ($) {
                             }
                             if (debug.openai && debug.openai.error) {
                                 infoHtml += '<p class="margin-bottom-5"><strong>OpenAI Debug:</strong> ' + escape_html(String(debug.openai.attempt || '')) + ' - ' + escape_html(String(debug.openai.error)) + '</p>';
+                            }
+                            if (debug.render && debug.render.background && debug.render.background.remote_provider) {
+                                infoHtml += '<p class="margin-bottom-5"><strong>Remote Provider:</strong> ' + escape_html(String(debug.render.background.remote_provider)) + '</p>';
+                            }
+                            if (debug.render && debug.render.background && typeof debug.render.background.remote_source_downloaded !== 'undefined') {
+                                infoHtml += '<p class="margin-bottom-5"><strong>Remote Source Downloaded:</strong> ' + escape_html(debug.render.background.remote_source_downloaded ? 'yes' : 'no') + '</p>';
+                            }
+                            if (debug.render && debug.render.background && debug.render.background.remote_source_path) {
+                                infoHtml += '<p class="margin-bottom-5"><strong>Remote Source Path:</strong> ' + escape_html(String(debug.render.background.remote_source_path)) + '</p>';
                             }
                             infoHtml += '</div></details>';
                         }

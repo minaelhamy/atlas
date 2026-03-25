@@ -163,6 +163,9 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             <?php if (!empty($meta['asset']['title'])) { ?>
                                                 <p class="margin-bottom-0"><strong><?php _e('Asset') ?>:</strong> <?php _esc($meta['asset']['title']) ?></p>
                                             <?php } ?>
+                                            <?php if (!empty($meta['asset']['remote_provider'])) { ?>
+                                                <p class="margin-bottom-0"><strong><?php _e('Asset Source') ?>:</strong> <?php _esc(ucfirst($meta['asset']['remote_provider'])) ?></p>
+                                            <?php } ?>
                                             <?php if (!empty($design['headline_font_key']) || !empty($design['background_tone'])) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e('Design') ?>:</strong>
                                                     <?php _esc(!empty($design['headline_font_key']) ? $design['headline_font_key'] : ''); ?>
@@ -191,6 +194,18 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                                         <?php } ?>
                                                         <?php if (!empty($debug['render']['background']['used_path'])) { ?>
                                                             <p class="margin-bottom-5"><strong><?php _e('Used Path') ?>:</strong> <code><?php _esc($debug['render']['background']['used_path']) ?></code></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($debug['render']['background']['remote_provider'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Remote Provider') ?>:</strong> <?php _esc($debug['render']['background']['remote_provider']) ?></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($debug['render']['background']['remote_url'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Remote URL') ?>:</strong> <code><?php _esc($debug['render']['background']['remote_url']) ?></code></p>
+                                                        <?php } ?>
+                                                        <?php if (isset($debug['render']['background']['remote_source_downloaded'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Remote Source Downloaded') ?>:</strong> <?php _esc($debug['render']['background']['remote_source_downloaded'] ? 'yes' : 'no') ?></p>
+                                                        <?php } ?>
+                                                        <?php if (!empty($debug['render']['background']['remote_source_path'])) { ?>
+                                                            <p class="margin-bottom-5"><strong><?php _e('Remote Source Path') ?>:</strong> <code><?php _esc($debug['render']['background']['remote_source_path']) ?></code></p>
                                                         <?php } ?>
                                                         <?php if (!empty($debug['render']['background']['attempted_paths'])) { ?>
                                                             <p class="margin-bottom-5"><strong><?php _e('Attempted Paths') ?>:</strong> <code><?php _esc(implode(' | ', $debug['render']['background']['attempted_paths'])) ?></code></p>

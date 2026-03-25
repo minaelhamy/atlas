@@ -2381,11 +2381,26 @@ function social_media_open_asset_background($asset, $width, $height, $background
         'used_path' => '',
         'used_source' => false,
         'fallback_gradient' => false,
+        'remote_provider' => !empty($asset['remote_provider']) ? $asset['remote_provider'] : '',
+        'remote_url' => !empty($asset['remote_url']) ? $asset['remote_url'] : '',
+        'remote_preview_url' => !empty($asset['remote_preview_url']) ? $asset['remote_preview_url'] : '',
+        'remote_source_path' => '',
+        'remote_preview_path' => '',
+        'remote_source_downloaded' => false,
+        'remote_preview_downloaded' => false,
     ];
 
     $assetPaths = [];
     $sourcePath = social_media_asset_source_path($asset);
     $previewPath = social_media_asset_preview_path($asset);
+    if (!empty($asset['remote_url'])) {
+        $debug['remote_source_path'] = (string) $sourcePath;
+        $debug['remote_source_downloaded'] = ($sourcePath !== '' && file_exists($sourcePath));
+    }
+    if (!empty($asset['remote_preview_url'])) {
+        $debug['remote_preview_path'] = (string) $previewPath;
+        $debug['remote_preview_downloaded'] = ($previewPath !== '' && file_exists($previewPath));
+    }
     if ($sourcePath && !empty($asset['asset_type']) && $asset['asset_type'] === 'image') {
         $assetPaths[] = $sourcePath;
     }
