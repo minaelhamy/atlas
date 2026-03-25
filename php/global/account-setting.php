@@ -257,6 +257,7 @@ if(isset($current_user['id']))
     $instagram_handle = $social_profile['instagram_handle'];
     $competitors = implode("\n", $social_profile['competitors']);
     $competitor_notes = $social_profile['competitor_notes'];
+    $company_intelligence = social_media_get_company_intelligence($_SESSION['user']['id']);
 
     if(isset($_POST['delete-account'])) {
         if (!check_allow()) {
@@ -385,6 +386,7 @@ if(isset($current_user['id']))
         'instagram_handle' => $instagram_handle,
         'competitors' => $competitors,
         'competitor_notes' => $competitor_notes,
+        'company_intelligence' => $company_intelligence,
         'billing_error' => $billing_error,
         'billing_details_type' => get_user_option($_SESSION['user']['id'],'billing_details_type'),
         'billing_tax_id' => get_user_option($_SESSION['user']['id'],'billing_tax_id'),

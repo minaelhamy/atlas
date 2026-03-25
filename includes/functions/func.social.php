@@ -139,6 +139,7 @@ function social_media_save_profile($user_id, $data)
     $profile = array_merge($profile, $data);
     $profile['competitors'] = social_media_normalize_list(isset($profile['competitors']) ? $profile['competitors'] : []);
     update_user_option($user_id, 'social_company_profile', json_encode($profile));
+    update_user_option($user_id, 'social_company_intelligence', '');
     return $profile;
 }
 
@@ -484,8 +485,140 @@ function social_media_get_company_context_text($user_id)
     if (!empty($profile['competitor_notes'])) {
         $parts[] = 'Competitor notes: ' . $profile['competitor_notes'];
     }
+    $intelligence = social_media_get_company_intelligence($user_id);
+    if (!empty($intelligence['summary_text'])) {
+        $parts[] = "Stored company intelligence:\n" . $intelligence['summary_text'];
+    }
 
     return implode("\n", $parts);
+}
+
+function social_media_get_company_intelligence_refresh_hours()
+{
+    return max(6, (int) get_env_setting('SOCIAL_COMPANY_INTELLIGENCE_REFRESH_HOURS', 72));
+}
+
+function social_media_profile_signature($profile)
+{
+    return sha1(json_encode([
+        'company_name' => !empty($profile['company_name']) ? $profile['company_name'] : '',
+        'company_website' => !empty($profile['company_website']) ? $profile['company_website'] : '',
+        'company_industry' => !empty($profile['company_industry']) ? $profile['company_industry'] : '',
+        'company_description' => !empty($profile['company_description']) ? $profile['company_description'] : '',
+        'target_audience' => !empty($profile['target_audience']) ? $profile['target_audience'] : '',
+        'brand_voice' => !empty($profile['brand_voice']) ? $profile['brand_voice'] : '',
+        'content_goals' => !empty($profile['content_goals']) ? $profile['content_goals'] : '',
+        'key_products' => !empty($profile['key_products']) ? $profile['key_products'] : '',
+        'differentiators' => !empty($profile['differentiators']) ? $profile['differentiators'] : '',
+        'competitors' => !empty($profile['competitors']) ? array_values($profile['competitors']) : [],
+        'competitor_notes' => !empty($profile['competitor_notes']) ? $profile['competitor_notes'] : '',
+    ]));
+}
+
+function social_media_get_company_intelligence($user_id, $force = false)
+{
+    $profile = social_media_get_profile($user_id);
+    $signature = social_media_profile_signature($profile);
+    $raw = get_user_option($user_id, 'social_company_intelligence', '');
+    $cached = !empty($raw) ? json_decode($raw, true) : [];
+    $refreshHours = social_media_get_company_intelligence_refresh_hours();
+    $needsRefresh = $force || empty($cached) || !is_array($cached);
+
+    if (!$needsRefresh) {
+        $cachedSignature = !empty($cached['profile_signature']) ? $cached['profile_signature'] : '';
+        $refreshedAt = !empty($cached['refreshed_at']) ? strtotime($cached['refreshed_at']) : 0;
+        if ($cachedSignature !== $signature) {
+            $needsRefresh = true;
+        } elseif ($refreshedAt <= 0 || (time() - $refreshedAt) > ($refreshHours * 3600)) {
+            $needsRefresh = true;
+        }
+    }
+
+    if (!$needsRefresh) {
+        return $cached;
+    }
+
+    $intelligence = social_media_refresh_company_intelligence($user_id, $profile);
+    update_user_option($user_id, 'social_company_intelligence', json_encode($intelligence));
+    return $intelligence;
+}
+
+function social_media_extract_site_points($html, $limit = 6)
+{
+    $points = [];
+    if (!is_string($html) || trim($html) === '') {
+        return $points;
+    }
+
+    if (preg_match_all('/<h[1-3][^>]*>(.*?)<\/h[1-3]>/is', $html, $matches)) {
+        foreach ($matches[1] as $match) {
+            $text = trim(html_entity_decode(strip_tags($match), ENT_QUOTES, 'UTF-8'));
+            if ($text !== '') {
+                $points[] = $text;
+            }
+            if (count($points) >= $limit) {
+                return array_slice(array_values(array_unique($points)), 0, $limit);
+            }
+        }
+    }
+
+    if (preg_match_all('/<p[^>]*>(.*?)<\/p>/is', $html, $matches)) {
+        foreach ($matches[1] as $match) {
+            $text = trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($match), ENT_QUOTES, 'UTF-8')));
+            if ($text !== '' && strlen($text) > 50) {
+                $points[] = $text;
+            }
+            if (count($points) >= $limit) {
+                break;
+            }
+        }
+    }
+
+    return array_slice(array_values(array_unique($points)), 0, $limit);
+}
+
+function social_media_fetch_site_snapshot($url)
+{
+    $url = trim((string) $url);
+    if ($url === '') {
+        return null;
+    }
+
+    if (!preg_match('/^https?:\/\//i', $url)) {
+        $url = 'https://' . ltrim($url, '/');
+    }
+
+    $snapshot = [
+        'url' => $url,
+        'title' => '',
+        'description' => '',
+        'headings' => [],
+        'summary_points' => [],
+        'instagram' => '',
+    ];
+
+    $html = social_media_safe_fetch_url($url);
+    if (!$html) {
+        return $snapshot;
+    }
+
+    if (preg_match('/<title>(.*?)<\/title>/is', $html, $match)) {
+        $snapshot['title'] = trim(html_entity_decode(strip_tags($match[1]), ENT_QUOTES, 'UTF-8'));
+    }
+
+    if (preg_match('/<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']/is', $html, $match)
+        || preg_match('/<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']/is', $html, $match)) {
+        $snapshot['description'] = trim(html_entity_decode($match[1], ENT_QUOTES, 'UTF-8'));
+    }
+
+    $snapshot['summary_points'] = social_media_extract_site_points($html, 6);
+    $snapshot['headings'] = array_slice($snapshot['summary_points'], 0, 3);
+
+    if (preg_match('/https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+/i', $html, $match)) {
+        $snapshot['instagram'] = $match[0];
+    }
+
+    return $snapshot;
 }
 
 function social_media_get_recent_chat_context($user_id, $limit = 8)
@@ -532,43 +665,131 @@ function social_media_fetch_competitor_snapshot($url)
         return null;
     }
 
-    if (!preg_match('/^https?:\/\//i', $url) && strpos($url, 'instagram.com/') === false) {
-        $url = 'https://' . $url;
-    } elseif (strpos($url, 'instagram.com/') !== false && !preg_match('/^https?:\/\//i', $url)) {
+    if (strpos($url, 'instagram.com/') !== false && !preg_match('/^https?:\/\//i', $url)) {
         $url = 'https://' . ltrim($url, '/');
     }
-
-    $snapshot = [
-        'url' => $url,
-        'title' => '',
-        'description' => '',
-        'instagram' => '',
-    ];
-
     if (strpos($url, 'instagram.com/') !== false) {
-        $snapshot['instagram'] = $url;
-        return $snapshot;
+        return [
+            'url' => $url,
+            'title' => '',
+            'description' => '',
+            'headings' => [],
+            'summary_points' => [],
+            'instagram' => $url,
+        ];
     }
 
-    $html = social_media_safe_fetch_url($url);
-    if (!$html) {
-        return $snapshot;
+    return social_media_fetch_site_snapshot($url);
+}
+
+function social_media_generate_intelligence_fallback($profile, $companySite, $competitors)
+{
+    $summary = [];
+    $market = [];
+    $edges = [];
+
+    if (!empty($profile['company_description'])) {
+        $summary[] = 'Company summary: ' . $profile['company_description'];
+    }
+    if (!empty($profile['key_products'])) {
+        $summary[] = 'Core offer: ' . $profile['key_products'];
+    }
+    if (!empty($profile['target_audience'])) {
+        $summary[] = 'Audience: ' . $profile['target_audience'];
+    }
+    if (!empty($profile['differentiators'])) {
+        $edges[] = $profile['differentiators'];
+    }
+    if (!empty($companySite['description'])) {
+        $summary[] = 'Website positioning: ' . $companySite['description'];
+    }
+    if (!empty($companySite['summary_points'])) {
+        $summary[] = 'Website highlights: ' . implode('; ', array_slice($companySite['summary_points'], 0, 4));
     }
 
-    if (preg_match('/<title>(.*?)<\/title>/is', $html, $match)) {
-        $snapshot['title'] = trim(html_entity_decode(strip_tags($match[1]), ENT_QUOTES, 'UTF-8'));
+    foreach (array_slice($competitors, 0, 3) as $competitor) {
+        $label = !empty($competitor['title']) ? $competitor['title'] : (!empty($competitor['url']) ? $competitor['url'] : 'Competitor');
+        $market[] = $label . ': ' . (!empty($competitor['description']) ? $competitor['description'] : 'No description found');
     }
 
-    if (preg_match('/<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']/is', $html, $match)
-        || preg_match('/<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']/is', $html, $match)) {
-        $snapshot['description'] = trim(html_entity_decode($match[1], ENT_QUOTES, 'UTF-8'));
+    return [
+        'company_summary' => implode(' ', array_filter($summary)),
+        'market_research' => !empty($market) ? 'Competitor/market signals: ' . implode(' | ', $market) : '',
+        'competitive_edges' => !empty($edges) ? implode(' | ', social_media_normalize_list($edges)) : '',
+        'strategic_guidance' => 'Use messaging that emphasizes clarity, differentiation, trust signals, and relevance to the target audience.',
+    ];
+}
+
+function social_media_generate_intelligence_via_openai($profile, $companySite, $competitors, $historyContext = '')
+{
+    if (trim((string) get_api_key()) === '') {
+        return [];
     }
 
-    if (preg_match('/https?:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._-]+/i', $html, $match)) {
-        $snapshot['instagram'] = $match[0];
-    }
+    require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/OpenAi.php';
+    require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
-    return $snapshot;
+    $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
+    $model = social_media_get_chat_model_candidates();
+    $model = !empty($model[0]) ? $model[0] : get_default_openai_chat_model();
+
+    $system = 'You are a business strategist. Build a concise reusable company intelligence brief as valid JSON only.';
+    $prompt = "Create a structured intelligence summary for Atlas to reuse in AI chats and social media generation.\n"
+        . "Return JSON only with keys: company_summary, market_research, competitive_edges, strategic_guidance.\n"
+        . "Company profile:\n" . json_encode($profile) . "\n\n"
+        . "Company website snapshot:\n" . json_encode($companySite) . "\n\n"
+        . "Competitor snapshots:\n" . json_encode($competitors) . "\n\n"
+        . "Recent founder/agent history:\n" . $historyContext . "\n\n"
+        . "Be specific. Focus on what the company does, who it serves, how it is different, market themes, and how content should position the brand.";
+
+    $response = $openAi->chat([
+        'model' => $model,
+        'messages' => [
+            ['role' => 'system', 'content' => $system],
+            ['role' => 'user', 'content' => $prompt],
+        ],
+        'temperature' => 0.4,
+        'response_format' => ['type' => 'json_object'],
+        'max_tokens' => 900,
+    ]);
+    $decoded = json_decode($response, true);
+    if (empty($decoded['choices'][0]['message']['content'])) {
+        return [];
+    }
+    $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
+    return is_array($json) ? $json : [];
+}
+
+function social_media_refresh_company_intelligence($user_id, $profile = null)
+{
+    $profile = $profile ?: social_media_get_profile($user_id);
+    $companySite = !empty($profile['company_website']) ? social_media_fetch_site_snapshot($profile['company_website']) : [];
+    $competitors = social_media_get_competitor_snapshots($profile);
+    $historyContext = social_media_get_recent_chat_context($user_id, 10);
+    $aiSummary = social_media_generate_intelligence_via_openai($profile, $companySite, $competitors, $historyContext);
+    $fallback = social_media_generate_intelligence_fallback($profile, $companySite, $competitors);
+    $intelligence = array_merge($fallback, array_filter($aiSummary, function ($value) {
+        return trim((string) $value) !== '';
+    }));
+
+    $summaryText = implode("\n", array_filter([
+        !empty($intelligence['company_summary']) ? 'Company summary: ' . $intelligence['company_summary'] : '',
+        !empty($intelligence['market_research']) ? 'Market research: ' . $intelligence['market_research'] : '',
+        !empty($intelligence['competitive_edges']) ? 'Competitive edges: ' . $intelligence['competitive_edges'] : '',
+        !empty($intelligence['strategic_guidance']) ? 'Strategic guidance: ' . $intelligence['strategic_guidance'] : '',
+    ]));
+
+    return [
+        'profile_signature' => social_media_profile_signature($profile),
+        'refreshed_at' => date('Y-m-d H:i:s'),
+        'company_site' => $companySite,
+        'competitors' => $competitors,
+        'company_summary' => !empty($intelligence['company_summary']) ? $intelligence['company_summary'] : '',
+        'market_research' => !empty($intelligence['market_research']) ? $intelligence['market_research'] : '',
+        'competitive_edges' => !empty($intelligence['competitive_edges']) ? $intelligence['competitive_edges'] : '',
+        'strategic_guidance' => !empty($intelligence['strategic_guidance']) ? $intelligence['strategic_guidance'] : '',
+        'summary_text' => $summaryText,
+    ];
 }
 
 function social_media_safe_fetch_url($url)

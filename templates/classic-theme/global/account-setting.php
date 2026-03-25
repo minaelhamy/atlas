@@ -208,6 +208,38 @@ overall_header(__("Account Setting"));
                                         <h5><?php _e("Competitor Notes") ?></h5>
                                         <textarea name="competitor_notes" class="with-border" rows="4"><?php _esc($competitor_notes) ?></textarea>
                                     </div>
+                                    <div class="dashboard-box intelligence-panel-box margin-top-20 margin-bottom-20">
+                                        <div class="headline">
+                                            <h3><i class="icon-feather-activity"></i> <?php _e("Company Intelligence") ?></h3>
+                                        </div>
+                                        <div class="content with-padding">
+                                            <p class="margin-bottom-10 intelligence-refreshed-at">
+                                                <strong><?php _e("Last Refreshed") ?>:</strong>
+                                                <span><?php _esc(!empty($company_intelligence['refreshed_at']) ? $company_intelligence['refreshed_at'] : __('Not generated yet')) ?></span>
+                                            </p>
+                                            <div class="company-intelligence-body">
+                                                <div class="margin-bottom-15">
+                                                    <strong><?php _e("Company Summary") ?></strong>
+                                                    <p class="margin-top-5 intelligence-company-summary"><?php _esc(!empty($company_intelligence['company_summary']) ? $company_intelligence['company_summary'] : __('No summary yet. Save your company profile and refresh intelligence.')) ?></p>
+                                                </div>
+                                                <div class="margin-bottom-15">
+                                                    <strong><?php _e("Market Research") ?></strong>
+                                                    <p class="margin-top-5 intelligence-market-research"><?php _esc(!empty($company_intelligence['market_research']) ? $company_intelligence['market_research'] : __('No market research yet.')) ?></p>
+                                                </div>
+                                                <div class="margin-bottom-15">
+                                                    <strong><?php _e("Competitive Edges") ?></strong>
+                                                    <p class="margin-top-5 intelligence-competitive-edges"><?php _esc(!empty($company_intelligence['competitive_edges']) ? $company_intelligence['competitive_edges'] : __('No competitive edge summary yet.')) ?></p>
+                                                </div>
+                                                <div class="margin-bottom-0">
+                                                    <strong><?php _e("Strategic Guidance") ?></strong>
+                                                    <p class="margin-top-5 intelligence-strategic-guidance"><?php _esc(!empty($company_intelligence['strategic_guidance']) ? $company_intelligence['strategic_guidance'] : __('No strategic guidance yet.')) ?></p>
+                                                </div>
+                                            </div>
+                                            <div class="margin-top-20">
+                                                <a href="#" class="button ripple-effect intelligence-refresh-btn"><?php _e("Refresh Now") ?></a>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <?php if(!empty($social_error)){ _esc($social_error); } ?>
                                     <button type="submit" name="social-submit" class="button ripple-effect"><?php _e("Save Company Profile") ?></button>
                                 </form>
@@ -382,6 +414,14 @@ overall_header(__("Account Setting"));
             background: #fff;
             padding: 10px;
         }
+        .intelligence-panel-box {
+            border: 1px solid #e7dcc8;
+            background: #f8f3e9;
+        }
+        .company-intelligence-body p {
+            color: #5a5142;
+            line-height: 1.65;
+        }
     </style>
     <script>
         var error = "";
@@ -498,6 +538,59 @@ overall_header(__("Account Setting"));
 
         $('#company_logo').on('change', function () {
             uploadProfileMedia('company_logo', '#company_logo', '#company-logo-upload-status', '#company-logo-preview');
+        });
+
+        $('.intelligence-refresh-btn').on('click', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            $btn.addClass('button-progress').prop('disabled', true);
+
+            $.ajax({
+                type: "POST",
+                url: ajaxurl + '?action=refresh_company_intelligence',
+                dataType: 'json',
+                success: function (response) {
+                    $btn.removeClass('button-progress').prop('disabled', false);
+                    if (response.success && response.intelligence) {
+                        $('.intelligence-refreshed-at span').text(response.intelligence.refreshed_at || '');
+                        $('.intelligence-company-summary').text(response.intelligence.company_summary || '');
+                        $('.intelligence-market-research').text(response.intelligence.market_research || '');
+                        $('.intelligence-competitive-edges').text(response.intelligence.competitive_edges || '');
+                        $('.intelligence-strategic-guidance').text(response.intelligence.strategic_guidance || '');
+                        Snackbar.show({
+                            text: response.message,
+                            pos: 'bottom-center',
+                            showAction: false,
+                            actionText: "Dismiss",
+                            duration: 3000,
+                            textColor: '#fff',
+                            backgroundColor: '#383838'
+                        });
+                    } else {
+                        Snackbar.show({
+                            text: response.error || '<?php echo escape(__('Unable to refresh company intelligence right now.')); ?>',
+                            pos: 'bottom-center',
+                            showAction: false,
+                            actionText: "Dismiss",
+                            duration: 3000,
+                            textColor: '#fff',
+                            backgroundColor: '#d32f2f'
+                        });
+                    }
+                },
+                error: function () {
+                    $btn.removeClass('button-progress').prop('disabled', false);
+                    Snackbar.show({
+                        text: '<?php echo escape(__('Unable to refresh company intelligence right now.')); ?>',
+                        pos: 'bottom-center',
+                        showAction: false,
+                        actionText: "Dismiss",
+                        duration: 3000,
+                        textColor: '#fff',
+                        backgroundColor: '#d32f2f'
+                    });
+                }
+            });
         });
     </script>
 <?php

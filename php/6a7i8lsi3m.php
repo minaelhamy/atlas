@@ -71,6 +71,9 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "upload_profile_media") {
         upload_profile_media();
     }
+    if ($_GET['action'] == "refresh_company_intelligence") {
+        refresh_company_intelligence();
+    }
     die(0);
 }
 
@@ -204,6 +207,31 @@ function upload_profile_media()
     }
 
     $result['error'] = __('Invalid upload type.');
+    die(json_encode($result));
+}
+
+function refresh_company_intelligence()
+{
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    $intelligence = social_media_get_company_intelligence($_SESSION['user']['id'], true);
+    if (empty($intelligence) || !is_array($intelligence)) {
+        die(json_encode($result));
+    }
+
+    $result['success'] = true;
+    $result['message'] = __('Company intelligence refreshed successfully.');
+    $result['intelligence'] = [
+        'refreshed_at' => !empty($intelligence['refreshed_at']) ? $intelligence['refreshed_at'] : '',
+        'company_summary' => !empty($intelligence['company_summary']) ? $intelligence['company_summary'] : '',
+        'market_research' => !empty($intelligence['market_research']) ? $intelligence['market_research'] : '',
+        'competitive_edges' => !empty($intelligence['competitive_edges']) ? $intelligence['competitive_edges'] : '',
+        'strategic_guidance' => !empty($intelligence['strategic_guidance']) ? $intelligence['strategic_guidance'] : '',
+    ];
     die(json_encode($result));
 }
 
