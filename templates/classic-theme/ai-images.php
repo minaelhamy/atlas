@@ -45,23 +45,72 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                         <h3><i class="icon-feather-instagram"></i> <?php _e("Plan A Campaign") ?></h3>
                     </div>
                     <div class="content with-padding">
-                        <div class="submit-field">
-                            <h5><?php _e("Campaign Brief") ?></h5>
-                            <textarea name="description" class="with-border" rows="4" placeholder="<?php _e('Example: Launch a 4-week campaign about our AI outbound product for B2B SaaS founders. Focus on trust, speed, and practical use cases.') ?>" <?php echo $profileReady ? '' : 'disabled'; ?> required></textarea>
-                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="submit-field">
-                                    <h5><?php _e("Focus Area") ?></h5>
-                                    <input type="text" name="focus_area" class="with-border" placeholder="<?php _e('Lead generation, education, founder story, product launch...') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>>
+                                    <h5><?php _e("Campaign Type") ?></h5>
+                                    <select name="campaign_type" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
+                                        <option value=""><?php _e("Select campaign type") ?></option>
+                                        <?php foreach ($campaign_catalog as $campaignKey => $campaignMeta) { ?>
+                                            <option value="<?php _esc($campaignKey) ?>"><?php _esc($campaignMeta['label']) ?></option>
+                                        <?php } ?>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="submit-field">
-                                    <h5><?php _e("Campaign Goal") ?></h5>
-                                    <input type="text" name="campaign_goal" class="with-border" placeholder="<?php _e('Drive DMs, book calls, get signups, warm audience...') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>>
+                                    <h5><?php _e("Funnel Stage") ?></h5>
+                                    <select name="funnel_stage" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
+                                        <option value=""><?php _e("Select funnel stage") ?></option>
+                                        <?php foreach ($funnel_stage_catalog as $stageKey => $stageLabel) { ?>
+                                            <option value="<?php _esc($stageKey) ?>"><?php _esc($stageLabel) ?></option>
+                                        <?php } ?>
+                                    </select>
                                 </div>
                             </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="submit-field">
+                                    <h5><?php _e("Primary Focus") ?></h5>
+                                    <select name="focus_area" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
+                                        <option value=""><?php _e("Select focus area") ?></option>
+                                        <?php foreach ($focus_options as $focusValue) { ?>
+                                            <option value="<?php _esc($focusValue) ?>"><?php _esc($focusValue) ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="submit-field">
+                                    <h5><?php _e("Content Angle") ?></h5>
+                                    <select name="content_angle" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
+                                        <option value=""><?php _e("Select content angle") ?></option>
+                                        <?php foreach ($content_angle_options as $contentAngleValue) { ?>
+                                            <option value="<?php _esc($contentAngleValue) ?>"><?php _esc($contentAngleValue) ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="submit-field">
+                                    <h5><?php _e("Use Case") ?></h5>
+                                    <select name="use_case" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
+                                        <option value=""><?php _e("Select use case") ?></option>
+                                        <?php foreach ($use_case_options as $useCaseValue) { ?>
+                                            <option value="<?php _esc($useCaseValue) ?>"><?php _esc($useCaseValue) ?></option>
+                                        <?php } ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="submit-field">
+                            <h5><?php _e("Extra Notes") ?></h5>
+                            <textarea name="description" class="with-border" rows="3" placeholder="<?php _e('Optional: add product, offer, launch context, audience nuance, or anything the generator should emphasize.') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>></textarea>
+                        </div>
+                        <div class="social-campaign-summary margin-bottom-20">
+                            <strong><?php _e("Campaign Strategy") ?>:</strong>
+                            <p class="margin-top-10 margin-bottom-0 social-campaign-summary-text"><?php _e("Choose a campaign type to see its goal, focus, content style, and best-use guidance.") ?></p>
                         </div>
                         <small class="form-error"></small>
                         <button type="submit" name="submit" class="button ripple-effect" <?php echo $profileReady ? '' : 'disabled'; ?>>
@@ -218,6 +267,13 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
     .social-post-card .social-post-body {
         background: #fff;
     }
+    .social-campaign-summary {
+        background: #f6f2e8;
+        border: 1px solid #e7dcc8;
+        border-radius: 12px;
+        padding: 16px 18px;
+        color: #514735;
+    }
     .social-post-actions {
         display: flex;
         align-items: center;
@@ -253,6 +309,35 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
         background: #c62828;
     }
 </style>
+<script>
+    (function () {
+        var campaignCatalog = <?php echo json_encode($campaign_catalog); ?>;
+        var select = document.querySelector('select[name="campaign_type"]');
+        var summary = document.querySelector('.social-campaign-summary-text');
+
+        if (!select || !summary) {
+            return;
+        }
+
+        function renderCampaignSummary() {
+            var key = select.value;
+            if (!key || !campaignCatalog[key]) {
+                summary.textContent = 'Choose a campaign type to see its goal, focus, content style, and best-use guidance.';
+                return;
+            }
+
+            var item = campaignCatalog[key];
+            summary.innerHTML =
+                '<strong>Goal:</strong> ' + item.goal +
+                '<br><strong>Focus:</strong> ' + item.focus.join(' | ') +
+                '<br><strong>Content:</strong> ' + item.content_examples.join(' | ') +
+                '<br><strong>When to use:</strong> ' + item.when_to_use.join(' | ');
+        }
+
+        select.addEventListener('change', renderCampaignSummary);
+        renderCampaignSummary();
+    })();
+</script>
 <?php
 $footer_content = ob_get_clean();
 include_once TEMPLATE_PATH . '/overall_footer_dashboard.php';

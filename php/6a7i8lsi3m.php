@@ -1186,7 +1186,7 @@ function generate_image()
 
         $_POST = validate_input($_POST);
 
-        if (!empty($_POST['description'])) {
+        if (!empty($_POST['campaign_type'])) {
 
             $membership = get_user_membership_detail($_SESSION['user']['id']);
             $images_limit = $membership['settings']['ai_images_limit'];
@@ -1208,13 +1208,7 @@ function generate_image()
                 die(json_encode($result));
             }
 
-            $prompt = trim($_POST['description']);
-            if (!empty($_POST['focus_area'])) {
-                $prompt .= "\nFocus area: " . trim($_POST['focus_area']);
-            }
-            if (!empty($_POST['campaign_goal'])) {
-                $prompt .= "\nCampaign goal: " . trim($_POST['campaign_goal']);
-            }
+            $prompt = social_media_build_campaign_brief($_POST);
 
             // check bad words
             if ($word = check_bad_words($prompt)) {
@@ -1236,7 +1230,7 @@ function generate_image()
 
             $result['success'] = true;
             $result['posts'] = $posts;
-            $result['description'] = $_POST['description'];
+            $result['description'] = !empty($_POST['description']) ? $_POST['description'] : '';
             $result['old_used_images'] = (int) $total_images_used;
             $result['current_used_images'] = (int) $total_images_used + $postsToGenerate;
 

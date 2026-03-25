@@ -156,6 +156,258 @@ function social_media_normalize_list($value)
     return $items;
 }
 
+function social_media_get_campaign_catalog()
+{
+    return [
+        'brand-awareness' => [
+            'label' => 'Brand Awareness',
+            'goal' => 'Get as many relevant people as possible to know your brand exists.',
+            'focus' => [
+                'Reach and impressions',
+                'Visual identity',
+                'Simple messaging about who you are and what you do',
+            ],
+            'content_examples' => [
+                'Short videos',
+                'Lifestyle imagery',
+                'Brand story posts',
+            ],
+            'when_to_use' => [
+                'New business',
+                'Entering a new market',
+                'Launching a new product line',
+            ],
+        ],
+        'engagement' => [
+            'label' => 'Engagement',
+            'goal' => 'Increase interaction like likes, comments, shares, and saves.',
+            'focus' => [
+                'Emotional triggers',
+                'Conversation starters',
+                'Relatability',
+            ],
+            'content_examples' => [
+                'Questions and polls',
+                'Memes',
+                'Controlled controversial takes',
+                'Tag-a-friend posts',
+            ],
+            'when_to_use' => [
+                'Low engagement pages',
+                'Building community',
+            ],
+        ],
+        'lead-generation' => [
+            'label' => 'Lead Generation',
+            'goal' => 'Collect user data such as emails, phone numbers, and signups.',
+            'focus' => [
+                'Value exchange',
+                'Low friction forms',
+                'Clear CTA',
+            ],
+            'content_examples' => [
+                'Free guides',
+                'Discount codes',
+                'Webinars',
+            ],
+            'when_to_use' => [
+                'Service businesses',
+                'B2B',
+                'Pre-sales funnels',
+            ],
+        ],
+        'conversion-sales' => [
+            'label' => 'Conversion / Sales',
+            'goal' => 'Drive direct purchases.',
+            'focus' => [
+                'Strong offer',
+                'Urgency and scarcity',
+                'Clear product benefits',
+            ],
+            'content_examples' => [
+                'Product demos',
+                'Testimonials',
+                'Before and after',
+                'Limited-time deals',
+            ],
+            'when_to_use' => [
+                'E-commerce',
+                'Proven product-market fit',
+            ],
+        ],
+        'retargeting' => [
+            'label' => 'Retargeting',
+            'goal' => 'Convert people who already interacted but did not buy.',
+            'focus' => [
+                'Reminder plus trust building',
+                'Objection handling',
+                'Incentives',
+            ],
+            'content_examples' => [
+                'Still thinking about this posts',
+                'Reviews',
+                'Cart abandonment ads',
+            ],
+            'when_to_use' => [
+                'Always-on high ROI campaigns',
+            ],
+        ],
+        'traffic' => [
+            'label' => 'Traffic',
+            'goal' => 'Drive users to a website, app, or landing page.',
+            'focus' => [
+                'Click-through rate',
+                'Curiosity hooks',
+                'Strong headlines',
+            ],
+            'content_examples' => [
+                'Blog links',
+                'Learn more posts',
+                'News-style content',
+            ],
+            'when_to_use' => [
+                'Content marketing',
+                'SEO support',
+            ],
+        ],
+        'influencer-collaboration' => [
+            'label' => 'Influencer / Collaboration',
+            'goal' => 'Leverage existing audiences for trust and reach.',
+            'focus' => [
+                'Authenticity',
+                'Audience alignment',
+                'Social proof',
+            ],
+            'content_examples' => [
+                'Influencer reviews',
+                'Co-branded posts',
+                'Giveaways',
+            ],
+            'when_to_use' => [
+                'Fast brand growth',
+                'Entering niche communities',
+            ],
+        ],
+        'product-launch' => [
+            'label' => 'Product Launch',
+            'goal' => 'Create hype and an initial sales spike.',
+            'focus' => [
+                'Teasing',
+                'Countdown',
+                'Exclusivity',
+            ],
+            'content_examples' => [
+                'Coming soon posts',
+                'Behind the scenes',
+                'Early access offers',
+            ],
+            'when_to_use' => [
+                'New product or service release',
+            ],
+        ],
+        'educational-value' => [
+            'label' => 'Educational / Value',
+            'goal' => 'Build authority and trust.',
+            'focus' => [
+                'Teaching',
+                'Solving problems',
+                'Positioning as expert',
+            ],
+            'content_examples' => [
+                'How-to posts',
+                'Tips and tricks',
+                'Industry insights',
+            ],
+            'when_to_use' => [
+                'Long-term brand building',
+                'High-ticket offers',
+            ],
+        ],
+        'loyalty-retention' => [
+            'label' => 'Loyalty / Retention',
+            'goal' => 'Keep existing customers and increase repeat purchases.',
+            'focus' => [
+                'Relationship',
+                'Rewards',
+                'Community',
+            ],
+            'content_examples' => [
+                'Exclusive discounts',
+                'VIP content',
+                'User-generated content',
+            ],
+            'when_to_use' => [
+                'After you start getting customers',
+            ],
+        ],
+    ];
+}
+
+function social_media_get_funnel_stage_catalog()
+{
+    return [
+        'awareness' => 'Awareness - Who are you?',
+        'engagement' => 'Engagement - I like you',
+        'trust' => 'Trust - I believe you',
+        'conversion' => 'Conversion - I buy',
+        'retargeting' => 'Retargeting - I was unsure, now I buy',
+        'loyalty' => 'Loyalty - I buy again',
+    ];
+}
+
+function social_media_get_selection_options($catalog, $field)
+{
+    $options = [];
+    foreach ($catalog as $item) {
+        if (!empty($item[$field]) && is_array($item[$field])) {
+            foreach ($item[$field] as $value) {
+                $key = md5($value);
+                $options[$key] = $value;
+            }
+        }
+    }
+    asort($options);
+    return $options;
+}
+
+function social_media_build_campaign_brief($input)
+{
+    $catalog = social_media_get_campaign_catalog();
+    $funnelStages = social_media_get_funnel_stage_catalog();
+    $campaignType = !empty($input['campaign_type']) && isset($catalog[$input['campaign_type']]) ? $catalog[$input['campaign_type']] : null;
+    $focusArea = trim((string) ($input['focus_area'] ?? ''));
+    $contentAngle = trim((string) ($input['content_angle'] ?? ''));
+    $useCase = trim((string) ($input['use_case'] ?? ''));
+    $funnelStage = trim((string) ($input['funnel_stage'] ?? ''));
+    $notes = trim((string) ($input['description'] ?? ''));
+
+    $parts = [];
+    if ($campaignType) {
+        $parts[] = 'Campaign type: ' . $campaignType['label'];
+        $parts[] = 'Primary goal: ' . $campaignType['goal'];
+        $parts[] = 'Campaign focus: ' . implode('; ', $campaignType['focus']);
+        $parts[] = 'Content examples to emulate: ' . implode('; ', $campaignType['content_examples']);
+        $parts[] = 'Best use cases: ' . implode('; ', $campaignType['when_to_use']);
+    }
+    if ($funnelStage !== '' && isset($funnelStages[$funnelStage])) {
+        $parts[] = 'Funnel stage: ' . $funnelStages[$funnelStage];
+    }
+    if ($focusArea !== '') {
+        $parts[] = 'Selected focus area: ' . $focusArea;
+    }
+    if ($contentAngle !== '') {
+        $parts[] = 'Preferred content angle: ' . $contentAngle;
+    }
+    if ($useCase !== '') {
+        $parts[] = 'Current use case: ' . $useCase;
+    }
+    if ($notes !== '') {
+        $parts[] = 'Extra campaign notes: ' . $notes;
+    }
+
+    return implode("\n", $parts);
+}
+
 function social_media_handle_profile_upload($field_name, $existing = '')
 {
     if (empty($_FILES[$field_name]) || empty($_FILES[$field_name]['name'])) {
@@ -622,7 +874,7 @@ function social_media_generate_batch($user_id, $brief = '')
     $fontCatalog = social_media_get_font_prompt_catalog();
     $paletteCatalog = social_media_get_palette_prompt_catalog();
 
-    $system = "You are Atlas Social Strategist. Generate practical, brand-aware social media packages for founders. Return valid JSON only.";
+    $system = "You are Atlas Social Strategist. Generate practical, brand-aware social media packages for founders. Use the campaign strategy as a hard constraint for messaging, CTA style, and content angle. Return valid JSON only.";
 
     $competitorText = json_encode($competitorSnapshots);
     $userPrompt = "Create exactly 9 social media ideas for this company.\n"
@@ -633,6 +885,8 @@ function social_media_generate_batch($user_id, $brief = '')
         . "overlay_text should read like the actual quote, claim, framework, or contrarian hook that will appear on the design.\n"
         . "caption must be publish-ready, useful, specific, and persuasive. It should sound like a real social caption, not an instruction to a marketer.\n"
         . "The CTA must be direct and natural, not generic.\n"
+        . "Every post must feel final and publishable. Do not explain the strategy to the audience. Turn the strategy into sharp copy.\n"
+        . "Use the selected campaign type, funnel stage, focus area, content angle, and use case to decide what kind of hook, caption, and CTA should be written.\n"
         . "The design object must include: headline_font_key, body_font_key, headline_size, body_size, text_case, text_align, overlay_color, overlay_opacity, text_color, accent_color, background_tone, asset_tags.\n"
         . "Only use font keys from this approved list:\n{$fontCatalog}\n\n"
         . "Use these palette directions and background tones when choosing colors:\n{$paletteCatalog}\n\n"
