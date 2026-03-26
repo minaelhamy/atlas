@@ -400,17 +400,15 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
             setProgress(progressValue);
 
             var progressTimer = window.setInterval(function () {
-                if (progressValue < 24) {
-                    progressValue += 6;
-                } else if (progressValue < 56) {
-                    progressValue += 4;
-                } else if (progressValue < 84) {
+                if (progressValue < 40) {
                     progressValue += 2;
-                } else if (progressValue < 93) {
+                } else if (progressValue < 68) {
+                    progressValue += 1;
+                } else if (progressValue < 84) {
                     progressValue += 1;
                 }
                 setProgress(progressValue);
-            }, 320);
+            }, 520);
 
             $.ajax({
                 type: 'POST',

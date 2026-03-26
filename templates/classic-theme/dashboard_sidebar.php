@@ -34,14 +34,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                     </ul>
 
                     <ul data-submenu-title="<?php _e("Organize and Manage") ?>">
-                        <?php if (get_option('enable_ai_templates', 1)) { ?>
-                            <li class="<?php echo CURRENT_PAGE == 'app/ai-templates' ? 'active' : ''; ?>">
-                                <a href="<?php url("AI_TEMPLATES") ?>"><i
-                                            class="icon-feather-layers"></i> <?php _e("Daily use templates") ?></a></li>
-
-                            <?php
-                        }
-                        if ($config['enable_ai_images']) {
+                        <?php if ($config['enable_ai_images']) {
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                 <li class="<?php echo in_array(CURRENT_PAGE, ['app/ai-images', 'app/ai-images-campaign', 'app/ai-images-grid'], true) ? 'active' : ''; ?>"><a
                                             href="<?php url("AI_IMAGES") ?>"><i

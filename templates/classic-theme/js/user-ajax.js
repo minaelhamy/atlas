@@ -368,17 +368,15 @@ jQuery(function ($) {
 
         var progressValue = 4;
         var progressTimer = window.setInterval(function () {
-            if (progressValue < 28) {
-                progressValue += 6;
-            } else if (progressValue < 58) {
-                progressValue += 4;
-            } else if (progressValue < 82) {
+            if (progressValue < 40) {
                 progressValue += 2;
-            } else if (progressValue < 93) {
+            } else if (progressValue < 68) {
+                progressValue += 1;
+            } else if (progressValue < 84) {
                 progressValue += 1;
             }
             set_generation_progress($form, progressValue);
-        }, 320);
+        }, 520);
 
         $error.slideUp();
         $.ajax({
