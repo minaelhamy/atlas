@@ -712,6 +712,206 @@ a.button:hover {
     border-color: rgba(23, 23, 23, 0.08) !important;
 }
 
+.atlas-dashboard-stats {
+    width: calc(100% + 16px);
+    margin-bottom: 8px;
+}
+
+.atlas-dashboard-stats .fun-fact {
+    flex: 1 1 calc(33.333% - 16px);
+    max-width: calc(33.333% - 16px);
+    margin: 0 16px 16px 0;
+    padding: 18px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--atlas-line);
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.atlas-dashboard-stats .fun-fact-icon {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(243, 239, 229, 0.92);
+}
+
+.atlas-dashboard-stats .fun-fact-icon i {
+    font-size: 24px;
+    color: #5b564d;
+}
+
+.atlas-dashboard-stats .fun-fact-text {
+    margin-right: 14px;
+}
+
+.atlas-dashboard-stats .fun-fact span {
+    font-size: 12px;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--atlas-muted-soft);
+}
+
+.atlas-dashboard-stats .fun-fact h4 {
+    margin-top: 8px;
+    font-size: 25px;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+}
+
+.atlas-dashboard-stats .fun-fact h4 small {
+    font-size: 13px;
+    color: var(--atlas-muted);
+}
+
+.atlas-dashboard-intelligence .content.with-padding {
+    padding-top: 20px;
+}
+
+.atlas-dashboard-intelligence-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.atlas-dashboard-intelligence-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.atlas-dashboard-intelligence-card {
+    border-radius: 18px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(247, 246, 242, 0.72);
+    padding: 18px;
+}
+
+.atlas-dashboard-label {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--atlas-muted-soft);
+}
+
+.atlas-dashboard-intelligence-card p {
+    margin: 0;
+    color: #5f594f;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.atlas-dashboard-list-box .content.with-padding {
+    padding: 14px;
+}
+
+.atlas-dashboard-quick-list,
+.atlas-dashboard-post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.atlas-dashboard-quick-item,
+.atlas-dashboard-post-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-radius: 18px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(247, 246, 242, 0.72);
+    padding: 12px;
+    color: var(--atlas-text);
+}
+
+.atlas-dashboard-quick-item:hover,
+.atlas-dashboard-post-item:hover {
+    color: var(--atlas-text);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.atlas-dashboard-quick-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex: 0 0 52px;
+    background: var(--atlas-accent-soft);
+}
+
+.atlas-dashboard-quick-avatar img,
+.atlas-dashboard-post-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.atlas-dashboard-quick-copy,
+.atlas-dashboard-post-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.atlas-dashboard-quick-copy strong,
+.atlas-dashboard-post-copy strong {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--atlas-text);
+}
+
+.atlas-dashboard-quick-copy small,
+.atlas-dashboard-post-copy small,
+.atlas-dashboard-quick-meta {
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.atlas-dashboard-quick-meta {
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.atlas-dashboard-post-thumb {
+    width: 76px;
+    height: 76px;
+    border-radius: 18px;
+    overflow: hidden;
+    flex: 0 0 76px;
+    background: var(--atlas-accent-soft);
+}
+
+@media (max-width: 1199px) {
+    .atlas-dashboard-stats .fun-fact {
+        flex: 1 1 calc(50% - 16px);
+        max-width: calc(50% - 16px);
+    }
+}
+
+@media (max-width: 767px) {
+    .atlas-dashboard-intelligence-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .atlas-dashboard-intelligence-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .atlas-dashboard-stats .fun-fact {
+        flex: 1 1 calc(100% - 16px);
+        max-width: calc(100% - 16px);
+    }
+}
+
 .social-generator-progress-bar {
     background: #171717 !important;
 }

@@ -58,7 +58,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                         <?php if (get_option('enable_ai_templates', 1)) { ?>
                             <li class="<?php echo CURRENT_PAGE == 'app/ai-templates' ? 'active' : ''; ?>">
                                 <a href="<?php url("AI_TEMPLATES") ?>"><i
-                                            class="icon-feather-layers"></i> <?php _e("Templates") ?></a></li>
+                                            class="icon-feather-layers"></i> <?php _e("Daily use templates") ?></a></li>
 
                             <?php
                         }

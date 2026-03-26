@@ -26,6 +26,47 @@ if (isset($current_user['id'])) {
     $membership = get_user_membership_detail($_SESSION['user']['id']);
     $membership_name = $membership['name'];
     $membership_settings = $membership['settings'];
+    $company_intelligence = social_media_get_company_intelligence($_SESSION['user']['id']);
+
+    $top_agents = [];
+    if ($config['enable_ai_chat']) {
+        $agentSql = "SELECT b.id, b.name, b.role, b.image, COUNT(c.id) AS usage_count
+            FROM `".$config['db']['pre']."ai_chat` c
+            INNER JOIN `".$config['db']['pre']."ai_chat_bots` b ON b.id = c.bot_id
+            WHERE c.user_id = " . (int) $_SESSION['user']['id'] . " AND c.bot_id IS NOT NULL AND b.active = 1
+            GROUP BY b.id, b.name, b.role, b.image
+            ORDER BY usage_count DESC, b.position ASC, b.id ASC
+            LIMIT 2";
+
+        $agentRows = ORM::for_table($config['db']['pre'] . 'ai_chat')->raw_query($agentSql)->find_many();
+        foreach ($agentRows as $agent) {
+            $top_agents[] = [
+                'id' => $agent['id'],
+                'name' => $agent['name'],
+                'role' => $agent['role'],
+                'usage_count' => (int) $agent['usage_count'],
+                'link' => $link['AI_CHAT'] . '/' . $agent['id'],
+                'image' => !empty($agent['image'])
+                    ? $config['site_url'] . 'storage/chat-bots/' . $agent['image']
+                    : get_avatar_url_by_name($agent['name'])
+            ];
+        }
+    }
+
+    $recent_social_posts = [];
+    if (get_option('enable_ai_images')) {
+        $recentPosts = social_media_get_recent_posts($_SESSION['user']['id'], 2);
+        foreach ($recentPosts as $post) {
+            $recent_social_posts[] = [
+                'id' => $post['id'],
+                'title' => $post['title'],
+                'overlay_text' => $post['overlay_text'],
+                'created_at' => !empty($post['created_at']) ? timeAgo($post['created_at']) : '',
+                'preview_url' => !empty($post['preview_image']) ? $config['site_url'] . 'storage/social_posts/' . $post['preview_image'] : '',
+                'link' => $link['AI_IMAGES']
+            ];
+        }
+    }
 
 
     $sql = "SELECT DATE(`date`) AS created, SUM(`words`) AS used_words 
@@ -44,14 +85,15 @@ if (isset($current_user['id'])) {
     }
 
     HtmlTemplate::display('dashboard', array(
-        'word_used' => json_encode(array_values($word_used)),
-        'days' => json_encode(array_values($days)),
         'membership_name' => $membership_name,
         'membership_settings' => $membership_settings,
         'total_documents_created' => $total_documents_created,
         'total_speech_used' => $total_speech_used,
         'total_words_used' => $total_words_used ?: 0,
-        'total_images_used' => $total_images_used ?: 0
+        'total_images_used' => $total_images_used ?: 0,
+        'company_intelligence' => $company_intelligence,
+        'top_agents' => $top_agents,
+        'recent_social_posts' => $recent_social_posts
     ));
 } else {
     headerRedirect($link['LOGIN']);
