@@ -82,6 +82,30 @@ textarea {
     letter-spacing: -0.02em;
 }
 
+body div,
+body span,
+body a,
+body p,
+body small,
+body strong,
+body em,
+body li,
+body label,
+body td,
+body th,
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6,
+body input,
+body textarea,
+body select,
+body button {
+    font-family: "Untitled Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+}
+
 #footer {
     display: none;
 }
@@ -146,23 +170,11 @@ textarea {
     color: var(--atlas-text);
 }
 
-.atlas-sidebar-brand-mark {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    background: #171717;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    font-weight: 700;
-}
-
 .atlas-sidebar-brand-copy {
     display: flex;
     flex-direction: column;
     line-height: 1.1;
+    min-width: 0;
 }
 
 .atlas-sidebar-brand-copy strong {
@@ -648,6 +660,32 @@ a.button:hover {
 
 .social-post-actions {
     gap: 6px;
+}
+
+.social-post-actions .social-action-btn {
+    width: auto;
+    height: auto;
+    min-width: 0;
+    padding: 2px !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: #59554d !important;
+}
+
+.social-post-actions .social-action-btn:hover,
+.social-post-actions .social-action-btn:focus {
+    background: transparent !important;
+    color: var(--atlas-text) !important;
+    transform: none;
+}
+
+.social-post-actions .social-action-danger,
+.social-post-actions .atlas-icon-button-danger {
+    background: transparent !important;
+    border: none !important;
+    color: #cc5a49 !important;
 }
 
 .social-post-card .social-post-body h4 {

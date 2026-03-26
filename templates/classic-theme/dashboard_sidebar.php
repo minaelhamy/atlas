@@ -8,7 +8,6 @@ $plan_settings = $current_user['plan']['settings']; ?>
         <div class="dashboard-nav-container">
             <div class="atlas-sidebar-brand">
                 <a href="<?php url("DASHBOARD") ?>" class="atlas-sidebar-brand-link">
-                    <span class="atlas-sidebar-brand-mark"><?php echo strtoupper(substr($config['site_title'], 0, 1)); ?></span>
                     <span class="atlas-sidebar-brand-copy">
                         <strong><?php _esc($config['site_title']) ?></strong>
                         <small><?php _e("AI workspace") ?></small>
