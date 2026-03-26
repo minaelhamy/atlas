@@ -897,6 +897,60 @@ function social_media_download_remote_file($url)
     return file_exists($target) ? $target : '';
 }
 
+function social_media_track_unsplash_download($asset)
+{
+    static $tracked = [];
+
+    if (empty($asset['remote_provider']) || $asset['remote_provider'] !== 'unsplash' || empty($asset['remote_download_url'])) {
+        return false;
+    }
+
+    $downloadUrl = trim((string) $asset['remote_download_url']);
+    if ($downloadUrl === '' || isset($tracked[$downloadUrl])) {
+        return isset($tracked[$downloadUrl]);
+    }
+
+    $headers = [
+        'Authorization: Client-ID ' . trim((string) get_env_setting('UNSPLASH_ACCESS_KEY', '')),
+        'Accept-Version: v1',
+    ];
+    social_media_http_get_json($downloadUrl, $headers);
+    $tracked[$downloadUrl] = true;
+
+    return true;
+}
+
+function social_media_unsplash_attribution_url($url)
+{
+    $url = trim((string) $url);
+    if ($url === '') {
+        return '';
+    }
+
+    $parts = parse_url($url);
+    if (empty($parts['scheme']) || empty($parts['host'])) {
+        return $url;
+    }
+
+    $query = [];
+    if (!empty($parts['query'])) {
+        parse_str($parts['query'], $query);
+    }
+    $query['utm_source'] = 'atlas';
+    $query['utm_medium'] = 'referral';
+
+    $rebuilt = $parts['scheme'] . '://' . $parts['host'];
+    if (!empty($parts['path'])) {
+        $rebuilt .= $parts['path'];
+    }
+    $rebuilt .= '?' . http_build_query($query);
+    if (!empty($parts['fragment'])) {
+        $rebuilt .= '#' . $parts['fragment'];
+    }
+
+    return $rebuilt;
+}
+
 function social_media_remote_asset_sources()
 {
     $env = get_env_setting('SOCIAL_REMOTE_ASSET_SOURCES', 'unsplash,pexels,pixabay');
@@ -1093,7 +1147,7 @@ function social_media_guess_background_tone($color)
     return 'warm';
 }
 
-function social_media_remote_asset_record($provider, $id, $title, $imageUrl, $previewUrl, $width, $height, $tags = [], $color = '#223046', $pageUrl = '', $author = '')
+function social_media_remote_asset_record($provider, $id, $title, $imageUrl, $previewUrl, $width, $height, $tags = [], $color = '#223046', $pageUrl = '', $author = '', $authorUrl = '', $downloadUrl = '')
 {
     $tone = social_media_guess_background_tone($color);
 
@@ -1109,6 +1163,8 @@ function social_media_remote_asset_record($provider, $id, $title, $imageUrl, $pr
         'remote_preview_url' => $previewUrl ?: $imageUrl,
         'remote_page_url' => $pageUrl,
         'remote_author' => $author,
+        'remote_author_url' => $authorUrl,
+        'remote_download_url' => $downloadUrl,
         'remote_provider' => $provider,
         'tags' => implode(', ', social_media_normalize_list($tags)),
         'text_position' => 'center',
@@ -1163,8 +1219,10 @@ function social_media_search_unsplash($query, $limit = 8)
                 !empty($item['description']) ? $item['description'] : '',
             ]),
             !empty($item['color']) ? $item['color'] : '#223046',
-            !empty($item['links']['html']) ? $item['links']['html'] : '',
-            !empty($item['user']['name']) ? $item['user']['name'] : ''
+            !empty($item['links']['html']) ? social_media_unsplash_attribution_url($item['links']['html']) : '',
+            !empty($item['user']['name']) ? $item['user']['name'] : '',
+            !empty($item['user']['links']['html']) ? social_media_unsplash_attribution_url($item['user']['links']['html']) : '',
+            !empty($item['links']['download_location']) ? $item['links']['download_location'] : ''
         );
     }
 
@@ -2276,6 +2334,9 @@ function social_media_tesseract_path()
 function social_media_asset_source_path($asset)
 {
     if (!empty($asset['remote_url'])) {
+        if (!empty($asset['remote_provider']) && $asset['remote_provider'] === 'unsplash') {
+            social_media_track_unsplash_download($asset);
+        }
         return social_media_download_remote_file($asset['remote_url']);
     }
     if (!empty($asset['file_name'])) {

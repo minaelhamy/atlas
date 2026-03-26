@@ -172,6 +172,24 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             <?php if (!empty($meta['asset']['remote_provider'])) { ?>
                                                 <p class="margin-bottom-0"><strong><?php _e('Asset Source') ?>:</strong> <?php _esc(ucfirst($meta['asset']['remote_provider'])) ?></p>
                                             <?php } ?>
+                                            <?php if (!empty($meta['asset']['remote_provider']) && $meta['asset']['remote_provider'] === 'unsplash' && !empty($meta['asset']['remote_author'])) { ?>
+                                                <p class="margin-bottom-10">
+                                                    <small>
+                                                        <?php _e('Photo by') ?>
+                                                        <?php if (!empty($meta['asset']['remote_author_url'])) { ?>
+                                                            <a href="<?php echo _esc($meta['asset']['remote_author_url'], 0); ?>" target="_blank" rel="nofollow noopener"><?php _esc($meta['asset']['remote_author']) ?></a>
+                                                        <?php } else { ?>
+                                                            <?php _esc($meta['asset']['remote_author']) ?>
+                                                        <?php } ?>
+                                                        <?php _e('on') ?>
+                                                        <?php if (!empty($meta['asset']['remote_page_url'])) { ?>
+                                                            <a href="<?php echo _esc($meta['asset']['remote_page_url'], 0); ?>" target="_blank" rel="nofollow noopener">Unsplash</a>
+                                                        <?php } else { ?>
+                                                            Unsplash
+                                                        <?php } ?>
+                                                    </small>
+                                                </p>
+                                            <?php } ?>
                                             <?php if (!empty($design['headline_font_key']) || !empty($design['background_tone'])) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e('Design') ?>:</strong>
                                                     <?php _esc(!empty($design['headline_font_key']) ? $design['headline_font_key'] : ''); ?>

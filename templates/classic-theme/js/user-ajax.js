@@ -421,6 +421,21 @@ jQuery(function ($) {
                         if (post.asset && post.asset.remote_provider) {
                             infoHtml += '<p class="margin-bottom-0"><strong>Asset Source:</strong> ' + escape_html(String(post.asset.remote_provider)) + '</p>';
                         }
+                        if (post.asset && post.asset.remote_provider === 'unsplash' && post.asset.remote_author) {
+                            infoHtml += '<p class="margin-bottom-10"><small>Photo by ';
+                            if (post.asset.remote_author_url) {
+                                infoHtml += '<a href="' + escape_html(String(post.asset.remote_author_url)) + '" target="_blank" rel="nofollow noopener">' + escape_html(String(post.asset.remote_author)) + '</a>';
+                            } else {
+                                infoHtml += escape_html(String(post.asset.remote_author));
+                            }
+                            infoHtml += ' on ';
+                            if (post.asset.remote_page_url) {
+                                infoHtml += '<a href="' + escape_html(String(post.asset.remote_page_url)) + '" target="_blank" rel="nofollow noopener">Unsplash</a>';
+                            } else {
+                                infoHtml += 'Unsplash';
+                            }
+                            infoHtml += '</small></p>';
+                        }
 
                         if (design.headline_font_key || design.background_tone) {
                             infoHtml += '<p class="margin-bottom-10"><strong>Design:</strong> ' +

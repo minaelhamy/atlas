@@ -70,6 +70,24 @@ overall_header(__("All Social Posts"));
                                                     <?php if (!empty($image['design']['background_tone'])) { ?>, <?php _esc($image['design']['background_tone']) ?><?php } ?>
                                                 </p>
                                             <?php } ?>
+                                            <?php if (!empty($image['asset']['remote_provider']) && $image['asset']['remote_provider'] === 'unsplash' && !empty($image['asset']['remote_author'])) { ?>
+                                                <p class="margin-bottom-10">
+                                                    <small>
+                                                        <?php _e('Photo by') ?>
+                                                        <?php if (!empty($image['asset']['remote_author_url'])) { ?>
+                                                            <a href="<?php echo _esc($image['asset']['remote_author_url'], 0); ?>" target="_blank" rel="nofollow noopener"><?php _esc($image['asset']['remote_author']) ?></a>
+                                                        <?php } else { ?>
+                                                            <?php _esc($image['asset']['remote_author']) ?>
+                                                        <?php } ?>
+                                                        <?php _e('on') ?>
+                                                        <?php if (!empty($image['asset']['remote_page_url'])) { ?>
+                                                            <a href="<?php echo _esc($image['asset']['remote_page_url'], 0); ?>" target="_blank" rel="nofollow noopener">Unsplash</a>
+                                                        <?php } else { ?>
+                                                            Unsplash
+                                                        <?php } ?>
+                                                    </small>
+                                                </p>
+                                            <?php } ?>
                                             <?php if (!empty($image['debug'])) { ?>
                                                 <details class="margin-bottom-10">
                                                     <summary><strong><?php _e('Debug') ?></strong></summary>
