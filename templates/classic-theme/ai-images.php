@@ -1,5 +1,5 @@
 <?php
-overall_header(__("Social Media Generator"));
+overall_header(__("Create a Campaign"));
 $profileReady = !empty($social_profile['company_name']) && !empty($social_profile['company_description']);
 ?>
 <div class="dashboard-container">
@@ -9,7 +9,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
             <?php print_adsense_code('header_bottom'); ?>
             <div class="dashboard-headline">
                 <h3 class="d-flex align-items-center">
-                    <?php _e("Social Media Generator") ?>
+                    <?php _e("Create a Campaign") ?>
                     <div class="word-used-wrapper margin-left-10">
                         <i class="icon-feather-bar-chart-2"></i>
                         <?php echo '<i id="quick-images-left">' .
@@ -23,7 +23,8 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 <nav id="breadcrumbs" class="dark">
                     <ul>
                         <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                        <li><?php _e("Social Media Generator") ?></li>
+                        <li><a href="<?php url("AI_IMAGES") ?>"><?php _e("Social Media Automation") ?></a></li>
+                        <li><?php _e("Create a Campaign") ?></li>
                     </ul>
                 </nav>
             </div>
@@ -35,14 +36,14 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 </div>
             <?php } else { ?>
                 <div class="notification notice">
-                    <?php _e("Each run generates 9 posts. Covers are rendered automatically using your company profile and admin-managed assets."); ?>
+                    <?php _e("Each run generates 9 strategic posts for one campaign goal. Atlas uses your company intelligence, market context, and selected funnel inputs to create a complete social funnel for publishing."); ?>
                 </div>
             <?php } ?>
 
             <form id="ai_images" name="ai_images" method="post" action="#">
                 <div class="dashboard-box margin-top-0">
                     <div class="headline">
-                        <h3><i class="icon-feather-instagram"></i> <?php _e("Plan A Campaign") ?></h3>
+                        <h3><i class="icon-feather-target"></i> <?php _e("Plan a Campaign") ?></h3>
                     </div>
                     <div class="content with-padding">
                         <div class="row">
@@ -128,7 +129,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
 
             <div class="dashboard-box">
                 <div class="headline">
-                    <h3><i class="icon-feather-grid"></i> <?php _e("Generated Social Content") ?></h3>
+                    <h3><i class="icon-feather-grid"></i> <?php _e("Latest Campaign Posts") ?></h3>
                 </div>
                 <div class="content with-padding">
                     <div class="row" id="generated_images_wrapper">

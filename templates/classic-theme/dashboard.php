@@ -160,6 +160,36 @@ overall_header(__("Dashboard"));
                 </div>
             </div>
 
+            <div class="row atlas-dashboard-secondary-row">
+                <div class="col-lg-12">
+                    <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">
+                        <div class="headline">
+                            <h3><i class="icon-feather-file-text"></i> <?php _e("Latest Generated Content") ?></h3>
+                        </div>
+                        <div class="content with-padding">
+                            <?php if (!empty($recent_generated_content)) { ?>
+                                <div class="atlas-dashboard-quick-list">
+                                    <?php foreach ($recent_generated_content as $contentItem) { ?>
+                                        <a href="<?php _esc($contentItem['link']) ?>" class="atlas-dashboard-quick-item">
+                                            <span class="atlas-dashboard-quick-avatar"><i class="icon-feather-file-text"></i></span>
+                                            <span class="atlas-dashboard-quick-copy">
+                                                <strong><?php _esc($contentItem['title']) ?></strong>
+                                                <small><?php _esc($contentItem['content']) ?></small>
+                                            </span>
+                                            <?php if (!empty($contentItem['created_at'])) { ?>
+                                                <span class="atlas-dashboard-quick-meta"><?php _esc($contentItem['created_at']) ?></span>
+                                            <?php } ?>
+                                        </a>
+                                    <?php } ?>
+                                </div>
+                            <?php } else { ?>
+                                <p class="margin-bottom-0"><?php _e("Create your first content pieces from daily templates and they will appear here.") ?></p>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <?php print_adsense_code('footer_top'); ?>
             <div class="dashboard-footer-spacer"></div>
             <div class="small-footer margin-top-15">

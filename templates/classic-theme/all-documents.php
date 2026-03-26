@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("All Documents"));
+overall_header(__("All Generated Content"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("All Documents"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("All Documents") ?>
+                        <?php _e("All Generated Content") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,7 +32,7 @@ overall_header(__("All Documents"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("All Documents") ?></li>
+                            <li><?php _e("All Generated Content") ?></li>
                         </ul>
                     </nav>
                 </div>
@@ -40,7 +40,7 @@ overall_header(__("All Documents"));
                 <div class="dashboard-box margin-top-0 margin-bottom-30">
                     <!-- Headline -->
                     <div class="headline">
-                        <h3><i class="icon-feather-file"></i><?php _e("All Documents") ?></h3>
+                        <h3><i class="icon-feather-file"></i><?php _e("All Generated Content") ?></h3>
                     </div>
                     <div class="content with-padding">
                         <table class="basic-table">

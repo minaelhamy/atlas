@@ -950,6 +950,280 @@ a.button:hover {
     background: #171717 !important;
 }
 
+.atlas-automation-card-grid {
+    align-items: stretch;
+}
+
+.atlas-automation-card {
+    display: block;
+    height: 100%;
+    border-radius: 28px;
+    text-decoration: none;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.atlas-automation-card:hover {
+    transform: translateY(-2px);
+}
+
+.atlas-automation-card .content.with-padding {
+    padding: 26px;
+}
+
+.atlas-automation-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(244, 240, 230, 0.95);
+    color: var(--atlas-text);
+    font-size: 21px;
+    margin-bottom: 18px;
+}
+
+.atlas-automation-card h4 {
+    margin-bottom: 10px;
+    font-size: 24px;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+}
+
+.atlas-automation-card p {
+    margin: 0;
+    color: var(--atlas-muted);
+    line-height: 1.65;
+    font-size: 15px;
+}
+
+.atlas-automation-link {
+    display: inline-flex;
+    margin-top: 18px;
+    color: var(--atlas-text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.atlas-instagram-preview-box .content.with-padding {
+    padding: 22px;
+}
+
+.atlas-instagram-phone {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    border-radius: 42px;
+    border: 1px solid rgba(27, 27, 27, 0.08);
+    background: #fff;
+    padding: 14px 14px 20px;
+    box-shadow: 0 28px 56px rgba(26, 26, 26, 0.08);
+}
+
+.atlas-instagram-notch {
+    width: 132px;
+    height: 24px;
+    border-radius: 999px;
+    background: #101010;
+    margin: 0 auto 10px;
+}
+
+.atlas-instagram-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #1d1d1d;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding: 0 4px;
+}
+
+.atlas-instagram-profile {
+    padding: 4px 8px 0;
+}
+
+.atlas-instagram-profile-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.atlas-instagram-avatar {
+    width: 74px;
+    height: 74px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f5f1e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #171717;
+}
+
+.atlas-instagram-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.atlas-instagram-stats {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    text-align: center;
+}
+
+.atlas-instagram-stats strong {
+    display: block;
+    color: #171717;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.atlas-instagram-stats span {
+    display: block;
+    margin-top: 4px;
+    color: #6e6a61;
+    font-size: 12px;
+}
+
+.atlas-instagram-meta h4 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    letter-spacing: -0.03em;
+}
+
+.atlas-instagram-handle {
+    margin: 0 0 8px;
+    color: #1d1d1d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.atlas-instagram-meta p,
+.atlas-instagram-meta a,
+.atlas-instagram-meta span {
+    display: block;
+    margin: 0;
+    color: #585349;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.atlas-instagram-meta a {
+    color: #0c67d7;
+}
+
+.atlas-instagram-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.atlas-instagram-action {
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(26, 26, 26, 0.08);
+    background: #f5f5f3;
+    color: #171717;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.atlas-instagram-action.primary {
+    background: #1093ff;
+    color: #fff;
+    border-color: #1093ff;
+}
+
+.atlas-instagram-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    text-align: center;
+    color: #171717;
+    font-size: 18px;
+    padding: 14px 10px 10px;
+}
+
+.atlas-instagram-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    border-top: 1px solid rgba(26, 26, 26, 0.06);
+    padding-top: 3px;
+}
+
+.atlas-instagram-tile {
+    aspect-ratio: 1 / 1;
+    background: #f1ece2;
+    overflow: hidden;
+}
+
+.atlas-instagram-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.atlas-instagram-tile-placeholder {
+    background: linear-gradient(135deg, #f5f2ea 0%, #ece5d8 100%);
+}
+
+.atlas-grid-download-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.atlas-grid-download-item {
+    min-height: 48px;
+    border-radius: 16px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(247, 246, 242, 0.92);
+    color: var(--atlas-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.atlas-grid-download-item:hover {
+    color: var(--atlas-text);
+    background: #fff;
+}
+
+@media (max-width: 991px) {
+    .atlas-grid-download-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575px) {
+    .atlas-instagram-phone {
+        max-width: 100%;
+        border-radius: 32px;
+        padding: 12px 12px 18px;
+    }
+
+    .atlas-grid-download-list {
+        grid-template-columns: 1fr;
+    }
+}
+
 .basic-table,
 table {
     border-radius: 18px;

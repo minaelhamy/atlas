@@ -63,9 +63,26 @@ if (isset($current_user['id'])) {
                 'overlay_text' => $post['overlay_text'],
                 'created_at' => !empty($post['created_at']) ? timeAgo($post['created_at']) : '',
                 'preview_url' => !empty($post['preview_image']) ? $config['site_url'] . 'storage/social_posts/' . $post['preview_image'] : '',
-                'link' => $link['AI_IMAGES']
+                'link' => $link['ALL_IMAGES']
             ];
         }
+    }
+
+    $recent_generated_content = [];
+    $docRows = ORM::for_table($config['db']['pre'] . 'ai_documents')
+        ->where('user_id', $_SESSION['user']['id'])
+        ->order_by_desc('id')
+        ->limit(2)
+        ->find_many();
+
+    foreach ($docRows as $docRow) {
+        $recent_generated_content[] = [
+            'id' => $docRow['id'],
+            'title' => $docRow['title'],
+            'content' => strlimiter(strip_tags((string) $docRow['content']), 90),
+            'created_at' => !empty($docRow['created_at']) ? timeAgo($docRow['created_at']) : '',
+            'link' => $link['ALL_DOCUMENTS']
+        ];
     }
 
 
@@ -93,7 +110,8 @@ if (isset($current_user['id'])) {
         'total_images_used' => $total_images_used ?: 0,
         'company_intelligence' => $company_intelligence,
         'top_agents' => $top_agents,
-        'recent_social_posts' => $recent_social_posts
+        'recent_social_posts' => $recent_social_posts,
+        'recent_generated_content' => $recent_generated_content
     ));
 } else {
     headerRedirect($link['LOGIN']);

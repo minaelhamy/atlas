@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("AI Agents"));
+overall_header(__("Your Ai Agents"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("AI Agents"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("AI Agents") ?>
+                        <?php _e("Your Ai Agents") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,7 +32,7 @@ overall_header(__("AI Agents"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("AI Agents") ?></li>
+                            <li><?php _e("Your Ai Agents") ?></li>
                         </ul>
                     </nav>
                 </div>

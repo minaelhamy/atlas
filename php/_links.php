@@ -34,6 +34,8 @@ $link['IMAGE_CONTENT'] = $config['site_url'] . 'imagecontent';
 /*App Links*/
 $link['AI_TEMPLATES'] = $config['site_url'] . 'ai-templates';
 $link['AI_IMAGES'] = $config['site_url'] . 'ai-images';
+$link['AI_IMAGES_CAMPAIGN'] = $config['site_url'] . 'ai-images/campaign';
+$link['AI_IMAGES_GRID'] = $config['site_url'] . 'ai-images/grid';
 $link['AI_CHAT'] = $config['site_url'] . 'ai-chat';
 $link['AI_CHAT_BOTS'] = $config['site_url'] . 'ai-chat-bots';
 $link['AI_SPEECH_TEXT'] = $config['site_url'] . 'ai-speech-text';

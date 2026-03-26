@@ -356,6 +356,119 @@ function social_media_get_funnel_stage_catalog()
     ];
 }
 
+function social_media_get_instagram_grid_catalog()
+{
+    return [
+        'bold_monochrome_ad_copy' => [
+            'label' => 'Bold Monochrome Ad Copy Grid',
+            'description' => 'High-contrast conversion grid with bold text tiles alternating against relevant product and lifestyle imagery.',
+            'objective' => 'conversion',
+            'layout' => ['text', 'image', 'text', 'image', 'text', 'image', 'text', 'image', 'text'],
+            'background_tone' => 'bold',
+            'headline_font_key' => 'bebas-neue',
+            'body_font_key' => 'inter',
+            'text_case' => 'uppercase',
+            'text_align' => 'center',
+            'palette' => ['#D84315', '#FF5722', '#F4A261'],
+            'image_keywords' => ['product', 'lifestyle', 'detail', 'commercial'],
+        ],
+        'checkerboard_affirmation' => [
+            'label' => 'Checkerboard Affirmation Lifestyle Grid',
+            'description' => 'Soft identity-led checkerboard grid alternating reflective text tiles with calm lifestyle imagery.',
+            'objective' => 'awareness',
+            'layout' => ['image', 'text', 'image', 'text', 'image', 'text', 'image', 'text', 'image'],
+            'background_tone' => 'soft',
+            'headline_font_key' => 'playfair-display',
+            'body_font_key' => 'lora',
+            'text_case' => 'sentence',
+            'text_align' => 'center',
+            'palette' => ['#EADCD6', '#F5EDEA', '#D8B7A6'],
+            'image_keywords' => ['lifestyle', 'editorial', 'minimal', 'soft'],
+        ],
+        'central_spine_moodboard' => [
+            'label' => 'Central Spine Moodboard Grid',
+            'description' => 'A moodboard grid with a locked text spine in the middle column and aesthetic imagery on both sides.',
+            'objective' => 'identity',
+            'layout' => ['image', 'text', 'image', 'image', 'text', 'image', 'image', 'text', 'image'],
+            'background_tone' => 'minimal',
+            'headline_font_key' => 'josefin-sans',
+            'body_font_key' => 'raleway',
+            'text_case' => 'lowercase',
+            'text_align' => 'center',
+            'palette' => ['#EDEDED', '#F4A6A6', '#6FA3B8'],
+            'image_keywords' => ['moodboard', 'aesthetic', 'editorial', 'minimal'],
+        ],
+        'authority_hook_grid' => [
+            'label' => 'Authority Hook Grid',
+            'description' => 'Text-heavy authority grid using bold editorial hooks with occasional proof imagery to humanize the brand.',
+            'objective' => 'authority',
+            'layout' => ['text', 'text', 'image', 'text', 'image', 'text', 'text', 'text', 'image'],
+            'background_tone' => 'minimal',
+            'headline_font_key' => 'abril-fatface',
+            'body_font_key' => 'dm-sans',
+            'text_case' => 'sentence',
+            'text_align' => 'center',
+            'palette' => ['#F4F4F2', '#D9D9D9', '#FFFFFF'],
+            'image_keywords' => ['founder', 'lifestyle', 'editorial', 'proof'],
+        ],
+        'nature_wellness_editorial' => [
+            'label' => 'Nature Wellness Editorial Grid',
+            'description' => 'Checkerboard editorial system that pairs calm nature visuals with educational brand panels.',
+            'objective' => 'education',
+            'layout' => ['image', 'text', 'image', 'text', 'image', 'text', 'image', 'text', 'image'],
+            'background_tone' => 'earthy',
+            'headline_font_key' => 'playfair-display',
+            'body_font_key' => 'nunito-sans',
+            'text_case' => 'sentence',
+            'text_align' => 'center',
+            'palette' => ['#1F2A1F', '#EDEBE6', '#4A5A44'],
+            'image_keywords' => ['nature', 'wellness', 'slow living', 'editorial'],
+        ],
+        'vertical_phrase_narrative' => [
+            'label' => 'Vertical Phrase Narrative Grid',
+            'description' => 'A storytelling grid with a vertical phrase down the center column and warm lifestyle imagery on both sides.',
+            'objective' => 'identity',
+            'layout' => ['image', 'text', 'image', 'image', 'text', 'image', 'image', 'text', 'image'],
+            'background_tone' => 'warm',
+            'headline_font_key' => 'cormorant-garamond',
+            'body_font_key' => 'karla',
+            'text_case' => 'title',
+            'text_align' => 'center',
+            'palette' => ['#CFC7C0', '#A98F7A', '#E8E1D9'],
+            'image_keywords' => ['cozy', 'lifestyle', 'warm', 'vintage'],
+        ],
+    ];
+}
+
+function social_media_choose_instagram_grid_template($profile, $campaignType = '', $preferredStyle = 'auto')
+{
+    $catalog = social_media_get_instagram_grid_catalog();
+    if (!empty($preferredStyle) && $preferredStyle !== 'auto' && !empty($catalog[$preferredStyle])) {
+        return [$preferredStyle, $catalog[$preferredStyle]];
+    }
+
+    $industry = strtolower(trim((string) ($profile['company_industry'] ?? '')));
+    if (preg_match('/wellness|spa|beauty|skincare|nature/', $industry)) {
+        return ['nature_wellness_editorial', $catalog['nature_wellness_editorial']];
+    }
+
+    $map = [
+        'brand_awareness' => 'checkerboard_affirmation',
+        'engagement' => 'vertical_phrase_narrative',
+        'lead_generation' => 'authority_hook_grid',
+        'conversion' => 'bold_monochrome_ad_copy',
+        'retargeting' => 'authority_hook_grid',
+        'traffic' => 'central_spine_moodboard',
+        'influencer_collaboration' => 'checkerboard_affirmation',
+        'product_launch' => 'bold_monochrome_ad_copy',
+        'educational_value' => 'nature_wellness_editorial',
+        'loyalty_retention' => 'vertical_phrase_narrative',
+    ];
+
+    $key = !empty($map[$campaignType]) ? $map[$campaignType] : 'central_spine_moodboard';
+    return [$key, $catalog[$key]];
+}
+
 function social_media_get_selection_options($catalog, $field)
 {
     $options = [];
@@ -1530,6 +1643,38 @@ function social_media_get_recent_posts($user_id, $limit = 18)
     return $posts;
 }
 
+function social_media_get_recent_grid_batch($user_id)
+{
+    $posts = social_media_get_recent_posts($user_id, 40);
+    $batchKey = '';
+
+    foreach ($posts as $post) {
+        if (!empty($post['metadata']['grid']['template_key'])) {
+            $batchKey = $post['batch_key'];
+            break;
+        }
+    }
+
+    if ($batchKey === '') {
+        return [];
+    }
+
+    $batch = [];
+    foreach ($posts as $post) {
+        if ($post['batch_key'] === $batchKey) {
+            $batch[] = $post;
+        }
+    }
+
+    usort($batch, function ($a, $b) {
+        $aPos = !empty($a['metadata']['grid']['position']) ? (int) $a['metadata']['grid']['position'] : 0;
+        $bPos = !empty($b['metadata']['grid']['position']) ? (int) $b['metadata']['grid']['position'] : 0;
+        return $aPos <=> $bPos;
+    });
+
+    return array_slice($batch, 0, 9);
+}
+
 function social_media_get_post($user_id, $id)
 {
     social_media_bootstrap();
@@ -1738,6 +1883,175 @@ function social_media_generate_batch($user_id, $brief = '')
     }
     unset($item);
     return $items;
+}
+
+function social_media_generate_instagram_grid($user_id, $brief = '', $input = [])
+{
+    social_media_runtime_debug('openai', null);
+    $profile = social_media_get_profile($user_id);
+    list($templateKey, $template) = social_media_choose_instagram_grid_template(
+        $profile,
+        !empty($input['campaign_type']) ? $input['campaign_type'] : '',
+        !empty($input['grid_style']) ? $input['grid_style'] : 'auto'
+    );
+
+    $companyContext = social_media_get_company_context_text($user_id);
+    $historyContext = social_media_get_recent_chat_context($user_id);
+    $competitorSnapshots = social_media_get_competitor_snapshots($profile);
+    $fontCatalog = social_media_get_font_prompt_catalog();
+    $paletteCatalog = social_media_get_palette_prompt_catalog();
+
+    $system = "You are Atlas Grid Director. Generate cohesive Instagram grid content packages that feel intentional, brand-aware, and sequence-ready. Return valid JSON only.";
+    $userPrompt = "Create exactly 9 Instagram grid posts in order for this company.\n"
+        . "Use this selected grid system as a hard visual and sequencing constraint:\n"
+        . json_encode($template) . "\n\n"
+        . "Each item must include: title, overlay_text, caption, cta, hashtags, visual_brief, keywords, design.\n"
+        . "The sequence must respect this tile layout: " . implode(', ', $template['layout']) . ".\n"
+        . "Rules:\n"
+        . "1. Text tiles must produce a short, bold overlay that can sit alone on a tile.\n"
+        . "2. Image tiles should keep overlay_text minimal or empty and depend on relevant imagery.\n"
+        . "3. Captions must be publish-ready and tied to the selected campaign goal and the company context.\n"
+        . "4. The full 9-tile sequence should feel like one Instagram grid, not 9 unrelated posts.\n"
+        . "5. Use only approved fonts:\n{$fontCatalog}\n\n"
+        . "6. Use these palette directions when choosing color behavior:\n{$paletteCatalog}\n\n"
+        . "Company context:\n{$companyContext}\n\n"
+        . "Recent company history from agents:\n{$historyContext}\n\n"
+        . "Competitor research:\n" . json_encode($competitorSnapshots) . "\n\n"
+        . "Campaign brief:\n{$brief}\n\n"
+        . "JSON shape: {\"items\":[...]}";
+
+    $items = social_media_generate_batch_via_openai($system, $userPrompt, $user_id);
+    $generationSource = 'openai';
+    if (empty($items)) {
+        $items = social_media_generate_instagram_grid_fallback($profile, $template, $brief);
+        $generationSource = 'fallback';
+    }
+
+    $items = social_media_normalize_instagram_grid_items($items, $profile, $templateKey, $template, $brief);
+    foreach ($items as &$item) {
+        $item['_generation_source'] = $generationSource;
+        $item['_openai_debug'] = social_media_runtime_debug('openai');
+    }
+    unset($item);
+
+    return [
+        'template_key' => $templateKey,
+        'template' => $template,
+        'items' => $items,
+    ];
+}
+
+function social_media_generate_instagram_grid_fallback($profile, $template, $brief = '')
+{
+    $company = !empty($profile['company_name']) ? $profile['company_name'] : 'your brand';
+    $audience = !empty($profile['target_audience']) ? trim(strtok($profile['target_audience'], ",\n")) : 'your audience';
+    $product = !empty($profile['key_products']) ? trim(strtok($profile['key_products'], ",\n")) : 'your offer';
+    $briefSummary = trim(preg_replace('/\s+/', ' ', strtok((string) $brief, "\n")));
+    $baseHooks = [
+        'Why your message gets ignored',
+        'What makes your brand memorable',
+        'The simplest way to stand out',
+        'Where the real value shows up',
+        'How to make the offer click',
+        'What your audience actually needs',
+        'The reason this content converts',
+        'Why clarity beats more noise',
+        'Build trust before the ask',
+    ];
+
+    $items = [];
+    foreach ($template['layout'] as $index => $mode) {
+        $hook = $baseHooks[$index % count($baseHooks)];
+        $items[] = [
+            'title' => $company . ' Grid Tile ' . ($index + 1),
+            'overlay_text' => $mode === 'text' ? $hook : '',
+            'caption' => ucfirst($audience) . ' who want a clearer result from ' . $product . ' get a sharper, more useful message through ' . $company . '.' . ($briefSummary !== '' ? ' Built for ' . rtrim($briefSummary, '.') . '.' : ''),
+            'cta' => 'Save this post',
+            'hashtags' => ['#' . preg_replace('/\s+/', '', ucwords($company)), '#InstagramGrid', '#Marketing'],
+            'visual_brief' => $mode === 'text'
+                ? 'Create a branded text tile that fits the selected grid system and keeps the message visually dominant.'
+                : 'Use a relevant lifestyle or product image that supports the selected grid system and matches the brand tone.',
+            'keywords' => [$company, $product, $audience],
+            'design' => [],
+        ];
+    }
+
+    return $items;
+}
+
+function social_media_normalize_instagram_grid_items($items, $profile, $templateKey, $template, $brief = '')
+{
+    $fontKeys = array_keys(social_media_get_available_fonts());
+    $defaults = social_media_get_design_defaults();
+    $normalized = [];
+    $briefSummary = trim(preg_replace('/\s+/', ' ', strtok((string) $brief, "\n")));
+    $company = !empty($profile['company_name']) ? $profile['company_name'] : 'Atlas';
+    $industry = !empty($profile['company_industry']) ? $profile['company_industry'] : 'your market';
+    $product = !empty($profile['key_products']) ? trim(strtok($profile['key_products'], ",\n")) : $industry;
+
+    for ($i = 0; $i < 9; $i++) {
+        $mode = !empty($template['layout'][$i]) ? $template['layout'][$i] : 'image';
+        $source = !empty($items[$i]) && is_array($items[$i]) ? $items[$i] : [];
+        $design = $defaults['post'];
+        $design['headline_font_key'] = !empty($template['headline_font_key']) ? $template['headline_font_key'] : ($fontKeys[0] ?? 'inter');
+        $design['body_font_key'] = !empty($template['body_font_key']) ? $template['body_font_key'] : ($fontKeys[1] ?? $design['headline_font_key']);
+        $design['headline_size'] = $mode === 'text' ? 92 : 100;
+        $design['body_size'] = 22;
+        $design['text_case'] = !empty($template['text_case']) ? $template['text_case'] : 'sentence';
+        $design['text_align'] = !empty($template['text_align']) ? $template['text_align'] : 'center';
+        $design['background_tone'] = !empty($template['background_tone']) ? $template['background_tone'] : 'minimal';
+        $design['background_colors'] = !empty($template['palette']) ? array_slice($template['palette'], 0, 2) : ['#F5F3EC', '#EEE7DA'];
+        $design['overlay_opacity'] = $mode === 'text' ? 0.04 : 0.18;
+        $design['text_color'] = !empty($template['palette'][0]) && social_media_guess_background_tone($template['palette'][0]) === 'light' ? '#171717' : '#FFFFFF';
+        $design['accent_color'] = !empty($template['palette'][2]) ? $template['palette'][2] : $design['text_color'];
+        $design['overlay_color'] = !empty($template['palette'][1]) ? $template['palette'][1] : $design['accent_color'];
+        $design['asset_tags'] = $mode === 'image'
+            ? array_values(array_unique(array_merge([$industry, $product], $template['image_keywords'])))
+            : [$industry, $company];
+        $design = social_media_normalize_design($design, 'post', $fontKeys, $defaults);
+
+        $overlay = trim((string) ($source['overlay_text'] ?? ''));
+        if ($mode === 'text' && $overlay === '') {
+            $overlay = 'Make your brand easier to trust';
+        }
+
+        $caption = trim((string) ($source['caption'] ?? ''));
+        if ($caption === '') {
+            $caption = 'People who need a clearer path to choosing ' . $product . ' get that clarity through ' . $company . '\'s more useful approach.' . ($briefSummary !== '' ? ' Designed for ' . rtrim($briefSummary, '.') . '.' : '');
+        }
+
+        $normalized[] = [
+            'post_type' => 'post',
+            'title' => trim((string) ($source['title'] ?? ($company . ' Grid Tile ' . ($i + 1)))),
+            'hook' => $overlay,
+            'overlay_text' => $mode === 'text' ? $overlay : '',
+            'caption' => $caption,
+            'cta' => trim((string) ($source['cta'] ?? ($mode === 'text' ? 'Save this post' : 'Follow for more'))),
+            'hashtags' => social_media_normalize_list(!empty($source['hashtags']) ? $source['hashtags'] : ['#' . preg_replace('/\s+/', '', ucwords($company)), '#InstagramGrid', '#Marketing']),
+            'visual_brief' => trim((string) ($source['visual_brief'] ?? ($mode === 'text'
+                ? 'Create a text-led tile that fits the selected grid template.'
+                : 'Use a relevant, on-brand image that supports the selected grid template.'))),
+            'keywords' => array_values(array_unique(array_merge(
+                social_media_normalize_list(!empty($source['keywords']) ? $source['keywords'] : []),
+                [$industry, $product],
+                $mode === 'image' ? $template['image_keywords'] : [$company]
+            ))),
+            'design' => $design,
+            'render_options' => $mode === 'text'
+                ? ['show_logo' => false, 'show_label' => false, 'show_subheadline' => false, 'show_brand' => false, 'show_cta' => false, 'show_headline' => true]
+                : ['show_logo' => false, 'show_label' => false, 'show_subheadline' => false, 'show_brand' => false, 'show_cta' => false, 'show_headline' => false],
+            'grid' => [
+                'template_key' => $templateKey,
+                'template_label' => $template['label'],
+                'tile_mode' => $mode,
+                'position' => $i + 1,
+            ],
+            '_generation_source' => !empty($source['_generation_source']) ? $source['_generation_source'] : 'openai',
+            '_openai_debug' => !empty($source['_openai_debug']) ? $source['_openai_debug'] : [],
+        ];
+    }
+
+    return $normalized;
 }
 
 function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
@@ -3078,6 +3392,17 @@ function social_media_apply_design_to_variant($variant, $design, $asset)
         $primaryBackground,
         social_media_normalize_hex_color(isset($dominant[1]) ? $dominant[1] : $palette['overlay'], $palette['overlay']),
     ];
+    if (!empty($design['background_colors']) && is_array($design['background_colors'])) {
+        $forcedColors = array_values(array_filter(array_map(function ($color) {
+            return social_media_normalize_hex_color($color, '');
+        }, $design['background_colors'])));
+        if (!empty($forcedColors)) {
+            $variant['background_colors'] = [
+                $forcedColors[0],
+                !empty($forcedColors[1]) ? $forcedColors[1] : $forcedColors[0],
+            ];
+        }
+    }
 
     foreach (['headline', 'subheadline', 'brand', 'cta'] as $zoneName) {
         if (!empty($variant['zones'][$zoneName])) {
@@ -3194,7 +3519,15 @@ function social_media_render_preview($post, $asset, $profile)
     $overlay = imagecolorallocatealpha($canvas, $ovR, $ovG, $ovB, (int) floor(127 * min(max($variant['overlay']['opacity'], 0), 1)));
     imagefilledrectangle($canvas, 0, 0, $width, $height, $overlay);
 
-    if (!empty($profile['company_logo'])) {
+    $renderOptions = !empty($post['render_options']) && is_array($post['render_options']) ? $post['render_options'] : [];
+    $showLogo = !isset($renderOptions['show_logo']) || $renderOptions['show_logo'];
+    $showLabel = !isset($renderOptions['show_label']) || $renderOptions['show_label'];
+    $showHeadline = !isset($renderOptions['show_headline']) || $renderOptions['show_headline'];
+    $showSubheadline = !isset($renderOptions['show_subheadline']) || $renderOptions['show_subheadline'];
+    $showBrand = !isset($renderOptions['show_brand']) || $renderOptions['show_brand'];
+    $showCta = !isset($renderOptions['show_cta']) || $renderOptions['show_cta'];
+
+    if ($showLogo && !empty($profile['company_logo'])) {
         $logoPath = ROOTPATH . '/storage/company/' . $profile['company_logo'];
         if (file_exists($logoPath)) {
             $logo = social_media_load_image_resource($logoPath);
@@ -3217,15 +3550,21 @@ function social_media_render_preview($post, $asset, $profile)
     $labelFont = social_media_font_path($post['design']['body_font_key']);
     $headlineFont = social_media_font_path($post['design']['headline_font_key']);
     $bodyFont = social_media_font_path($post['design']['body_font_key'], true);
-    if ($post['post_type'] !== 'post') {
+    if ($showLabel && $post['post_type'] !== 'post') {
         social_media_render_zone_text($canvas, strtoupper($format['label']), $variant['zones']['label'], $labelFont);
     }
-    social_media_render_zone_text($canvas, social_media_transform_text_case($post['overlay_text'], $post['design']['text_case']), $variant['zones']['headline'], $headlineFont);
-    if ($post['post_type'] === 'reel') {
+    if ($showHeadline) {
+        social_media_render_zone_text($canvas, social_media_transform_text_case($post['overlay_text'], $post['design']['text_case']), $variant['zones']['headline'], $headlineFont);
+    }
+    if ($showSubheadline && $post['post_type'] === 'reel') {
         social_media_render_zone_text($canvas, social_media_transform_text_case($post['hook'], 'sentence'), $variant['zones']['subheadline'], $bodyFont);
     }
-    social_media_render_zone_text($canvas, $brand, $variant['zones']['brand'], $bodyFont);
-    social_media_render_zone_text($canvas, trim((string) $post['cta']), $variant['zones']['cta'], $bodyFont);
+    if ($showBrand) {
+        social_media_render_zone_text($canvas, $brand, $variant['zones']['brand'], $bodyFont);
+    }
+    if ($showCta) {
+        social_media_render_zone_text($canvas, trim((string) $post['cta']), $variant['zones']['cta'], $bodyFont);
+    }
 
     $targetDir = ROOTPATH . '/storage/social_posts/';
     social_media_make_directory($targetDir);
@@ -3263,13 +3602,13 @@ function social_media_get_manifest_variant($asset, $postType, $format)
     ], !empty($asset['text_position']) ? $asset['text_position'] : 'center', $postType);
 }
 
-function social_media_store_generated_posts($user_id, $items, $brief = '')
+function social_media_store_generated_posts($user_id, $items, $brief = '', $options = [])
 {
     social_media_bootstrap();
     global $config;
 
     $profile = social_media_get_profile($user_id);
-    $batchKey = uniqid('batch_');
+    $batchKey = !empty($options['batch_key']) ? $options['batch_key'] : uniqid('batch_');
     $stored = [];
     $usedAssetIds = [];
 
@@ -3311,6 +3650,8 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'slides' => $item['slides'],
             'reel_script' => $item['reel_script'],
             'design' => $item['design'],
+            'grid' => !empty($item['grid']) ? $item['grid'] : [],
+            'render_options' => !empty($item['render_options']) ? $item['render_options'] : [],
             'asset' => $asset ?: [],
             'rendered_video' => $renderedVideo,
             'source_video' => $sourceVideo,
@@ -3338,11 +3679,14 @@ function social_media_store_generated_posts($user_id, $items, $brief = '')
             'reel_script' => $item['reel_script'],
             'design' => $item['design'],
             'preview_image' => $config['site_url'] . 'storage/social_posts/' . $preview,
+            'batch_key' => $batchKey,
             'rendered_video' => !empty($renderedVideo) ? $config['site_url'] . 'storage/social_posts/videos/' . $renderedVideo : '',
             'source_video' => !empty($sourceVideo) ? $config['site_url'] . 'storage/social_assets/' . $sourceVideo : '',
             'asset_preview' => !empty($asset['preview_name']) ? $config['site_url'] . 'storage/social_assets/' . $asset['preview_name'] : '',
             'asset_type' => !empty($asset['asset_type']) ? $asset['asset_type'] : '',
             'asset_title' => !empty($asset['title']) ? $asset['title'] : '',
+            'grid' => !empty($item['grid']) ? $item['grid'] : [],
+            'render_options' => !empty($item['render_options']) ? $item['render_options'] : [],
             'debug' => [
                 'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
                 'openai' => !empty($item['_openai_debug']) ? $item['_openai_debug'] : [],

@@ -31,27 +31,6 @@ $plan_settings = $current_user['plan']['settings']; ?>
                         <li class="<?php echo CURRENT_PAGE == 'app/dashboard' ? 'active' : ''; ?>"><a
                                     href="<?php url("DASHBOARD") ?>"><i
                                         class="icon-feather-grid"></i> <?php _e("Dashboard") ?></a></li>
-                        <li class="atlas-static-submenu <?php echo CURRENT_PAGE == 'app/all-images' || CURRENT_PAGE == 'app/all-documents' || CURRENT_PAGE == 'app/all-speeches' ? 'active-submenu' : ''; ?>">
-                            <a href="<?php url("ALL_DOCUMENTS") ?>"><i class="icon-feather-file-text"></i> <?php _e("My Documents") ?></a>
-                            <ul>
-                                <li class="<?php echo CURRENT_PAGE == 'app/all-documents' ? 'active' : ''; ?>"><a
-                                            href="<?php url("ALL_DOCUMENTS") ?>"><?php _e("All Documents") ?></a></li>
-                                <?php if ($config['enable_ai_images']) {
-                                    if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
-                                        <li class="<?php echo CURRENT_PAGE == 'app/all-images' ? 'active' : ''; ?>"><a
-                                                    href="<?php url("ALL_IMAGES") ?>"><?php _e("All Social Posts") ?></a></li>
-                                    <?php }
-                                }
-
-                                if (get_option('enable_text_to_speech', 0)) {
-                                    if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_text_to_speech_limit'])) { ?>
-                                        <li class="<?php echo CURRENT_PAGE == 'app/all-speeches' ? 'active' : ''; ?>"><a
-                                                    href="<?php url("ALL_SPEECHES") ?>"><?php _e("All Speeches") ?></a></li>
-                                    <?php }
-                                } ?>
-
-                            </ul>
-                        </li>
                     </ul>
 
                     <ul data-submenu-title="<?php _e("Organize and Manage") ?>">
@@ -64,9 +43,9 @@ $plan_settings = $current_user['plan']['settings']; ?>
                         }
                         if ($config['enable_ai_images']) {
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
-                                <li class="<?php echo CURRENT_PAGE == 'app/ai-images' ? 'active' : ''; ?>"><a
+                                <li class="<?php echo in_array(CURRENT_PAGE, ['app/ai-images', 'app/ai-images-campaign', 'app/ai-images-grid'], true) ? 'active' : ''; ?>"><a
                                             href="<?php url("AI_IMAGES") ?>"><i
-                                                class="icon-feather-image"></i> <?php _e("Social Media Generator") ?></a></li>
+                                                class="icon-feather-image"></i> <?php _e("Social Media Automation") ?></a></li>
                             <?php }
                         }
 
@@ -74,7 +53,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                 <li class="<?php echo CURRENT_PAGE == 'app/ai-chat' || CURRENT_PAGE == 'app/ai-chat-bots' ? 'active' : ''; ?>">
                                     <a href="<?php url("AI_CHAT_BOTS") ?>">
-                                        <i class="icon-feather-message-circle"></i> <?php _e("AI Agents") ?>
+                                        <i class="icon-feather-message-circle"></i> <?php _e("Your Ai Agents") ?>
                                     </a></li>
                             <?php }
                         }

@@ -1,5 +1,5 @@
 <?php
-overall_header(__("Templates"));
+overall_header(__("Daily use templates"));
 ?>
     <!-- Dashboard Container -->
     <div class="dashboard-container">
@@ -14,7 +14,7 @@ overall_header(__("Templates"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("Templates") ?>
+                        <?php _e("Daily use templates") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -30,7 +30,7 @@ overall_header(__("Templates"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Templates") ?></li>
+                            <li><?php _e("Daily use templates") ?></li>
                         </ul>
                     </nav>
                 </div>

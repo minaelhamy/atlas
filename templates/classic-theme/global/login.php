@@ -1,26 +1,9 @@
 <?php
-overall_header(__("Login"));
+overall_header(__("Welcome"));
 ?>
 <?php print_adsense_code('header_bottom'); ?>
 <!-- Titlebar
 ================================================== -->
-<div id="titlebar" class="gradient">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h2><?php _e("Login") ?></h2>
-                <!-- Breadcrumbs -->
-                <nav id="breadcrumbs" class="dark">
-                    <ul>
-                        <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                        <li><?php _e("Login") ?></li>
-                    </ul>
-                </nav>
-
-            </div>
-        </div>
-    </div>
-</div>
 <div class="container">
     <div class="row">
         <div class="col-xl-5 offset-xl-3">

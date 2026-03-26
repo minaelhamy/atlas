@@ -21,6 +21,9 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "generate_image") {
         generate_image();
     }
+    if ($_GET['action'] == "generate_instagram_grid") {
+        generate_instagram_grid();
+    }
     if ($_GET['action'] == "save_document") {
         save_document();
     }
@@ -1265,6 +1268,94 @@ function generate_image()
             die(json_encode($result));
         }
     }
+    $result['success'] = false;
+    $result['error'] = __('Unexpected error, please try again.');
+    die(json_encode($result));
+}
+
+function generate_instagram_grid()
+{
+    $result = array();
+    if (checkloggedin()) {
+        global $config;
+
+        if (!$config['enable_ai_images']) {
+            $result['success'] = false;
+            $result['error'] = __('This feature is disabled by the admin.');
+            die(json_encode($result));
+        }
+
+        if (!$config['non_active_allow']) {
+            $user_data = get_user_data(null, $_SESSION['user']['id']);
+            if ($user_data['status'] == 0) {
+                $result['success'] = false;
+                $result['error'] = __('Verify your email address to use the AI.');
+                die(json_encode($result));
+            }
+        }
+
+        set_time_limit(0);
+        $_POST = validate_input($_POST);
+
+        if (!empty($_POST['campaign_type'])) {
+            $membership = get_user_membership_detail($_SESSION['user']['id']);
+            $images_limit = $membership['settings']['ai_images_limit'];
+            $total_images_used = get_user_option($_SESSION['user']['id'], 'total_images_used', 0);
+            $postsToGenerate = 9;
+
+            if ($images_limit != -1 && ((($images_limit + get_user_option($_SESSION['user']['id'], 'total_images_available', 0)) - $total_images_used) < $postsToGenerate)) {
+                $result['success'] = false;
+                $result['error'] = __('Images limit exceeded, Upgrade your membership plan.');
+                die(json_encode($result));
+            }
+
+            $profile = social_media_get_profile($_SESSION['user']['id']);
+            if (empty($profile['company_name']) || empty($profile['company_description'])) {
+                $result['success'] = false;
+                $result['error'] = __('Complete your company profile first from Account Settings to generate an Instagram grid.');
+                die(json_encode($result));
+            }
+
+            $prompt = social_media_build_campaign_brief($_POST);
+
+            if ($word = check_bad_words($prompt)) {
+                $result['success'] = false;
+                $result['error'] = __('Your request contains a banned word:') . ' ' . $word;
+                die(json_encode($result));
+            }
+
+            $gridBatch = social_media_generate_instagram_grid($_SESSION['user']['id'], $prompt, $_POST);
+            $batchKey = uniqid('grid_');
+            $posts = social_media_store_generated_posts($_SESSION['user']['id'], $gridBatch['items'], $prompt, [
+                'batch_key' => $batchKey
+            ]);
+
+            $image_used = ORM::for_table($config['db']['pre'] . 'image_used')->create();
+            $image_used->user_id = $_SESSION['user']['id'];
+            $image_used->images = $postsToGenerate;
+            $image_used->date = date('Y-m-d H:i:s');
+            $image_used->save();
+
+            update_user_option($_SESSION['user']['id'], 'total_images_used', $total_images_used + $postsToGenerate);
+
+            $result['success'] = true;
+            $result['posts'] = $posts;
+            $result['grid_template'] = !empty($gridBatch['template']) ? $gridBatch['template'] : [];
+            $result['grid_template_key'] = !empty($gridBatch['template_key']) ? $gridBatch['template_key'] : '';
+            $result['company_profile'] = [
+                'company_name' => !empty($profile['company_name']) ? $profile['company_name'] : '',
+                'instagram_handle' => !empty($profile['instagram_handle']) ? $profile['instagram_handle'] : '',
+                'company_description' => !empty($profile['company_description']) ? $profile['company_description'] : '',
+                'company_website' => !empty($profile['company_website']) ? $profile['company_website'] : '',
+                'company_logo' => !empty($profile['company_logo']) ? $config['site_url'] . 'storage/company/' . $profile['company_logo'] : '',
+            ];
+            $result['old_used_images'] = (int) $total_images_used;
+            $result['current_used_images'] = (int) $total_images_used + $postsToGenerate;
+
+            die(json_encode($result));
+        }
+    }
+
     $result['success'] = false;
     $result['error'] = __('Unexpected error, please try again.');
     die(json_encode($result));
