@@ -322,30 +322,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
         padding-bottom: 2px;
     }
     .social-action-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #7a705e;
-        color: #fff;
-        font-size: 15px;
         flex: 0 0 auto;
-        transition: transform .15s ease, background-color .15s ease;
-    }
-    .social-action-btn:hover,
-    .social-action-btn:focus {
-        color: #fff;
-        background: #605747;
-        transform: translateY(-1px);
-    }
-    .social-action-danger {
-        background: #e53935;
-    }
-    .social-action-danger:hover,
-    .social-action-danger:focus {
-        background: #c62828;
     }
 </style>
 <script>
