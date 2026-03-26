@@ -5,7 +5,7 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
 <?php print_adsense_code('header_bottom'); ?>
 <div class="container atlas-login-shell">
     <div class="row">
-        <div class="col-xl-5 offset-xl-3">
+        <div class="col-xl-5 col-lg-6 col-md-8 col-sm-10 mx-auto">
             <div class="login-register-page atlas-login-page">
                 <div class="welcome-text atlas-login-brand">
                     <?php if (!empty($logo_dark)) { ?>
@@ -72,9 +72,26 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
         </div>
     </div>
 </div>
+<div class="atlas-login-footer">
+    <div class="atlas-login-footer-copy">2026 Hatchers.ai, All right reserved</div>
+    <div class="atlas-login-footer-social">
+        <?php if ($config['facebook_link'] != "") { ?>
+            <a href="<?php _esc($config['facebook_link'], false) ?>" target="_blank" rel="nofollow noopener" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
+        <?php } ?>
+        <?php if ($config['instagram_link'] != "") { ?>
+            <a href="<?php _esc($config['instagram_link'], false) ?>" target="_blank" rel="nofollow noopener" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
+        <?php } ?>
+        <?php if ($config['twitter_link'] != "") { ?>
+            <a href="<?php _esc($config['twitter_link'], false) ?>" target="_blank" rel="nofollow noopener" aria-label="X"><i class="fa fa-twitter"></i></a>
+        <?php } ?>
+        <?php if ($config['youtube_link'] != "") { ?>
+            <a href="<?php _esc($config['youtube_link'], false) ?>" target="_blank" rel="nofollow noopener" aria-label="YouTube"><i class="fa fa-youtube"></i></a>
+        <?php } ?>
+    </div>
+</div>
 <style>
     .atlas-login-shell {
-        min-height: calc(100vh - 120px);
+        min-height: calc(100vh - 170px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -91,6 +108,8 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
         flex-direction: column;
         justify-content: center;
         text-align: center;
+        max-width: 520px;
+        margin: 0 auto;
     }
 
     .atlas-login-brand {
@@ -126,6 +145,42 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
         text-align: center;
         color: #8d877f;
         font-size: 14px;
+    }
+
+    .atlas-login-footer {
+        width: min(1320px, calc(100% - 48px));
+        margin: 0 auto 26px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        color: #8d877f;
+        font-size: 15px;
+    }
+
+    .atlas-login-footer-social {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .atlas-login-footer-social a {
+        color: #4f4a43;
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .atlas-login-footer-social a:hover {
+        color: #171717;
+    }
+
+    @media (max-width: 767px) {
+        .atlas-login-footer {
+            width: calc(100% - 32px);
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
     }
 </style>
 <?php

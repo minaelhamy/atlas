@@ -106,6 +106,44 @@ body button {
     font-family: "Untitled Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
 }
 
+i,
+.fa,
+.fab,
+.far,
+.fas,
+[class^="icon-feather"],
+[class*=" icon-feather"],
+[class^="icon-material"],
+[class*=" icon-material"],
+[class^="la "],
+[class*=" la-"],
+.icon-feather,
+.icon-material-outline-power-settings-new {
+    font-family: inherit;
+}
+
+.fa,
+.far,
+.fas,
+.fab {
+    font-family: FontAwesome !important;
+}
+
+[class^="icon-feather"],
+[class*=" icon-feather"] {
+    font-family: feather-icons !important;
+}
+
+[class^="icon-material"],
+[class*=" icon-material"] {
+    font-family: Material-Icons !important;
+}
+
+[class^="la "],
+[class*=" la-"] {
+    font-family: LineAwesome !important;
+}
+
 #footer {
     display: none;
 }
