@@ -241,7 +241,32 @@ body button {
 }
 
 .dashboard-nav ul li ul {
-    padding-top: 6px;
+    margin: 0;
+    padding: 0;
+    visibility: hidden;
+    opacity: 0;
+    max-height: 0;
+    line-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, max-height 0.22s ease, padding 0.22s ease;
+}
+
+.dashboard-nav ul li.active-submenu ul,
+.dashboard-nav.active ul li.active-submenu ul {
+    visibility: visible;
+    opacity: 1;
+    max-height: 320px;
+    line-height: 1.45;
+    padding: 8px 0 10px;
+    pointer-events: all;
+}
+
+.dashboard-nav ul li ul li {
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding-left: 0;
 }
 
 .dashboard-nav ul li ul li a {

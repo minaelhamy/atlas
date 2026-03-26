@@ -973,34 +973,50 @@
             }
         });
 
-        // ai template blocks
-        $('.ai-templates-category').on('click', function (e) {
-            e.preventDefault();
-            // make active
-            $('.template-categories li').removeClass('active');
-            $(this).parents('li').addClass('active');
+        function updateTemplateBlocksToggle($scope) {
+            var $toggle = $scope.find('.ai-template-blocks-toggle');
+            var $blocks = $scope.find('.ai-template-blocks');
+            var $toggleButton = $scope.find('.ai-template-blocks-toggle-button');
 
-            if($(this).data('category') === 'all') {
-                $('.ai-template-blocks > div').show();
-                $('.ai-templates-category-title').show();
+            if (!$toggle.length || !$blocks.length) {
+                return;
+            }
+
+            if ($blocks.height() <= 690) {
+                $toggle.removeClass('show-blocks-toggle');
+                $toggleButton.hide();
             } else {
-                $('.ai-template-blocks > div').hide();
-                $('.category-' + $(this).data('category')).show();
-                $('.ai-templates-category-title').hide();
+                $toggle.addClass('show-blocks-toggle');
+                $toggleButton.show();
+            }
+        }
 
-                // empty search
-                $('#template-search').val('');
+        // ai template blocks
+        $(document).on('click', '.ai-templates-category', function (e) {
+            e.preventDefault();
+
+            var $trigger = $(this);
+            var $scope = $trigger.closest('.dashboard-content-inner, .main-content');
+            var $categoryList = $trigger.closest('.template-categories');
+            var $blocks = $scope.find('.ai-template-blocks').first();
+            var category = $trigger.data('category');
+
+            $categoryList.find('li').removeClass('active');
+            $trigger.parent('li').addClass('active');
+
+            if (category === 'all') {
+                $blocks.children('div').show();
+                $blocks.find('.ai-templates-category-title').show();
+            } else {
+                $blocks.children('div').hide();
+                $blocks.find('.category-' + category).show();
+                $blocks.find('.ai-templates-category-title').hide();
+
+                $scope.find('#template-search').val('');
+                $scope.find('#chat-bot-search').val('');
             }
 
-            if($('.ai-template-blocks-toggle').length){
-                if($('.ai-template-blocks').height() <= 690){
-                    $('.ai-template-blocks-toggle').removeClass('show-blocks-toggle')
-                    $('.ai-template-blocks-toggle-button').hide()
-                } else {
-                    $('.ai-template-blocks-toggle').addClass('show-blocks-toggle')
-                    $('.ai-template-blocks-toggle-button').show()
-                }
-            }
+            updateTemplateBlocksToggle($scope);
         });
 
         $('#export_to_word').on('click', function (e) {
@@ -1080,10 +1096,14 @@
 
         // template search
         $(document).on('keyup', '#template-search', function () {
-            $('[data-category="all"]').click();
+            var $input = $(this);
+            var $scope = $input.closest('.dashboard-content-inner, .main-content');
+            var $blocks = $scope.find('.ai-template-blocks').first();
 
-            var searchTerm = $(this).val().toLowerCase();
-            $('.ai-template-blocks').find('> div').each(function () {
+            $scope.find('.template-categories [data-category="all"]').first().click();
+
+            var searchTerm = $input.val().toLowerCase();
+            $blocks.find('> div').each(function () {
                 if ($(this).filter(function() {
                     return $(this).find('h4').text().toLowerCase().indexOf(searchTerm) > -1;
                 }).length > 0 || searchTerm.length < 1) {
@@ -1092,14 +1112,20 @@
                     $(this).hide();
                 }
             });
+
+            updateTemplateBlocksToggle($scope);
         });
 
         // chatbot search
         $(document).on('keyup', '#chat-bot-search', function () {
-            $('[data-category="all"]').click();
+            var $input = $(this);
+            var $scope = $input.closest('.dashboard-content-inner, .main-content');
+            var $blocks = $scope.find('.ai-template-blocks').first();
 
-            var searchTerm = $(this).val().toLowerCase();
-            $('.ai-template-blocks').find('> div').each(function () {
+            $scope.find('.template-categories [data-category="all"]').first().click();
+
+            var searchTerm = $input.val().toLowerCase();
+            $blocks.find('> div').each(function () {
                 if ($(this).filter(function() {
                     return $(this).data('search').toLowerCase().indexOf(searchTerm) > -1;
                 }).length > 0 || searchTerm.length < 1) {
@@ -1108,6 +1134,8 @@
                     $(this).hide();
                 }
             });
+
+            updateTemplateBlocksToggle($scope);
         });
 
         // ai images
