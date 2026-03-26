@@ -6,6 +6,15 @@ $plan_settings = $current_user['plan']['settings']; ?>
 <div class="dashboard-sidebar">
     <div class="dashboard-sidebar-inner" data-simplebar>
         <div class="dashboard-nav-container">
+            <div class="atlas-sidebar-brand">
+                <a href="<?php url("DASHBOARD") ?>" class="atlas-sidebar-brand-link">
+                    <span class="atlas-sidebar-brand-mark"><?php echo strtoupper(substr($config['site_title'], 0, 1)); ?></span>
+                    <span class="atlas-sidebar-brand-copy">
+                        <strong><?php _esc($config['site_title']) ?></strong>
+                        <small><?php _e("AI workspace") ?></small>
+                    </span>
+                </a>
+            </div>
 
             <!-- Responsive Navigation Trigger -->
             <a href="#" class="dashboard-responsive-nav-trigger">
@@ -140,6 +149,12 @@ $plan_settings = $current_user['plan']['settings']; ?>
                 </div>
             </div>
             <!-- Navigation / End -->
+            <div class="atlas-sidebar-footer">
+                <div class="atlas-sidebar-footer-card">
+                    <strong><?php _e("Private Workspace") ?></strong>
+                    <span><?php _e("Company-aware agents, social content, and business context in one place.") ?></span>
+                </div>
+            </div>
         </div>
     </div>
 </div>

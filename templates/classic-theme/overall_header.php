@@ -85,9 +85,7 @@
         echo '<link rel="stylesheet" href="' . TEMPLATE_URL . '/css/style.css?ver=' . $config['version'] . '">';
     } ?>
     <link rel="stylesheet" href="<?php _esc(TEMPLATE_URL); ?>/css/color.css?ver=<?php _esc($config['version']); ?>">
-    <?php if (isset($_COOKIE['quickapp'])) { ?>
-        <link rel="stylesheet" href="<?php _esc(TEMPLATE_URL); ?>/css/app.css?ver=<?php _esc($config['version']); ?>">
-    <?php } ?>
+    <link rel="stylesheet" href="<?php _esc(TEMPLATE_URL); ?>/css/app.css?ver=<?php _esc($config['version']); ?>">
     <script src="<?php _esc(TEMPLATE_URL); ?>/js/jquery.min.js"></script>
 
     <?php if (CURRENT_PAGE == 'app/home') { ?>
@@ -103,7 +101,7 @@
     <?php _esc($config['external_code']); ?>
     <!-- ===/External Code=== -->
 </head>
-<body data-role="page" class="<?php _esc($lang_direction); ?>" id="page">
+<body data-role="page" class="<?php _esc($lang_direction); ?> page-<?php _esc(str_replace(['/', '.'], '-', CURRENT_PAGE)); ?>" id="page">
 <!--[if lt IE 8]>
 <p class="browserupgrade">
     You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade
