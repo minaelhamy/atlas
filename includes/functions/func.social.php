@@ -1988,6 +1988,32 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
     $company = !empty($profile['company_name']) ? $profile['company_name'] : 'Atlas';
     $industry = !empty($profile['company_industry']) ? $profile['company_industry'] : 'your market';
     $product = !empty($profile['key_products']) ? trim(strtok($profile['key_products'], ",\n")) : $industry;
+    $audience = !empty($profile['target_audience']) ? trim(strtok($profile['target_audience'], ",\n")) : 'your audience';
+    $differentiator = !empty($profile['differentiators']) ? trim(strtok($profile['differentiators'], ".\n")) : '';
+    $companyDescription = !empty($profile['company_description']) ? trim($profile['company_description']) : '';
+    $profileText = strtolower(trim(implode(' ', array_filter([
+        $company,
+        $industry,
+        $product,
+        $audience,
+        $differentiator,
+        $companyDescription,
+        $briefSummary,
+    ]))));
+    $subjectHints = [];
+    if (preg_match('/\bdog|dogs|canine|puppy|puppies|leash|collar|pet walk|petcare\b/i', $profileText)) {
+        $subjectHints = array_merge($subjectHints, ['dog', 'canine', 'pet']);
+    }
+    if (preg_match('/\bcat|cats|kitten|feline\b/i', $profileText)) {
+        $subjectHints = array_merge($subjectHints, ['cat', 'feline', 'pet']);
+    }
+    if (preg_match('/\bfounder|creator|startup|business owner|entrepreneur\b/i', $profileText)) {
+        $subjectHints = array_merge($subjectHints, ['founder', 'entrepreneur', 'workspace']);
+    }
+    if (preg_match('/\bproduct|products|ecommerce|shop|store\b/i', $profileText)) {
+        $subjectHints = array_merge($subjectHints, ['product', 'ecommerce', 'brand']);
+    }
+    $subjectHints = array_values(array_unique($subjectHints));
 
     for ($i = 0; $i < 9; $i++) {
         $mode = !empty($template['layout'][$i]) ? $template['layout'][$i] : 'image';
@@ -2020,6 +2046,29 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
             $caption = 'People who need a clearer path to choosing ' . $product . ' get that clarity through ' . $company . '\'s more useful approach.' . ($briefSummary !== '' ? ' Designed for ' . rtrim($briefSummary, '.') . '.' : '');
         }
 
+        $sourceKeywords = social_media_normalize_list(!empty($source['keywords']) ? $source['keywords'] : []);
+        $sourceKeywords = array_merge(
+            $sourceKeywords,
+            social_media_normalize_list(trim((string) ($source['title'] ?? ''))),
+            social_media_normalize_list(trim((string) ($source['overlay_text'] ?? '')))
+        );
+        $visualBrief = trim((string) ($source['visual_brief'] ?? ''));
+        if ($mode === 'image') {
+            $visualBrief = $visualBrief !== ''
+                ? $visualBrief
+                : 'Use a relevant, on-brand image for ' . $company . ' that clearly relates to ' . $product . ' and the needs of ' . $audience . '. Avoid unrelated subjects and abstract imagery.';
+            if ($differentiator !== '') {
+                $visualBrief .= ' Reflect the brand edge: ' . $differentiator . '.';
+            }
+            if (!empty($subjectHints)) {
+                $visualBrief .= ' Preferred subjects: ' . implode(', ', $subjectHints) . '.';
+            }
+        } else {
+            $visualBrief = $visualBrief !== ''
+                ? $visualBrief
+                : 'Create a text-led tile that fits the selected grid template.';
+        }
+
         $normalized[] = [
             'post_type' => 'post',
             'title' => trim((string) ($source['title'] ?? ($company . ' Grid Tile ' . ($i + 1)))),
@@ -2028,12 +2077,12 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
             'caption' => $caption,
             'cta' => trim((string) ($source['cta'] ?? ($mode === 'text' ? 'Save this post' : 'Follow for more'))),
             'hashtags' => social_media_normalize_list(!empty($source['hashtags']) ? $source['hashtags'] : ['#' . preg_replace('/\s+/', '', ucwords($company)), '#InstagramGrid', '#Marketing']),
-            'visual_brief' => trim((string) ($source['visual_brief'] ?? ($mode === 'text'
-                ? 'Create a text-led tile that fits the selected grid template.'
-                : 'Use a relevant, on-brand image that supports the selected grid template.'))),
+            'visual_brief' => $visualBrief,
             'keywords' => array_values(array_unique(array_merge(
-                social_media_normalize_list(!empty($source['keywords']) ? $source['keywords'] : []),
-                [$industry, $product],
+                $sourceKeywords,
+                [$company, $industry, $product, $audience],
+                $differentiator !== '' ? [$differentiator] : [],
+                $subjectHints,
                 $mode === 'image' ? $template['image_keywords'] : [$company]
             ))),
             'design' => $design,
