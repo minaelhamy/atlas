@@ -210,6 +210,9 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                             $previewUrl = $config['site_url'] . 'storage/social_posts/' . $gridPost['preview_image']; ?>
                                             <div class="atlas-instagram-tile">
                                                 <img src="<?php echo $previewUrl; ?>" alt="<?php _esc($gridPost['title']) ?>">
+                                                <a href="<?php echo $previewUrl; ?>" class="atlas-instagram-tile-download" download aria-label="<?php echo sprintf(__('Download tile %d'), !empty($gridPost['metadata']['grid']['position']) ? (int)$gridPost['metadata']['grid']['position'] : 0); ?>">
+                                                    <i class="fa fa-download"></i>
+                                                </a>
                                             </div>
                                         <?php } ?>
                                     <?php } else { ?>
@@ -218,22 +221,6 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                         <?php } ?>
                                     <?php } ?>
                                 </div>
-                            </div>
-
-                            <div class="atlas-grid-downloads margin-top-24" id="instagram-grid-downloads">
-                                <?php if (!empty($recent_grid_posts)) { ?>
-                                    <div class="atlas-grid-download-list">
-                                        <?php foreach ($recent_grid_posts as $gridPost) {
-                                            $previewUrl = $config['site_url'] . 'storage/social_posts/' . $gridPost['preview_image']; ?>
-                                            <a href="<?php echo $previewUrl; ?>" class="atlas-grid-download-item" download>
-                                                <span><?php echo sprintf(__('Tile %d'), !empty($gridPost['metadata']['grid']['position']) ? (int)$gridPost['metadata']['grid']['position'] : 0); ?></span>
-                                                <i class="fa fa-download"></i>
-                                            </a>
-                                        <?php } ?>
-                                    </div>
-                                <?php } else { ?>
-                                    <p class="margin-bottom-0" id="instagram-grid-empty"><?php _e("Generate a grid and your 9 tile downloads will appear here in publishing order.") ?></p>
-                                <?php } ?>
                             </div>
                         </div>
                     </div>
@@ -367,18 +354,17 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
 
         function renderGrid(posts) {
             var gridHtml = '';
-            var downloadHtml = '';
 
             $.each(posts, function (index, post) {
-                gridHtml += '<div class="atlas-instagram-tile"><img src="' + escapeHtml(post.preview_image) + '" alt="' + escapeHtml(post.title) + '"></div>';
-                downloadHtml += '<a href="' + escapeHtml(post.preview_image) + '" class="atlas-grid-download-item" download>' +
-                    '<span>Tile ' + (index + 1) + '</span>' +
-                    '<i class="fa fa-download"></i>' +
-                '</a>';
+                gridHtml += '<div class="atlas-instagram-tile">' +
+                    '<img src="' + escapeHtml(post.preview_image) + '" alt="' + escapeHtml(post.title) + '">' +
+                    '<a href="' + escapeHtml(post.preview_image) + '" class="atlas-instagram-tile-download" download aria-label="Download tile ' + (index + 1) + '">' +
+                        '<i class="fa fa-download"></i>' +
+                    '</a>' +
+                '</div>';
             });
 
             $('#instagram-grid-preview').html(gridHtml);
-            $('#instagram-grid-downloads').html('<div class="atlas-grid-download-list">' + downloadHtml + '</div>');
         }
 
         $campaignSelect.on('change', renderCampaignSummary);
