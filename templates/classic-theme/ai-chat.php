@@ -37,16 +37,16 @@ overall_header(__("AI Agents"));
                     </nav>
                 </div>
                 <?php if ($membership_ai_chat && ($bot_id == null || in_array($bot_id, $membership_ai_chatbots))) { ?>
-                    <div class="notification notice">
+                    <div class="notification notice atlas-inline-notice">
                         <?php _e("Ask your company-aware AI agents for strategy, positioning, content, and operational help.") ?>
                     </div>
                 <?php } else { ?>
-                    <div class="notification small-notification error">
+                    <div class="notification small-notification error atlas-inline-notice">
                         <?php _e("Upgrade your membership plan to use this feature.") ?>
                     </div>
                 <?php } ?>
 
-                <div class="messages-container margin-top-0">
+                    <div class="messages-container margin-top-0 atlas-chat-shell">
                     <div class="messages-container-inner">
                         <!-- Messages -->
                         <div class="messages-inbox">
@@ -80,7 +80,7 @@ overall_header(__("AI Agents"));
                             </ul>
                             <div class="messages-inbox-bottom">
                                 <a href="javascript:void(0)" id="new-conversation"
-                                   class="button full-width button-sliding-icon"><?php _e('New Conversation'); ?> <i
+                                   class="button full-width atlas-ghost-button atlas-block-button"><?php _e('New Conversation'); ?> <i
                                             class="icon-feather-plus"></i></a>
                             </div>
                         </div>
@@ -102,13 +102,13 @@ overall_header(__("AI Agents"));
                                     </div>
                                 </h4>
                                 <div class="message-action">
-                                    <a href="#" class="button ripple-effect btn-sm d-md-none d-inline-block"
+                                    <a href="#" class="button ripple-effect btn-sm d-md-none d-inline-block atlas-icon-button"
                                        id="show-conversations" title="<?php _e("Show Conversations") ?>"
                                        data-tippy-placement="top"><i class="icon-feather-menu"></i></a>
-                                    <a href="#" class="button ripple-effect btn-sm" id="export-chats"
+                                    <a href="#" class="button ripple-effect btn-sm atlas-icon-button" id="export-chats"
                                        title="<?php _e("Export Conversation") ?>"
                                        data-tippy-placement="top"><i class="icon-feather-download"></i></a>
-                                    <a href="#" class="button ripple-effect btn-sm red" id="delete-chats"
+                                    <a href="#" class="button ripple-effect btn-sm red atlas-icon-button atlas-icon-button-danger" id="delete-chats"
                                        title="<?php _e("Delete Conversation") ?>"
                                        data-tippy-placement="top"><i class="icon-feather-trash-2"></i></a>
                                 </div>
@@ -145,16 +145,16 @@ overall_header(__("AI Agents"));
                                             id="ai-chat-textarea" rows="2"></textarea>
                                     <div>
                                         <?php if (get_option("enable_ai_chat_prompts", 1)) { ?>
-                                            <a id="chat-prompts" href="javascript:void(0)"
+                                            <a id="chat-prompts" class="atlas-icon-button" href="javascript:void(0)"
                                                title="<?php _e('Prompt Library'); ?>" data-tippy-placement="top"><i
                                                         class="fa fa-book"></i></a>
                                         <?php } ?>
                                         <?php if (get_option("enable_ai_chat_mic", 1)) { ?>
-                                            <a id="chat-microphone" href="javascript:void(0)"><i
+                                            <a id="chat-microphone" class="atlas-icon-button" href="javascript:void(0)"><i
                                                         class="fa fa-microphone"></i></a>
                                         <?php } ?>
                                         <button id="chat-send-button" type="submit"
-                                                class="button ripple-effect">
+                                                class="button ripple-effect atlas-send-button">
                                             <?php _e('Send') ?>
                                         </button>
                                     </div>
