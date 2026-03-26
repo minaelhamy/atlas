@@ -38,22 +38,22 @@ overall_header(__("Templates"));
                     <input id="template-search" placeholder="<?php _e('Search...'); ?>" type="text"
                            class="with-border border-pilled">
                 </div>
-                <div class="template-categories">
+                <div class="template-categories" data-template-library>
                     <ul>
-                        <li class="active"><a href="javascript:void();" class="ai-templates-category"
-                                              data-category="all"><?php _e("All templates") ?></a></li>
+                        <li class="active"><button type="button" class="ai-templates-category"
+                                                   data-category="all"><?php _e("All templates") ?></button></li>
                         <?php
                         foreach ($ai_templates as $category) {
                             if (!empty($category['templates'])) {
                                 $translations = json_decode((string)$category['translations'], true);
                                 ?>
                                 <li>
-                                    <a href="javascript:void();" class="ai-templates-category"
+                                    <button type="button" class="ai-templates-category"
                                        data-category="<?php _esc($category['id']) ?>">
                                         <?php echo !empty($translations[$config['lang_code']]['title'])
                                             ? $translations[$config['lang_code']]['title']
                                             : $category['title']; ?>
-                                    </a>
+                                    </button>
                                 </li>
                             <?php }
                         }
@@ -67,7 +67,7 @@ overall_header(__("Templates"));
                             if (!empty($category['templates'])) {
                             $translations = json_decode((string)$category['translations'], true);
                             ?>
-                            <div class="col-md-12 ai-templates-category-title">
+                            <div class="col-md-12 ai-templates-category-title" data-template-title="<?php _esc($category['id']) ?>">
                                 <h4>
                                     <?php echo !empty($translations[$config['lang_code']]['title'])
                                         ? $translations[$config['lang_code']]['title']
@@ -78,7 +78,7 @@ overall_header(__("Templates"));
                             foreach ($category['templates'] as $template) {
                                 $translations = json_decode((string)$template['translations'], true);
                                 ?>
-                                <div class="col-md-4 col-sm-6 category-<?php _esc($category['id']) ?>">
+                                <div class="col-md-4 col-sm-6 category-<?php _esc($category['id']) ?>" data-template-card="<?php _esc($category['id']) ?>">
                                     <a href="<?php echo url('AI_TEMPLATES', false) . '/' . $template['slug'] ?>"
                                         <?php if (!in_array($template['slug'], $plan_templates)) { ?>
                                             title="<?php _e("Upgrade your plan to use this template") ?>" data-tippy-placement="top"
@@ -142,6 +142,77 @@ overall_header(__("Templates"));
         </div>
     </div>
 <?php ob_start() ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var library = document.querySelector('[data-template-library]');
+    var searchInput = document.getElementById('template-search');
+    var blocks = document.querySelector('.ai-template-blocks');
+
+    if (!library || !blocks) {
+        return;
+    }
+
+    var buttons = library.querySelectorAll('.ai-templates-category');
+    var cards = blocks.querySelectorAll('[data-template-card]');
+    var titles = blocks.querySelectorAll('[data-template-title]');
+
+    function setActive(category) {
+        library.querySelectorAll('li').forEach(function (item) {
+            item.classList.remove('active');
+        });
+
+        var activeButton = library.querySelector('.ai-templates-category[data-category="' + category + '"]');
+        if (activeButton && activeButton.parentElement) {
+            activeButton.parentElement.classList.add('active');
+        }
+    }
+
+    function applyCategory(category) {
+        setActive(category);
+
+        titles.forEach(function (title) {
+            title.style.display = category === 'all' ? '' : 'none';
+        });
+
+        cards.forEach(function (card) {
+            card.style.display = category === 'all' || card.getAttribute('data-template-card') === String(category) ? '' : 'none';
+        });
+    }
+
+    buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            applyCategory(button.getAttribute('data-category'));
+            if (searchInput) {
+                searchInput.value = '';
+            }
+        });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            var term = searchInput.value.toLowerCase().trim();
+            applyCategory('all');
+
+            cards.forEach(function (card) {
+                var heading = card.querySelector('h4');
+                var matches = !term || (heading && heading.textContent.toLowerCase().indexOf(term) > -1);
+                card.style.display = matches ? '' : 'none';
+            });
+
+            titles.forEach(function (title) {
+                var categoryId = title.getAttribute('data-template-title');
+                var hasVisibleCards = Array.prototype.some.call(
+                    blocks.querySelectorAll('[data-template-card="' + categoryId + '"]'),
+                    function (card) {
+                        return card.style.display !== 'none';
+                    }
+                );
+                title.style.display = hasVisibleCards ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
 <?php
 $footer_content = ob_get_clean();
 include_once TEMPLATE_PATH . '/overall_footer_dashboard.php';

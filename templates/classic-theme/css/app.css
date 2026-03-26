@@ -262,6 +262,15 @@ body button {
     pointer-events: all;
 }
 
+.dashboard-nav ul li.atlas-static-submenu ul {
+    visibility: visible;
+    opacity: 1;
+    max-height: 320px;
+    line-height: 1.45;
+    padding: 8px 0 10px;
+    pointer-events: all;
+}
+
 .dashboard-nav ul li ul li {
     background: transparent;
     border: 0;
@@ -1043,6 +1052,16 @@ table th {
 .ud-single-feature,
 .dashboard-box.ai-templates {
     padding: 8px;
+}
+
+.template-categories ul li button.ai-templates-category {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
 }
 
 .small-footer {
