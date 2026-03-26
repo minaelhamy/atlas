@@ -952,7 +952,7 @@ function social_media_build_asset_search_queries($keywords = [], $design = [])
 function social_media_build_provider_search_queries($provider, $keywords = [], $design = [])
 {
     $queries = social_media_build_asset_search_queries($keywords, $design);
-    if ($provider !== 'pixabay') {
+    if ($provider !== 'pixabay' && $provider !== 'unsplash') {
         return $queries;
     }
 
@@ -962,31 +962,36 @@ function social_media_build_provider_search_queries($provider, $keywords = [], $
     }
     $tokens = array_values(array_unique($tokens));
     $families = social_media_detect_keyword_family($tokens);
-    $pixabayQueries = [];
+    $providerQueries = [];
 
     if (in_array('dog', $families, true)) {
-        $pixabayQueries[] = 'dog leash dog owner park';
-        $pixabayQueries[] = 'dog walking leash outdoors';
-        $pixabayQueries[] = 'puppy collar pet accessory';
+        $providerQueries[] = 'dog leash dog owner park';
+        $providerQueries[] = 'dog walking leash outdoors';
+        $providerQueries[] = 'puppy collar pet accessory';
     } elseif (in_array('cat', $families, true)) {
-        $pixabayQueries[] = 'cat collar pet owner home';
-        $pixabayQueries[] = 'cat accessory indoor pet';
+        $providerQueries[] = 'cat collar pet owner home';
+        $providerQueries[] = 'cat accessory indoor pet';
     }
 
     if (!empty($tokens)) {
-        $pixabayQueries[] = implode(' ', array_slice($tokens, 0, 4));
+        $providerQueries[] = implode(' ', array_slice($tokens, 0, 4));
         if (count($tokens) > 4) {
-            $pixabayQueries[] = implode(' ', array_slice($tokens, 4, 4));
+            $providerQueries[] = implode(' ', array_slice($tokens, 4, 4));
         }
     }
 
     foreach ($queries as $query) {
-        if (stripos($query, 'creative brand background') === false) {
-            $pixabayQueries[] = $query;
+        if ($provider === 'pixabay' && stripos($query, 'creative brand background') !== false) {
+            continue;
         }
+        $providerQueries[] = $query;
     }
 
-    return array_values(array_unique(array_filter(array_map('trim', $pixabayQueries))));
+    if ($provider === 'unsplash') {
+        $providerQueries[] = implode(' ', array_slice(array_filter(array_unique(array_merge($tokens, $families))), 0, 4));
+    }
+
+    return array_values(array_unique(array_filter(array_map('trim', $providerQueries))));
 }
 
 function social_media_keyword_tokens($value)
@@ -1134,7 +1139,7 @@ function social_media_search_unsplash($query, $limit = 8)
         return [];
     }
 
-    $url = 'https://api.unsplash.com/search/photos?query=' . rawurlencode($query) . '&per_page=' . max(1, min(30, (int) $limit)) . '&orientation=squarish&content_filter=high';
+    $url = 'https://api.unsplash.com/search/photos?query=' . rawurlencode($query) . '&per_page=' . max(1, min(30, (int) $limit)) . '&orientation=squarish&content_filter=high&order_by=relevant';
     $data = social_media_http_get_json($url, [
         'Authorization: Client-ID ' . $key,
         'Accept-Version: v1',
@@ -1264,6 +1269,14 @@ function social_media_filter_remote_assets($assets, $provider, $keywords = [], $
         }
         if ($relevance['family_penalty'] > 0) {
             continue;
+        }
+        if ($provider === 'unsplash') {
+            if (!empty($relevance['families_wanted']) && empty($relevance['families_found'])) {
+                continue;
+            }
+            if ($relevance['match_count'] < 2) {
+                continue;
+            }
         }
         if ($provider === 'pixabay') {
             if ($relevance['match_count'] < 2) {
