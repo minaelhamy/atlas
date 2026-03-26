@@ -130,3 +130,43 @@ $plan_settings = $current_user['plan']['settings']; ?>
     </div>
 </div>
 <!-- Dashboard Sidebar / End -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var trigger = document.querySelector('.dashboard-responsive-nav-trigger');
+    if (!trigger) {
+        return;
+    }
+
+    var navContainer = trigger.closest('.dashboard-nav-container');
+    var nav = navContainer ? navContainer.querySelector('.dashboard-nav') : null;
+    var hamburger = trigger.querySelector('.hamburger');
+
+    if (!nav) {
+        return;
+    }
+
+    var toggleNav = function (event) {
+        if (event) {
+            event.preventDefault();
+        }
+
+        var isActive = trigger.classList.toggle('active');
+        nav.classList.toggle('active', isActive);
+
+        if (hamburger) {
+            hamburger.classList.toggle('is-active', isActive);
+        }
+
+        trigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    };
+
+    trigger.setAttribute('aria-expanded', nav.classList.contains('active') ? 'true' : 'false');
+    trigger.addEventListener('click', toggleNav);
+    trigger.addEventListener('touchend', function (event) {
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+        toggleNav();
+    }, {passive: false});
+});
+</script>
