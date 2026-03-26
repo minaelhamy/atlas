@@ -10,7 +10,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                 <a href="<?php url("DASHBOARD") ?>" class="atlas-sidebar-brand-link">
                     <span class="atlas-sidebar-brand-copy">
                         <strong><?php _esc($config['site_title']) ?></strong>
-                        <small><?php _e("AI workspace") ?></small>
+                        <small><?php _e("Your AI workspace") ?></small>
                     </span>
                 </a>
             </div>

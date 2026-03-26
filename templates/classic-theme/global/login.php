@@ -13,7 +13,7 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
                     <?php } else { ?>
                         <h3><?php _esc($config['site_title']) ?></h3>
                     <?php } ?>
-                    <span><?php _e("AI workspace") ?></span>
+                    <span><?php _e("Hatchers AI workspace") ?></span>
                 </div>
 
                 <?php if(get_option("enable_user_registration", '1')) { ?>
