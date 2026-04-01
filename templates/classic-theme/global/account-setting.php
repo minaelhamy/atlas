@@ -96,195 +96,29 @@ overall_header(__("Account Setting"));
                         </div>
                         <div class="dashboard-box atlas-workflow-shell">
                             <div class="headline">
-                                <h3><i class="icon-feather-briefcase"></i> <?php _e("Company Profile") ?></h3>
+                                <h3><i class="icon-feather-activity"></i> <?php _e("Company Intelligence") ?></h3>
                             </div>
                             <div class="content with-padding">
                                 <div class="atlas-wizard-card margin-bottom-24">
                                     <div class="atlas-wizard-header">
                                         <div>
-                                            <span class="atlas-workflow-eyebrow"><?php _e("Tell us about your business") ?></span>
-                                            <h2><?php _e("Build the company profile Atlas will use everywhere") ?></h2>
-                                            <p><?php _e("This takes a couple of minutes. Atlas uses this profile to understand your company, sharpen positioning, and generate content that sounds like it came from your team.") ?></p>
+                                            <span class="atlas-workflow-eyebrow"><?php _e("New location") ?></span>
+                                            <h2><?php _e("Your business profile has moved") ?></h2>
+                                            <p><?php _e("Company profile, website extraction, visual direction, competitors, and the reusable business summary now live in Company Intelligence so Atlas can use them everywhere.") ?></p>
                                         </div>
                                         <div class="atlas-stepper atlas-stepper-compact">
                                             <span class="active"><?php _e("Your website") ?></span>
                                             <span class="active"><?php _e("Business info") ?></span>
-                                            <span><?php _e("Inspiration") ?></span>
-                                            <span><?php _e("Review") ?></span>
+                                            <span class="active"><?php _e("Inspiration") ?></span>
+                                            <span class="active"><?php _e("Review") ?></span>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="atlas-wizard-inline-note margin-bottom-25"><?php _e("This profile powers every AI agent and the social media generator.") ?></div>
-                                <form method="post" accept-charset="UTF-8" enctype="multipart/form-data">
-                                    <div class="atlas-profile-section-card margin-bottom-20">
-                                        <div class="atlas-profile-section-heading">
-                                            <span class="atlas-section-step"><?php _e("01") ?></span>
-                                            <div>
-                                                <h4><?php _e("Brand foundation") ?></h4>
-                                                <p><?php _e("Upload your logo and define the core business details Atlas should anchor to.") ?></p>
-                                            </div>
-                                        </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Company Logo") ?></h5>
-                                                <div class="account-media-card">
-                                                    <div class="account-media-preview logo-preview-wrap">
-                                                        <?php if (!empty($company_logo)) { ?>
-                                                            <img id="company-logo-preview" src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $company_logo; ?>" alt="" class="account-media-image logo-shape">
-                                                        <?php } else { ?>
-                                                            <div id="company-logo-preview" class="account-media-placeholder logo-shape"><?php _e('Logo') ?></div>
-                                                        <?php } ?>
-                                                    </div>
-                                                <div class="uploadButton">
-                                                    <input class="uploadButton-input" type="file" accept="images/*" id="company_logo" name="company_logo"/>
-                                                    <label class="uploadButton-button ripple-effect" for="company_logo"><?php _e('Upload Company Logo') ?></label>
-                                                    <span class="uploadButton-file-name" id="company-logo-upload-status"><?php _e('Select a logo and it will upload instantly.') ?></span>
-                                                </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Founder Name") ?></h5>
-                                                <input type="text" name="founder_name" class="with-border" value="<?php _esc($founder_name) ?>">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Founder Title") ?></h5>
-                                                <input type="text" name="founder_title" class="with-border" value="<?php _esc($founder_title) ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Company Name") ?></h5>
-                                                <input type="text" name="company_name" class="with-border" value="<?php _esc($company_name) ?>">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Company Website") ?></h5>
-                                                <input type="text" name="company_website" class="with-border" value="<?php _esc($company_website) ?>" placeholder="https://example.com">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Industry") ?></h5>
-                                                <input type="text" name="company_industry" class="with-border" value="<?php _esc($company_industry) ?>" placeholder="<?php _e('SaaS, eCommerce, fintech, agency...') ?>">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Instagram Handle") ?></h5>
-                                                <input type="text" name="instagram_handle" class="with-border" value="<?php _esc($instagram_handle) ?>" placeholder="@yourbrand">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    <div class="atlas-profile-section-card margin-bottom-20">
-                                        <div class="atlas-profile-section-heading">
-                                            <span class="atlas-section-step"><?php _e("02") ?></span>
-                                            <div>
-                                                <h4><?php _e("Audience and positioning") ?></h4>
-                                                <p><?php _e("Tell Atlas who you serve, how you sound, what you sell, and what makes you different.") ?></p>
-                                            </div>
-                                        </div>
-                                    <div class="submit-field">
-                                        <h5><?php _e("Company Description") ?></h5>
-                                        <textarea name="company_description" class="with-border" rows="4"><?php _esc($company_description) ?></textarea>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Target Audience") ?></h5>
-                                                <textarea name="target_audience" class="with-border" rows="4"><?php _esc($target_audience) ?></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Brand Voice") ?></h5>
-                                                <textarea name="brand_voice" class="with-border" rows="4"><?php _esc($brand_voice) ?></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Content Goals") ?></h5>
-                                                <textarea name="content_goals" class="with-border" rows="4"><?php _esc($content_goals) ?></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="submit-field">
-                                                <h5><?php _e("Key Products or Services") ?></h5>
-                                                <textarea name="key_products" class="with-border" rows="4"><?php _esc($key_products) ?></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="submit-field">
-                                        <h5><?php _e("Differentiators") ?></h5>
-                                        <textarea name="differentiators" class="with-border" rows="4"><?php _esc($differentiators) ?></textarea>
-                                    </div>
-                                    </div>
-                                    <div class="atlas-profile-section-card margin-bottom-20">
-                                        <div class="atlas-profile-section-heading">
-                                            <span class="atlas-section-step"><?php _e("03") ?></span>
-                                            <div>
-                                                <h4><?php _e("Competitors and market context") ?></h4>
-                                                <p><?php _e("Add competitor sites or Instagram profiles so Atlas can build a sharper strategic understanding of your market.") ?></p>
-                                            </div>
-                                        </div>
-                                    <div class="submit-field">
-                                        <h5><?php _e("Competitor Websites or Instagram URLs") ?></h5>
-                                        <textarea name="competitors" class="with-border" rows="4" placeholder="https://competitor.com&#10;https://instagram.com/competitor"><?php _esc($competitors) ?></textarea>
-                                    </div>
-                                    <div class="submit-field">
-                                        <h5><?php _e("Competitor Notes") ?></h5>
-                                        <textarea name="competitor_notes" class="with-border" rows="4"><?php _esc($competitor_notes) ?></textarea>
-                                    </div>
-                                    </div>
-                                    <div class="dashboard-box intelligence-panel-box margin-top-20 margin-bottom-20">
-                                        <div class="headline">
-                                            <h3><i class="icon-feather-activity"></i> <?php _e("Company Intelligence") ?></h3>
-                                        </div>
-                                        <div class="content with-padding">
-                                            <p class="margin-bottom-10 intelligence-refreshed-at">
-                                                <strong><?php _e("Last Refreshed") ?>:</strong>
-                                                <span><?php _esc(!empty($company_intelligence['refreshed_at']) ? $company_intelligence['refreshed_at'] : __('Not generated yet')) ?></span>
-                                            </p>
-                                            <div class="company-intelligence-body">
-                                                <div class="margin-bottom-15">
-                                                    <strong><?php _e("Company Summary") ?></strong>
-                                                    <p class="margin-top-5 intelligence-company-summary"><?php _esc(!empty($company_intelligence['company_summary']) ? $company_intelligence['company_summary'] : __('No summary yet. Save your company profile and refresh intelligence.')) ?></p>
-                                                </div>
-                                                <div class="margin-bottom-15">
-                                                    <strong><?php _e("Market Research") ?></strong>
-                                                    <p class="margin-top-5 intelligence-market-research"><?php _esc(!empty($company_intelligence['market_research']) ? $company_intelligence['market_research'] : __('No market research yet.')) ?></p>
-                                                </div>
-                                                <div class="margin-bottom-15">
-                                                    <strong><?php _e("Competitive Edges") ?></strong>
-                                                    <p class="margin-top-5 intelligence-competitive-edges"><?php _esc(!empty($company_intelligence['competitive_edges']) ? $company_intelligence['competitive_edges'] : __('No competitive edge summary yet.')) ?></p>
-                                                </div>
-                                                <div class="margin-bottom-0">
-                                                    <strong><?php _e("Strategic Guidance") ?></strong>
-                                                    <p class="margin-top-5 intelligence-strategic-guidance"><?php _esc(!empty($company_intelligence['strategic_guidance']) ? $company_intelligence['strategic_guidance'] : __('No strategic guidance yet.')) ?></p>
-                                                </div>
-                                            </div>
-                                            <div class="margin-top-20">
-                                                <a href="#" class="button ripple-effect intelligence-refresh-btn"><?php _e("Refresh Now") ?></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <?php if(!empty($social_error)){ _esc($social_error); } ?>
-                                    <button type="submit" name="social-submit" class="button ripple-effect"><?php _e("Save Company Profile") ?></button>
-                                </form>
+                                <div class="atlas-wizard-inline-note margin-bottom-25"><?php _e("Open Company Intelligence to manage the business context Atlas uses for AI Agents and social generation.") ?></div>
+                                <div class="dashboard-note">
+                                    <p class="margin-bottom-15"><?php _e("You can now extract details from your website, define ICP and USPs, save brand colors and tone of voice, upload a moodboard, add reference brands and competitors, and review the intelligence Atlas will use in every workflow.") ?></p>
+                                    <a href="<?php echo $link['COMPANY_INTELLIGENCE']; ?>" class="button ripple-effect"><?php _e("Open Company Intelligence") ?></a>
+                                </div>
                             </div>
                         </div>
                         <?php if (get_option('enable_tax_billing', 1)) { ?>
@@ -578,62 +412,6 @@ overall_header(__("Account Setting"));
             uploadProfileMedia('avatar', '#avatar', '#avatar-upload-status', '#account-avatar-preview');
         });
 
-        $('#company_logo').on('change', function () {
-            uploadProfileMedia('company_logo', '#company_logo', '#company-logo-upload-status', '#company-logo-preview');
-        });
-
-        $('.intelligence-refresh-btn').on('click', function (e) {
-            e.preventDefault();
-            var $btn = $(this);
-            $btn.addClass('button-progress').prop('disabled', true);
-
-            $.ajax({
-                type: "POST",
-                url: ajaxurl + '?action=refresh_company_intelligence',
-                dataType: 'json',
-                success: function (response) {
-                    $btn.removeClass('button-progress').prop('disabled', false);
-                    if (response.success && response.intelligence) {
-                        $('.intelligence-refreshed-at span').text(response.intelligence.refreshed_at || '');
-                        $('.intelligence-company-summary').text(response.intelligence.company_summary || '');
-                        $('.intelligence-market-research').text(response.intelligence.market_research || '');
-                        $('.intelligence-competitive-edges').text(response.intelligence.competitive_edges || '');
-                        $('.intelligence-strategic-guidance').text(response.intelligence.strategic_guidance || '');
-                        Snackbar.show({
-                            text: response.message,
-                            pos: 'bottom-center',
-                            showAction: false,
-                            actionText: "Dismiss",
-                            duration: 3000,
-                            textColor: '#fff',
-                            backgroundColor: '#383838'
-                        });
-                    } else {
-                        Snackbar.show({
-                            text: response.error || '<?php echo escape(__('Unable to refresh company intelligence right now.')); ?>',
-                            pos: 'bottom-center',
-                            showAction: false,
-                            actionText: "Dismiss",
-                            duration: 3000,
-                            textColor: '#fff',
-                            backgroundColor: '#d32f2f'
-                        });
-                    }
-                },
-                error: function () {
-                    $btn.removeClass('button-progress').prop('disabled', false);
-                    Snackbar.show({
-                        text: '<?php echo escape(__('Unable to refresh company intelligence right now.')); ?>',
-                        pos: 'bottom-center',
-                        showAction: false,
-                        actionText: "Dismiss",
-                        duration: 3000,
-                        textColor: '#fff',
-                        backgroundColor: '#d32f2f'
-                    });
-                }
-            });
-        });
     </script>
 <?php
 $footer_content = ob_get_clean();

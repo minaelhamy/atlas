@@ -28,6 +28,7 @@ $link['INVOICE'] = $config['site_url'] . 'invoice';
 $link['TRANSACTION'] = $config['site_url'] . 'transaction';
 $link['ADVERTISE_HERE'] = $config['site_url'] . 'advertise-here';
 $link['ACCOUNT_SETTING'] = $config['site_url'] . 'account-setting';
+$link['COMPANY_INTELLIGENCE'] = $config['site_url'] . 'company-intelligence';
 $link['AFFILIATE-PROGRAM'] = $config['site_url'] . 'affiliate-program';
 $link['WITHDRAWALS'] = $config['site_url'] . 'withdrawals';
 $link['IMAGE_CONTENT'] = $config['site_url'] . 'imagecontent';

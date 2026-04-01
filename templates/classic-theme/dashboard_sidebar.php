@@ -34,6 +34,9 @@ $plan_settings = $current_user['plan']['settings']; ?>
                     </ul>
 
                     <ul data-submenu-title="<?php _e("Organize and Manage") ?>">
+                        <li class="<?php echo CURRENT_PAGE == 'global/company-intelligence' ? 'active' : ''; ?>"><a
+                                    href="<?php url("COMPANY_INTELLIGENCE") ?>"><i
+                                        class="icon-feather-activity"></i> <?php _e("Company Intelligence") ?></a></li>
                         <?php if ($config['enable_ai_images']) {
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                 <li class="<?php echo in_array(CURRENT_PAGE, ['app/ai-images', 'app/ai-images-campaign', 'app/ai-images-grid'], true) ? 'active' : ''; ?>"><a

@@ -165,10 +165,6 @@ if(isset($current_user['id']))
     }
 
     $billing_error = 0;
-    $social_profile = social_media_get_profile($_SESSION['user']['id']);
-    if (empty($social_profile['founder_name'])) {
-        $social_profile['founder_name'] = $ses_userdata['name'];
-    }
 
     if(isset($_POST['billing-submit']))
     {
@@ -197,36 +193,6 @@ if(isset($current_user['id']))
         }
     }
 
-    $social_error = '';
-    if(isset($_POST['social-submit']))
-    {
-        if (!check_allow()) {
-            $social_error = "<span class='status-not-available'> Disabled on demo</span>";
-        } else {
-            $profileData = [
-                'founder_name' => validate_input($_POST['founder_name']),
-                'founder_title' => validate_input($_POST['founder_title']),
-                'company_name' => validate_input($_POST['company_name']),
-                'company_website' => validate_input($_POST['company_website']),
-                'company_industry' => validate_input($_POST['company_industry']),
-                'company_description' => validate_input($_POST['company_description']),
-                'target_audience' => validate_input($_POST['target_audience']),
-                'brand_voice' => validate_input($_POST['brand_voice']),
-                'content_goals' => validate_input($_POST['content_goals']),
-                'key_products' => validate_input($_POST['key_products']),
-                'differentiators' => validate_input($_POST['differentiators']),
-                'instagram_handle' => validate_input($_POST['instagram_handle']),
-                'competitors' => social_media_normalize_list(isset($_POST['competitors']) ? $_POST['competitors'] : ''),
-                'competitor_notes' => validate_input($_POST['competitor_notes']),
-            ];
-
-            $social_profile = social_media_save_profile($_SESSION['user']['id'], $profileData);
-
-            transfer($link['ACCOUNT_SETTING'], __("Company profile saved successfully"), __("Settings Saved Successfully"));
-            exit;
-        }
-    }
-
     if(isset($_POST['submit'])) {
         $email_field = $ses_userdata['email'];
         $username_field = $_SESSION['user']['username'];
@@ -241,23 +207,6 @@ if(isset($current_user['id']))
 
     $username = $username_field;
     $current_avatar = !empty($ses_userdata['image']) ? $ses_userdata['image'] : 'default_user.png';
-
-    $founder_name = $social_profile['founder_name'];
-    $founder_title = $social_profile['founder_title'];
-    $company_name = $social_profile['company_name'];
-    $company_logo = $social_profile['company_logo'];
-    $company_website = $social_profile['company_website'];
-    $company_industry = $social_profile['company_industry'];
-    $company_description = $social_profile['company_description'];
-    $target_audience = $social_profile['target_audience'];
-    $brand_voice = $social_profile['brand_voice'];
-    $content_goals = $social_profile['content_goals'];
-    $key_products = $social_profile['key_products'];
-    $differentiators = $social_profile['differentiators'];
-    $instagram_handle = $social_profile['instagram_handle'];
-    $competitors = implode("\n", $social_profile['competitors']);
-    $competitor_notes = $social_profile['competitor_notes'];
-    $company_intelligence = social_media_get_company_intelligence($_SESSION['user']['id']);
 
     if(isset($_POST['delete-account'])) {
         if (!check_allow()) {
@@ -370,23 +319,6 @@ if(isset($current_user['id']))
         'email_error' => $email_error,
         'password_error' => $password_error,
         'delete_account_error' => $delete_account_error,
-        'social_error' => $social_error,
-        'founder_name' => $founder_name,
-        'founder_title' => $founder_title,
-        'company_name' => $company_name,
-        'company_logo' => $company_logo,
-        'company_website' => $company_website,
-        'company_industry' => $company_industry,
-        'company_description' => $company_description,
-        'target_audience' => $target_audience,
-        'brand_voice' => $brand_voice,
-        'content_goals' => $content_goals,
-        'key_products' => $key_products,
-        'differentiators' => $differentiators,
-        'instagram_handle' => $instagram_handle,
-        'competitors' => $competitors,
-        'competitor_notes' => $competitor_notes,
-        'company_intelligence' => $company_intelligence,
         'billing_error' => $billing_error,
         'billing_details_type' => get_user_option($_SESSION['user']['id'],'billing_details_type'),
         'billing_tax_id' => get_user_option($_SESSION['user']['id'],'billing_tax_id'),

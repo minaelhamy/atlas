@@ -1432,6 +1432,9 @@ a.button:hover {
     align-items: center;
     justify-content: center;
     padding: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -1457,6 +1460,7 @@ a.button:hover {
     z-index: 2;
     width: min(680px, calc(100vw - 32px));
     max-height: calc(100vh - 32px);
+    margin: auto;
     border-radius: 32px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.96);
@@ -1473,6 +1477,7 @@ a.button:hover {
     justify-content: center;
     padding: 22px;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
     min-height: 0;
     flex: 1 1 auto;
 }
@@ -1525,6 +1530,12 @@ a.button:hover {
 
 body.atlas-modal-open {
     overflow: hidden;
+}
+
+@supports (-webkit-touch-callout: none) {
+    body.atlas-modal-open {
+        overflow: clip;
+    }
 }
 
 .atlas-profile-section-card {

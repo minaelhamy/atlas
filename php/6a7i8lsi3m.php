@@ -74,6 +74,9 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "upload_profile_media") {
         upload_profile_media();
     }
+    if ($_GET['action'] == "extract_company_profile") {
+        extract_company_profile();
+    }
     if ($_GET['action'] == "refresh_company_intelligence") {
         refresh_company_intelligence();
     }
@@ -235,6 +238,33 @@ function refresh_company_intelligence()
         'competitive_edges' => !empty($intelligence['competitive_edges']) ? $intelligence['competitive_edges'] : '',
         'strategic_guidance' => !empty($intelligence['strategic_guidance']) ? $intelligence['strategic_guidance'] : '',
     ];
+    die(json_encode($result));
+}
+
+function extract_company_profile()
+{
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    $website = !empty($_POST['website']) ? validate_input($_POST['website']) : '';
+    if ($website === '') {
+        $result['error'] = __('Please enter your website first.');
+        die(json_encode($result));
+    }
+
+    $existingProfile = social_media_get_profile($_SESSION['user']['id']);
+    $profile = social_media_extract_profile_from_website($website, $existingProfile);
+
+    if (empty($profile) || !is_array($profile)) {
+        die(json_encode($result));
+    }
+
+    $result['success'] = true;
+    $result['message'] = __('Website extracted successfully.');
+    $result['profile'] = $profile;
     die(json_encode($result));
 }
 

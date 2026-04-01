@@ -10,6 +10,7 @@ $router->map('GET|POST','/message/?', 'global/message.php');
 $router->map('GET|POST','/forgot/?', 'global/forgot.php');
 $router->map('GET|POST','/transaction/?', 'global/transaction.php');
 $router->map('GET|POST','/account-setting/?', 'global/account-setting.php');
+$router->map('GET|POST','/company-intelligence/?', 'global/company-intelligence.php');
 $router->map('GET|POST','/report/?', 'global/report.php');
 $router->map('GET|POST','/contact/?', 'global/contact.php');
 $router->map('GET|POST','/sitemap/?', 'global/sitemap.php');

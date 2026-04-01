@@ -111,7 +111,17 @@ function social_media_get_profile($user_id)
         'content_goals' => '',
         'key_products' => '',
         'differentiators' => '',
+        'ideal_customer_profile' => '',
+        'top_problems_solved' => [],
+        'unique_selling_points' => [],
         'instagram_handle' => '',
+        'brand_colors' => [],
+        'visual_mood' => [],
+        'tone_attributes' => [],
+        'reference_brands' => [],
+        'moodboard_images' => [],
+        'website_snapshot' => [],
+        'website_extracted_at' => '',
         'competitors' => [],
         'competitor_notes' => '',
     ];
@@ -129,6 +139,28 @@ function social_media_get_profile($user_id)
     $profile['competitors'] = !empty($profile['competitors']) && is_array($profile['competitors'])
         ? array_values(array_filter(array_map('trim', $profile['competitors'])))
         : [];
+    $profile['top_problems_solved'] = !empty($profile['top_problems_solved']) && is_array($profile['top_problems_solved'])
+        ? array_values(array_filter(array_map('trim', $profile['top_problems_solved'])))
+        : [];
+    $profile['unique_selling_points'] = !empty($profile['unique_selling_points']) && is_array($profile['unique_selling_points'])
+        ? array_values(array_filter(array_map('trim', $profile['unique_selling_points'])))
+        : [];
+    $profile['reference_brands'] = !empty($profile['reference_brands']) && is_array($profile['reference_brands'])
+        ? array_values(array_filter(array_map('trim', $profile['reference_brands'])))
+        : [];
+    $profile['visual_mood'] = !empty($profile['visual_mood']) && is_array($profile['visual_mood'])
+        ? array_values(array_filter(array_map('trim', $profile['visual_mood'])))
+        : [];
+    $profile['tone_attributes'] = !empty($profile['tone_attributes']) && is_array($profile['tone_attributes'])
+        ? array_values(array_filter(array_map('trim', $profile['tone_attributes'])))
+        : [];
+    $profile['brand_colors'] = social_media_normalize_color_list(isset($profile['brand_colors']) ? $profile['brand_colors'] : []);
+    $profile['moodboard_images'] = !empty($profile['moodboard_images']) && is_array($profile['moodboard_images'])
+        ? array_values(array_filter(array_map('trim', $profile['moodboard_images'])))
+        : [];
+    $profile['website_snapshot'] = !empty($profile['website_snapshot']) && is_array($profile['website_snapshot'])
+        ? $profile['website_snapshot']
+        : [];
 
     return array_merge($defaults, $profile);
 }
@@ -138,6 +170,15 @@ function social_media_save_profile($user_id, $data)
     $profile = social_media_get_profile($user_id);
     $profile = array_merge($profile, $data);
     $profile['competitors'] = social_media_normalize_list(isset($profile['competitors']) ? $profile['competitors'] : []);
+    $profile['top_problems_solved'] = social_media_normalize_list(isset($profile['top_problems_solved']) ? $profile['top_problems_solved'] : []);
+    $profile['unique_selling_points'] = social_media_normalize_list(isset($profile['unique_selling_points']) ? $profile['unique_selling_points'] : []);
+    $profile['reference_brands'] = social_media_normalize_list(isset($profile['reference_brands']) ? $profile['reference_brands'] : []);
+    $profile['visual_mood'] = social_media_normalize_list(isset($profile['visual_mood']) ? $profile['visual_mood'] : []);
+    $profile['tone_attributes'] = social_media_normalize_list(isset($profile['tone_attributes']) ? $profile['tone_attributes'] : []);
+    $profile['brand_colors'] = social_media_normalize_color_list(isset($profile['brand_colors']) ? $profile['brand_colors'] : []);
+    $profile['moodboard_images'] = !empty($profile['moodboard_images']) && is_array($profile['moodboard_images'])
+        ? array_values(array_filter(array_map('trim', $profile['moodboard_images'])))
+        : [];
     update_user_option($user_id, 'social_company_profile', json_encode($profile));
     update_user_option($user_id, 'social_company_intelligence', '');
     return $profile;
@@ -155,6 +196,19 @@ function social_media_normalize_list($value)
     $items = array_values(array_unique(array_filter($items)));
 
     return $items;
+}
+
+function social_media_normalize_color_list($value)
+{
+    $items = social_media_normalize_list($value);
+    $colors = [];
+    foreach ($items as $item) {
+        $normalized = social_media_normalize_hex_color($item, '');
+        if ($normalized !== '') {
+            $colors[] = $normalized;
+        }
+    }
+    return array_values(array_unique($colors));
 }
 
 function social_media_get_campaign_catalog()
@@ -554,6 +608,53 @@ function social_media_upload_company_logo($user_id, $existing = '')
     return $fileName;
 }
 
+function social_media_upload_moodboard_images($user_id, $existing = [])
+{
+    $existing = !empty($existing) && is_array($existing) ? array_values(array_filter($existing)) : [];
+    if (empty($_FILES['moodboard_images']) || empty($_FILES['moodboard_images']['name']) || !is_array($_FILES['moodboard_images']['name'])) {
+        return $existing;
+    }
+
+    $targetDir = ROOTPATH . '/storage/company/';
+    social_media_make_directory($targetDir);
+    $uploaded = $existing;
+
+    foreach ($_FILES['moodboard_images']['name'] as $index => $name) {
+        if (trim((string) $name) === '') {
+            continue;
+        }
+
+        $_FILES['__moodboard_single'] = [
+            'name' => $_FILES['moodboard_images']['name'][$index],
+            'type' => $_FILES['moodboard_images']['type'][$index],
+            'tmp_name' => $_FILES['moodboard_images']['tmp_name'][$index],
+            'error' => $_FILES['moodboard_images']['error'][$index],
+            'size' => $_FILES['moodboard_images']['size'][$index],
+        ];
+
+        $result = quick_file_upload('__moodboard_single', $targetDir);
+        if (!empty($result['success']) && !empty($result['file_name'])) {
+            $uploaded[] = $result['file_name'];
+        }
+    }
+
+    unset($_FILES['__moodboard_single']);
+    $uploaded = array_slice(array_values(array_unique(array_filter($uploaded))), 0, 6);
+    return $uploaded;
+}
+
+function social_media_get_reference_brand_snapshots($profile)
+{
+    $snapshots = [];
+    foreach (array_slice(isset($profile['reference_brands']) ? $profile['reference_brands'] : [], 0, 4) as $url) {
+        $snapshot = social_media_fetch_competitor_snapshot($url);
+        if (!empty($snapshot)) {
+            $snapshots[] = $snapshot;
+        }
+    }
+    return $snapshots;
+}
+
 function social_media_get_company_context_text($user_id)
 {
     $profile = social_media_get_profile($user_id);
@@ -589,8 +690,32 @@ function social_media_get_company_context_text($user_id)
     if (!empty($profile['differentiators'])) {
         $parts[] = 'Differentiators: ' . $profile['differentiators'];
     }
+    if (!empty($profile['ideal_customer_profile'])) {
+        $parts[] = 'Ideal customer profile: ' . $profile['ideal_customer_profile'];
+    }
+    if (!empty($profile['top_problems_solved'])) {
+        $parts[] = 'Top problems solved: ' . implode('; ', $profile['top_problems_solved']);
+    }
+    if (!empty($profile['unique_selling_points'])) {
+        $parts[] = 'Unique selling points: ' . implode('; ', $profile['unique_selling_points']);
+    }
     if (!empty($profile['instagram_handle'])) {
         $parts[] = 'Instagram: ' . $profile['instagram_handle'];
+    }
+    if (!empty($profile['brand_colors'])) {
+        $parts[] = 'Brand colors: ' . implode(', ', $profile['brand_colors']);
+    }
+    if (!empty($profile['visual_mood'])) {
+        $parts[] = 'Visual mood: ' . implode(', ', $profile['visual_mood']);
+    }
+    if (!empty($profile['tone_attributes'])) {
+        $parts[] = 'Tone of voice tags: ' . implode(', ', $profile['tone_attributes']);
+    }
+    if (!empty($profile['reference_brands'])) {
+        $parts[] = 'Reference brands: ' . implode(', ', $profile['reference_brands']);
+    }
+    if (!empty($profile['website_snapshot']['description'])) {
+        $parts[] = 'Website extraction summary: ' . $profile['website_snapshot']['description'];
     }
     if (!empty($profile['competitors'])) {
         $parts[] = 'Competitors: ' . implode(', ', $profile['competitors']);
@@ -601,6 +726,16 @@ function social_media_get_company_context_text($user_id)
     $intelligence = social_media_get_company_intelligence($user_id);
     if (!empty($intelligence['summary_text'])) {
         $parts[] = "Stored company intelligence:\n" . $intelligence['summary_text'];
+    }
+    $referenceBrandSnapshots = social_media_get_reference_brand_snapshots($profile);
+    if (!empty($referenceBrandSnapshots)) {
+        $referenceLines = [];
+        foreach ($referenceBrandSnapshots as $snapshot) {
+            $referenceLines[] = (!empty($snapshot['title']) ? $snapshot['title'] : $snapshot['url']) . ': ' . (!empty($snapshot['description']) ? $snapshot['description'] : implode('; ', array_slice((array) $snapshot['summary_points'], 0, 2)));
+        }
+        if (!empty($referenceLines)) {
+            $parts[] = "Reference brand signals:\n" . implode("\n", $referenceLines);
+        }
     }
 
     return implode("\n", $parts);
@@ -623,6 +758,14 @@ function social_media_profile_signature($profile)
         'content_goals' => !empty($profile['content_goals']) ? $profile['content_goals'] : '',
         'key_products' => !empty($profile['key_products']) ? $profile['key_products'] : '',
         'differentiators' => !empty($profile['differentiators']) ? $profile['differentiators'] : '',
+        'ideal_customer_profile' => !empty($profile['ideal_customer_profile']) ? $profile['ideal_customer_profile'] : '',
+        'top_problems_solved' => !empty($profile['top_problems_solved']) ? array_values($profile['top_problems_solved']) : [],
+        'unique_selling_points' => !empty($profile['unique_selling_points']) ? array_values($profile['unique_selling_points']) : [],
+        'brand_colors' => !empty($profile['brand_colors']) ? array_values($profile['brand_colors']) : [],
+        'visual_mood' => !empty($profile['visual_mood']) ? array_values($profile['visual_mood']) : [],
+        'tone_attributes' => !empty($profile['tone_attributes']) ? array_values($profile['tone_attributes']) : [],
+        'reference_brands' => !empty($profile['reference_brands']) ? array_values($profile['reference_brands']) : [],
+        'website_extracted_at' => !empty($profile['website_extracted_at']) ? $profile['website_extracted_at'] : '',
         'competitors' => !empty($profile['competitors']) ? array_values($profile['competitors']) : [],
         'competitor_notes' => !empty($profile['competitor_notes']) ? $profile['competitor_notes'] : '',
     ]));
@@ -813,6 +956,9 @@ function social_media_generate_intelligence_fallback($profile, $companySite, $co
     if (!empty($profile['differentiators'])) {
         $edges[] = $profile['differentiators'];
     }
+    if (!empty($profile['unique_selling_points'])) {
+        $edges[] = implode('; ', $profile['unique_selling_points']);
+    }
     if (!empty($companySite['description'])) {
         $summary[] = 'Website positioning: ' . $companySite['description'];
     }
@@ -829,8 +975,73 @@ function social_media_generate_intelligence_fallback($profile, $companySite, $co
         'company_summary' => implode(' ', array_filter($summary)),
         'market_research' => !empty($market) ? 'Competitor/market signals: ' . implode(' | ', $market) : '',
         'competitive_edges' => !empty($edges) ? implode(' | ', social_media_normalize_list($edges)) : '',
-        'strategic_guidance' => 'Use messaging that emphasizes clarity, differentiation, trust signals, and relevance to the target audience.',
+        'strategic_guidance' => 'Use messaging that emphasizes clarity, differentiation, trust signals, relevance to the target audience, and a brand presentation consistent with the chosen visual mood and tone.',
     ];
+}
+
+function social_media_extract_profile_from_website($url, $existingProfile = [])
+{
+    $snapshot = social_media_fetch_site_snapshot($url);
+    $profile = array_merge(social_media_get_profile(0), is_array($existingProfile) ? $existingProfile : []);
+
+    $fallback = [
+        'company_name' => !empty($profile['company_name']) ? $profile['company_name'] : (!empty($snapshot['title']) ? preg_replace('/\s*[\|\-–].*$/', '', $snapshot['title']) : ''),
+        'company_website' => $url,
+        'company_description' => !empty($snapshot['description']) ? $snapshot['description'] : (!empty($profile['company_description']) ? $profile['company_description'] : ''),
+        'company_industry' => !empty($profile['company_industry']) ? $profile['company_industry'] : '',
+        'ideal_customer_profile' => !empty($profile['ideal_customer_profile']) ? $profile['ideal_customer_profile'] : '',
+        'target_audience' => !empty($profile['target_audience']) ? $profile['target_audience'] : '',
+        'content_goals' => !empty($profile['content_goals']) ? $profile['content_goals'] : '',
+        'differentiators' => !empty($profile['differentiators']) ? $profile['differentiators'] : '',
+        'top_problems_solved' => !empty($profile['top_problems_solved']) ? $profile['top_problems_solved'] : array_slice((array) $snapshot['summary_points'], 0, 3),
+        'unique_selling_points' => !empty($profile['unique_selling_points']) ? $profile['unique_selling_points'] : array_slice((array) $snapshot['headings'], 0, 3),
+        'website_snapshot' => $snapshot,
+        'website_extracted_at' => date('Y-m-d H:i:s'),
+    ];
+
+    if (trim((string) get_api_key()) === '') {
+        return $fallback;
+    }
+
+    require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/OpenAi.php';
+    require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
+
+    $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
+    $models = social_media_get_chat_model_candidates();
+    $model = !empty($models[0]) ? $models[0] : get_default_openai_chat_model();
+    $prompt = "Extract a concise company profile from this website snapshot. Return valid JSON only with keys: company_name, company_description, company_industry, ideal_customer_profile, target_audience, content_goals, differentiators, top_problems_solved, unique_selling_points.\n"
+        . "Website URL: {$url}\n"
+        . "Website snapshot:\n" . json_encode($snapshot) . "\n"
+        . "If something is unclear, leave it empty instead of inventing it. top_problems_solved and unique_selling_points should be arrays of short statements.";
+
+    $response = $openAi->chat([
+        'model' => $model,
+        'messages' => [
+            ['role' => 'system', 'content' => 'You extract structured business profile information from websites. Return JSON only.'],
+            ['role' => 'user', 'content' => $prompt],
+        ],
+        'temperature' => 0.2,
+        'response_format' => ['type' => 'json_object'],
+        'max_tokens' => 900,
+    ]);
+    $decoded = json_decode($response, true);
+    if (empty($decoded['choices'][0]['message']['content'])) {
+        return $fallback;
+    }
+
+    $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
+    if (!is_array($json)) {
+        return $fallback;
+    }
+
+    $json['top_problems_solved'] = social_media_normalize_list(isset($json['top_problems_solved']) ? $json['top_problems_solved'] : []);
+    $json['unique_selling_points'] = social_media_normalize_list(isset($json['unique_selling_points']) ? $json['unique_selling_points'] : []);
+    $json['website_snapshot'] = $snapshot;
+    $json['website_extracted_at'] = date('Y-m-d H:i:s');
+
+    return array_merge($fallback, array_filter($json, function ($value) {
+        return !(is_string($value) && trim($value) === '');
+    }));
 }
 
 function social_media_generate_intelligence_via_openai($profile, $companySite, $competitors, $historyContext = '')
@@ -2035,6 +2246,7 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
             ? array_values(array_unique(array_merge([$industry, $product], $template['image_keywords'])))
             : [$industry, $company];
         $design = social_media_normalize_design($design, 'post', $fontKeys, $defaults);
+        $design = social_media_apply_profile_branding_to_design($design, $profile);
 
         $overlay = trim((string) ($source['overlay_text'] ?? ''));
         if ($mode === 'text' && $overlay === '') {
@@ -2361,6 +2573,7 @@ function social_media_normalize_generated_items($items, $profile)
         $item['slides'] = [];
         $item['reel_script'] = [];
         $item['design'] = social_media_normalize_design(isset($item['design']) && is_array($item['design']) ? $item['design'] : [], $type, $fontKeys, $designDefaults);
+        $item['design'] = social_media_apply_profile_branding_to_design($item['design'], $profile);
 
         $bucketed[$type][] = $item;
     }
@@ -2596,6 +2809,33 @@ function social_media_normalize_design($design, $type, $fontKeys, $defaultsMap)
     $normalized['asset_tags'] = social_media_normalize_list(isset($normalized['asset_tags']) ? $normalized['asset_tags'] : []);
 
     return $normalized;
+}
+
+function social_media_apply_profile_branding_to_design($design, $profile)
+{
+    if (!is_array($design)) {
+        return $design;
+    }
+
+    $brandColors = !empty($profile['brand_colors']) && is_array($profile['brand_colors']) ? $profile['brand_colors'] : [];
+    if (!empty($brandColors[0])) {
+        $primary = social_media_normalize_hex_color($brandColors[0], '#171717');
+        $secondary = !empty($brandColors[1]) ? social_media_normalize_hex_color($brandColors[1], $primary) : $primary;
+        $design['accent_color'] = $primary;
+        $design['overlay_color'] = $secondary;
+        $design['text_color'] = social_media_contrast_ratio($secondary, '#FFFFFF') >= social_media_contrast_ratio($secondary, '#171717') ? '#FFFFFF' : '#171717';
+        $design['background_tone'] = social_media_guess_background_tone($primary);
+        $design['background_palette'] = 'custom-brand';
+    }
+
+    if (!empty($profile['tone_attributes'])) {
+        $design['asset_tags'] = array_values(array_unique(array_merge(
+            social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []),
+            array_slice((array) $profile['tone_attributes'], 0, 3)
+        )));
+    }
+
+    return $design;
 }
 
 function social_media_font_path($fontKey = '', $useBodyFile = false)
