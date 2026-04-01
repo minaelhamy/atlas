@@ -26,7 +26,7 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
 
             <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished">
                 <div class="col-lg-4 col-md-6 margin-bottom-30">
-                    <a href="<?php url("AI_IMAGES_CAMPAIGN") ?>" class="atlas-automation-card atlas-automation-card-primary dashboard-box">
+                    <a href="<?php url("AI_IMAGES_CAMPAIGN") ?>" class="atlas-automation-card dashboard-box">
                         <div class="content with-padding">
                             <div class="atlas-automation-card-top">
                                 <span class="atlas-automation-icon"><i class="icon-feather-target"></i></span>

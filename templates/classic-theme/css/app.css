@@ -1097,24 +1097,46 @@ a.button:hover {
     display: block;
     height: 100%;
     border-radius: 28px;
+    background: #fbf8f2 !important;
+    border: 1px solid rgba(54, 45, 30, 0.08) !important;
     text-decoration: none;
-    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    color: var(--atlas-text);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease, color .22s ease;
 }
 
 .atlas-automation-card:hover {
     transform: translateY(-2px);
-}
-
-.atlas-automation-card-primary {
     background: #1b1b1b !important;
     border-color: rgba(27, 27, 27, 0.82) !important;
+    box-shadow: 0 24px 60px rgba(17, 17, 17, 0.16);
 }
 
-.atlas-automation-card-primary h4,
-.atlas-automation-card-primary p,
-.atlas-automation-card-primary .atlas-automation-link,
-.atlas-automation-card-primary .atlas-automation-feature-list li {
+.atlas-automation-card:hover h4,
+.atlas-automation-card:hover p,
+.atlas-automation-card:hover .atlas-automation-link,
+.atlas-automation-card:hover .atlas-automation-feature-list li {
     color: #f7f4ee !important;
+}
+
+.atlas-automation-card:hover .atlas-automation-feature-list li::before {
+    color: rgba(247, 244, 238, 0.62);
+}
+
+.atlas-automation-card:hover .atlas-automation-icon {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f7f4ee;
+}
+
+.atlas-automation-card:hover .atlas-automation-pill {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(247, 244, 238, 0.82);
+}
+
+.atlas-automation-card:hover .atlas-automation-pill-success {
+    background: rgba(95, 200, 130, 0.12);
+    border-color: rgba(95, 200, 130, 0.18);
+    color: #b6f3c6;
 }
 
 .atlas-automation-card .content.with-padding {
