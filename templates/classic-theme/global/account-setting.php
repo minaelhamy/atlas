@@ -94,13 +94,36 @@ overall_header(__("Account Setting"));
                                 </form>
                             </div>
                         </div>
-                        <div class="dashboard-box">
+                        <div class="dashboard-box atlas-workflow-shell">
                             <div class="headline">
                                 <h3><i class="icon-feather-briefcase"></i> <?php _e("Company Profile") ?></h3>
                             </div>
                             <div class="content with-padding">
-                                <div class="notification notice"><?php _e("This profile powers every AI agent and the social media generator.") ?></div>
+                                <div class="atlas-wizard-card margin-bottom-24">
+                                    <div class="atlas-wizard-header">
+                                        <div>
+                                            <span class="atlas-workflow-eyebrow"><?php _e("Tell us about your business") ?></span>
+                                            <h2><?php _e("Build the company profile Atlas will use everywhere") ?></h2>
+                                            <p><?php _e("This takes a couple of minutes. Atlas uses this profile to understand your company, sharpen positioning, and generate content that sounds like it came from your team.") ?></p>
+                                        </div>
+                                        <div class="atlas-stepper atlas-stepper-compact">
+                                            <span class="active"><?php _e("Your website") ?></span>
+                                            <span class="active"><?php _e("Business info") ?></span>
+                                            <span><?php _e("Inspiration") ?></span>
+                                            <span><?php _e("Review") ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="atlas-wizard-inline-note margin-bottom-25"><?php _e("This profile powers every AI agent and the social media generator.") ?></div>
                                 <form method="post" accept-charset="UTF-8" enctype="multipart/form-data">
+                                    <div class="atlas-profile-section-card margin-bottom-20">
+                                        <div class="atlas-profile-section-heading">
+                                            <span class="atlas-section-step"><?php _e("01") ?></span>
+                                            <div>
+                                                <h4><?php _e("Brand foundation") ?></h4>
+                                                <p><?php _e("Upload your logo and define the core business details Atlas should anchor to.") ?></p>
+                                            </div>
+                                        </div>
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="submit-field">
@@ -164,6 +187,15 @@ overall_header(__("Account Setting"));
                                             </div>
                                         </div>
                                     </div>
+                                    </div>
+                                    <div class="atlas-profile-section-card margin-bottom-20">
+                                        <div class="atlas-profile-section-heading">
+                                            <span class="atlas-section-step"><?php _e("02") ?></span>
+                                            <div>
+                                                <h4><?php _e("Audience and positioning") ?></h4>
+                                                <p><?php _e("Tell Atlas who you serve, how you sound, what you sell, and what makes you different.") ?></p>
+                                            </div>
+                                        </div>
                                     <div class="submit-field">
                                         <h5><?php _e("Company Description") ?></h5>
                                         <textarea name="company_description" class="with-border" rows="4"><?php _esc($company_description) ?></textarea>
@@ -200,6 +232,15 @@ overall_header(__("Account Setting"));
                                         <h5><?php _e("Differentiators") ?></h5>
                                         <textarea name="differentiators" class="with-border" rows="4"><?php _esc($differentiators) ?></textarea>
                                     </div>
+                                    </div>
+                                    <div class="atlas-profile-section-card margin-bottom-20">
+                                        <div class="atlas-profile-section-heading">
+                                            <span class="atlas-section-step"><?php _e("03") ?></span>
+                                            <div>
+                                                <h4><?php _e("Competitors and market context") ?></h4>
+                                                <p><?php _e("Add competitor sites or Instagram profiles so Atlas can build a sharper strategic understanding of your market.") ?></p>
+                                            </div>
+                                        </div>
                                     <div class="submit-field">
                                         <h5><?php _e("Competitor Websites or Instagram URLs") ?></h5>
                                         <textarea name="competitors" class="with-border" rows="4" placeholder="https://competitor.com&#10;https://instagram.com/competitor"><?php _esc($competitors) ?></textarea>
@@ -207,6 +248,7 @@ overall_header(__("Account Setting"));
                                     <div class="submit-field">
                                         <h5><?php _e("Competitor Notes") ?></h5>
                                         <textarea name="competitor_notes" class="with-border" rows="4"><?php _esc($competitor_notes) ?></textarea>
+                                    </div>
                                     </div>
                                     <div class="dashboard-box intelligence-panel-box margin-top-20 margin-bottom-20">
                                         <div class="headline">

@@ -5,7 +5,7 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
     <div class="dashboard-content-container" data-simplebar>
-        <div class="dashboard-content-inner">
+        <div class="dashboard-content-inner atlas-workflow-shell">
             <?php print_adsense_code('header_bottom'); ?>
 
             <div class="dashboard-headline">
@@ -18,17 +18,27 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
                 </nav>
             </div>
 
-            <div class="notification notice margin-bottom-30">
-                <?php echo sprintf(__('Build repeatable social output for %s with campaign generation, Instagram grid planning, and fast content creation tools.'), _esc($companyName, 0)); ?>
+            <div class="atlas-workflow-hero margin-bottom-30">
+                <span class="atlas-workflow-eyebrow"><?php _e("Choose your starting point") ?></span>
+                <h2><?php _e("What do you want to create?") ?></h2>
+                <p><?php echo sprintf(__('Choose the workflow that matches %s best. Atlas uses your company profile, market context, and brand direction to generate content that looks and sounds aligned.'), _esc($companyName, 0)); ?></p>
             </div>
 
-            <div class="row atlas-automation-card-grid">
+            <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished">
                 <div class="col-lg-4 col-md-6 margin-bottom-30">
-                    <a href="<?php url("AI_IMAGES_CAMPAIGN") ?>" class="atlas-automation-card dashboard-box">
+                    <a href="<?php url("AI_IMAGES_CAMPAIGN") ?>" class="atlas-automation-card atlas-automation-card-primary dashboard-box">
                         <div class="content with-padding">
-                            <span class="atlas-automation-icon"><i class="icon-feather-target"></i></span>
+                            <div class="atlas-automation-card-top">
+                                <span class="atlas-automation-icon"><i class="icon-feather-target"></i></span>
+                                <span class="atlas-automation-pill atlas-automation-pill-dark"><?php _e("Most used") ?></span>
+                            </div>
                             <h4><?php _e("Create a campaign") ?></h4>
                             <p><?php _e("Generate 9 strategic social posts for a specific campaign goal, funnel stage, and focus area. Atlas turns your company context into a conversion-minded content funnel you can publish across your social channels.") ?></p>
+                            <ul class="atlas-automation-feature-list">
+                                <li><?php _e("Starts with your campaign goal and funnel stage") ?></li>
+                                <li><?php _e("Builds 9 posts that each play a role in the sequence") ?></li>
+                                <li><?php _e("Best when you want strategy, consistency, and momentum") ?></li>
+                            </ul>
                             <span class="atlas-automation-link"><?php _e("Open campaign generator") ?></span>
                         </div>
                     </a>
@@ -36,9 +46,17 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
                 <div class="col-lg-4 col-md-6 margin-bottom-30">
                     <a href="<?php url("AI_IMAGES_GRID") ?>" class="atlas-automation-card dashboard-box">
                         <div class="content with-padding">
-                            <span class="atlas-automation-icon"><i class="icon-feather-grid"></i></span>
+                            <div class="atlas-automation-card-top">
+                                <span class="atlas-automation-icon"><i class="icon-feather-grid"></i></span>
+                                <span class="atlas-automation-pill"><?php _e("Visual first") ?></span>
+                            </div>
                             <h4><?php _e("Create an Instagram grid") ?></h4>
                             <p><?php _e("Generate 9 posts designed as a coordinated Instagram grid that should be posted in exact sequence. Atlas builds a visually connected layout, previews it inside a mobile-style profile view, and gives you the final tiles ready to upload.") ?></p>
+                            <ul class="atlas-automation-feature-list">
+                                <li><?php _e("Uses your visual direction and company profile") ?></li>
+                                <li><?php _e("Designs 9 tiles that work together on the profile view") ?></li>
+                                <li><?php _e("Lets you preview the full grid before export") ?></li>
+                            </ul>
                             <span class="atlas-automation-link"><?php _e("Build a grid") ?></span>
                         </div>
                     </a>
@@ -46,13 +64,26 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
                 <div class="col-lg-4 col-md-6 margin-bottom-30">
                     <a href="<?php url("AI_TEMPLATES") ?>" class="atlas-automation-card dashboard-box">
                         <div class="content with-padding">
-                            <span class="atlas-automation-icon"><i class="icon-feather-edit-3"></i></span>
+                            <div class="atlas-automation-card-top">
+                                <span class="atlas-automation-icon"><i class="icon-feather-edit-3"></i></span>
+                                <span class="atlas-automation-pill atlas-automation-pill-success"><?php _e("Quick") ?></span>
+                            </div>
                             <h4><?php _e("Create content") ?></h4>
                             <p><?php _e("Jump into your daily templates to create focused content assets such as Facebook posts, paid ads, Amazon product descriptions, blog articles, website copy, and other on-demand marketing outputs.") ?></p>
+                            <ul class="atlas-automation-feature-list">
+                                <li><?php _e("Generate single assets fast without a campaign setup") ?></li>
+                                <li><?php _e("Ideal for captions, ads, blogs, product copy, and more") ?></li>
+                                <li><?php _e("Best when you need one output right now") ?></li>
+                            </ul>
                             <span class="atlas-automation-link"><?php _e("Open daily templates") ?></span>
                         </div>
                     </a>
                 </div>
+            </div>
+
+            <div class="atlas-automation-footnote margin-bottom-10">
+                <strong><?php _e("Campaign vs Grid") ?>:</strong>
+                <?php _e("Both generate 9 posts, but for different goals. A campaign follows a strategic arc from hook to value to CTA. A grid is designed for visual harmony so your profile looks intentional and on-brand.") ?>
             </div>
 
             <?php print_adsense_code('footer_top'); ?>

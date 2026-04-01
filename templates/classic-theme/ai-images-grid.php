@@ -12,7 +12,7 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
     <div class="dashboard-content-container" data-simplebar>
-        <div class="dashboard-content-inner">
+        <div class="dashboard-content-inner atlas-workflow-shell">
             <?php print_adsense_code('header_bottom'); ?>
 
             <div class="dashboard-headline">
@@ -37,6 +37,20 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                 </nav>
             </div>
 
+            <div class="atlas-wizard-card margin-bottom-24">
+                <div class="atlas-wizard-header">
+                    <div>
+                        <span class="atlas-workflow-eyebrow"><?php _e("Step 1 of 2") ?></span>
+                        <h2><?php _e("Design your Instagram grid") ?></h2>
+                        <p><?php _e("Atlas uses your company profile, visual direction, and campaign strategy to generate 9 coordinated tiles that should be posted in exact sequence.") ?></p>
+                    </div>
+                    <div class="atlas-stepper">
+                        <span class="active"><?php _e("Grid brief") ?></span>
+                        <span><?php _e("Preview & export") ?></span>
+                    </div>
+                </div>
+            </div>
+
             <?php if (!$profileReady) { ?>
                 <div class="notification warning">
                     <?php _e("Complete your company profile in Account Settings before generating an Instagram grid."); ?>
@@ -51,11 +65,15 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
             <div class="row">
                 <div class="col-xl-5 col-lg-6">
                     <form id="instagram_grid_form" method="post" action="#">
-                        <div class="dashboard-box margin-top-0">
+                        <div class="dashboard-box margin-top-0 atlas-wizard-form-card">
                             <div class="headline">
                                 <h3><i class="icon-feather-grid"></i> <?php _e("Plan Your Grid") ?></h3>
                             </div>
                             <div class="content with-padding">
+                                <div class="atlas-wizard-inline-note margin-bottom-25">
+                                    <strong><?php _e("How Atlas uses this") ?>:</strong>
+                                    <?php _e("Your selections shape the visual structure, message pacing, and asset relevance of the full 9-tile grid so it feels deliberate on the profile view, not random.") ?>
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="submit-field">
@@ -132,18 +150,18 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                     <textarea name="description" class="with-border" rows="3" placeholder="<?php _e('Optional: add launch context, product focus, seasonal message, or any visual direction Atlas should follow.') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>></textarea>
                                 </div>
 
-                                <div class="social-campaign-summary margin-bottom-15">
+                                <div class="social-campaign-summary atlas-strategy-summary margin-bottom-15">
                                     <strong><?php _e("Campaign Strategy") ?>:</strong>
                                     <p class="margin-top-10 margin-bottom-0 social-campaign-summary-text"><?php _e("Choose a campaign type to see its goal, focus, content style, and best-use guidance.") ?></p>
                                 </div>
 
-                                <div class="social-campaign-summary social-grid-summary margin-bottom-20">
+                                <div class="social-campaign-summary social-grid-summary atlas-strategy-summary margin-bottom-20">
                                     <strong><?php _e("Grid Direction") ?>:</strong>
                                     <p class="margin-top-10 margin-bottom-0 social-grid-summary-text"><?php _e("Atlas can auto-pick the strongest grid system for your campaign, or you can select one manually.") ?></p>
                                 </div>
 
                                 <small class="form-error"></small>
-                                <button type="submit" class="button ripple-effect" <?php echo $profileReady ? '' : 'disabled'; ?>>
+                                <button type="submit" class="button ripple-effect atlas-primary-action" <?php echo $profileReady ? '' : 'disabled'; ?>>
                                     <?php _e("Generate 9 Grid Posts") ?> <i class="icon-feather-arrow-right"></i>
                                 </button>
                                 <div class="social-generator-progress margin-top-15" style="display:none;">
@@ -208,12 +226,9 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                     <?php if (!empty($recent_grid_posts)) { ?>
                                         <?php foreach ($recent_grid_posts as $gridPost) {
                                             $previewUrl = $config['site_url'] . 'storage/social_posts/' . $gridPost['preview_image']; ?>
-                                            <div class="atlas-instagram-tile">
+                                            <button type="button" class="atlas-instagram-tile atlas-instagram-tile-button" data-image="<?php echo $previewUrl; ?>" data-title="<?php _esc($gridPost['title']) ?>" data-download-label="<?php echo sprintf(__('Download tile %d'), !empty($gridPost['metadata']['grid']['position']) ? (int)$gridPost['metadata']['grid']['position'] : 0); ?>">
                                                 <img src="<?php echo $previewUrl; ?>" alt="<?php _esc($gridPost['title']) ?>">
-                                                <a href="<?php echo $previewUrl; ?>" class="atlas-instagram-tile-download" download aria-label="<?php echo sprintf(__('Download tile %d'), !empty($gridPost['metadata']['grid']['position']) ? (int)$gridPost['metadata']['grid']['position'] : 0); ?>">
-                                                    <i class="fa fa-download"></i>
-                                                </a>
-                                            </div>
+                                            </button>
                                         <?php } ?>
                                     <?php } else { ?>
                                         <?php for ($tile = 0; $tile < 9; $tile++) { ?>
@@ -223,6 +238,27 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="atlas-grid-modal" id="atlas-grid-modal" aria-hidden="true">
+                <div class="atlas-grid-modal-backdrop" data-close-grid-modal></div>
+                <div class="atlas-grid-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="atlas-grid-modal-title">
+                    <button type="button" class="atlas-grid-modal-close" data-close-grid-modal aria-label="<?php _e("Close preview") ?>">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <div class="atlas-grid-modal-media">
+                        <img id="atlas-grid-modal-image" src="" alt="">
+                    </div>
+                    <div class="atlas-grid-modal-footer">
+                        <div>
+                            <strong id="atlas-grid-modal-title"><?php _e("Grid tile") ?></strong>
+                            <p><?php _e("Tap download to save this tile and keep your posting sequence in order.") ?></p>
+                        </div>
+                        <a href="#" id="atlas-grid-modal-download" class="button atlas-primary-action" download>
+                            <i class="fa fa-download"></i> <?php _e("Download") ?>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -356,21 +392,46 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
             var gridHtml = '';
 
             $.each(posts, function (index, post) {
-                gridHtml += '<div class="atlas-instagram-tile">' +
+                gridHtml += '<button type="button" class="atlas-instagram-tile atlas-instagram-tile-button" data-image="' + escapeHtml(post.preview_image) + '" data-title="' + escapeHtml(post.title) + '" data-download-label="Download tile ' + (index + 1) + '">' +
                     '<img src="' + escapeHtml(post.preview_image) + '" alt="' + escapeHtml(post.title) + '">' +
-                    '<a href="' + escapeHtml(post.preview_image) + '" class="atlas-instagram-tile-download" download aria-label="Download tile ' + (index + 1) + '">' +
-                        '<i class="fa fa-download"></i>' +
-                    '</a>' +
-                '</div>';
+                '</button>';
             });
 
             $('#instagram-grid-preview').html(gridHtml);
+        }
+
+        function openGridModal(imageUrl, title, downloadLabel) {
+            var $modal = $('#atlas-grid-modal');
+            $('#atlas-grid-modal-image').attr('src', imageUrl).attr('alt', title || 'Grid tile');
+            $('#atlas-grid-modal-title').text(title || 'Grid tile');
+            $('#atlas-grid-modal-download').attr('href', imageUrl).attr('download', downloadLabel || 'grid-tile');
+            $modal.addClass('active').attr('aria-hidden', 'false');
+            $('body').addClass('atlas-modal-open');
+        }
+
+        function closeGridModal() {
+            $('#atlas-grid-modal').removeClass('active').attr('aria-hidden', 'true');
+            $('body').removeClass('atlas-modal-open');
         }
 
         $campaignSelect.on('change', renderCampaignSummary);
         $gridSelect.on('change', renderGridSummary);
         renderCampaignSummary();
         renderGridSummary();
+
+        $(document).on('click', '.atlas-instagram-tile-button', function () {
+            openGridModal($(this).data('image'), $(this).data('title'), $(this).data('download-label'));
+        });
+
+        $(document).on('click', '[data-close-grid-modal]', function () {
+            closeGridModal();
+        });
+
+        $(document).on('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeGridModal();
+            }
+        });
 
         $form.on('submit', function (e) {
             e.preventDefault();

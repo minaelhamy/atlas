@@ -5,7 +5,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
     <div class="dashboard-content-container" data-simplebar>
-        <div class="dashboard-content-inner">
+        <div class="dashboard-content-inner atlas-workflow-shell">
             <?php print_adsense_code('header_bottom'); ?>
             <div class="dashboard-headline">
                 <h3 class="d-flex align-items-center">
@@ -29,6 +29,20 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 </nav>
             </div>
 
+            <div class="atlas-wizard-card margin-bottom-24">
+                <div class="atlas-wizard-header">
+                    <div>
+                        <span class="atlas-workflow-eyebrow"><?php _e("Step 1 of 2") ?></span>
+                        <h2><?php _e("Plan your campaign") ?></h2>
+                        <p><?php _e("Choose the strategic inputs Atlas should use. We’ll turn your company intelligence and campaign direction into 9 posts that move like a funnel instead of random content.") ?></p>
+                    </div>
+                    <div class="atlas-stepper">
+                        <span class="active"><?php _e("Campaign brief") ?></span>
+                        <span><?php _e("Generate posts") ?></span>
+                    </div>
+                </div>
+            </div>
+
             <?php if (!$profileReady) { ?>
                 <div class="notification warning">
                     <?php _e("Complete your company profile in Account Settings before generating posts."); ?>
@@ -41,11 +55,15 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
             <?php } ?>
 
             <form id="ai_images" name="ai_images" method="post" action="#">
-                <div class="dashboard-box margin-top-0">
+                <div class="dashboard-box margin-top-0 atlas-wizard-form-card">
                     <div class="headline">
                         <h3><i class="icon-feather-target"></i> <?php _e("Plan a Campaign") ?></h3>
                     </div>
                     <div class="content with-padding">
+                        <div class="atlas-wizard-inline-note margin-bottom-25">
+                            <strong><?php _e("How Atlas uses this") ?>:</strong>
+                            <?php _e("These choices tell Atlas what stage of the funnel this campaign belongs to, what kind of response you want, and how the copy should sound and convert.") ?>
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="submit-field">
@@ -109,12 +127,12 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                             <h5><?php _e("Extra Notes") ?></h5>
                             <textarea name="description" class="with-border" rows="3" placeholder="<?php _e('Optional: add product, offer, launch context, audience nuance, or anything the generator should emphasize.') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>></textarea>
                         </div>
-                        <div class="social-campaign-summary margin-bottom-20">
+                        <div class="social-campaign-summary atlas-strategy-summary margin-bottom-20">
                             <strong><?php _e("Campaign Strategy") ?>:</strong>
                             <p class="margin-top-10 margin-bottom-0 social-campaign-summary-text"><?php _e("Choose a campaign type to see its goal, focus, content style, and best-use guidance.") ?></p>
                         </div>
                         <small class="form-error"></small>
-                        <button type="submit" name="submit" class="button ripple-effect" <?php echo $profileReady ? '' : 'disabled'; ?>>
+                        <button type="submit" name="submit" class="button ripple-effect atlas-primary-action" <?php echo $profileReady ? '' : 'disabled'; ?>>
                             <?php _e("Generate 9 Posts") ?> <i class="icon-feather-arrow-right"></i>
                         </button>
                         <div class="social-generator-progress margin-top-15" style="display:none;">
