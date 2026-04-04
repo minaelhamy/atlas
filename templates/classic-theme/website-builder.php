@@ -83,47 +83,63 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                         </div>
                     </div>
                     <?php if (!empty($templates)) { ?>
-                        <div class="atlas-website-template-grid margin-top-20">
+                        <div class="margin-top-20" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:stretch;">
                             <?php foreach ($templates as $template) { ?>
-                                <div class="atlas-website-template-grid-item">
-                                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" class="atlas-automation-card atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
-                                        <div class="content with-padding">
-                                            <div class="atlas-website-template-frame">
-                                                <div class="atlas-website-template-frame-browser">
-                                                    <span></span><span></span><span></span>
+                                <div>
+                                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" style="display:block;height:100%;text-decoration:none;color:#1d1d1f;background:#fbf8f2;border:1px solid rgba(54,45,30,0.08);border-radius:28px;overflow:hidden;box-shadow:<?php echo $selectedTemplateKey === $template['key'] ? '0 18px 44px rgba(31,27,18,0.10)' : 'none'; ?>;">
+                                        <div style="padding:26px;">
+                                            <div style="border:1px solid rgba(54,45,30,0.08);border-radius:20px;background:rgba(255,255,255,0.92);overflow:hidden;">
+                                                <div style="display:flex;align-items:center;gap:6px;padding:12px 14px;border-bottom:1px solid rgba(54,45,30,0.08);background:rgba(247,246,242,0.72);">
+                                                    <span style="width:8px;height:8px;border-radius:50%;background:rgba(23,23,23,0.14);display:inline-block;"></span>
+                                                    <span style="width:8px;height:8px;border-radius:50%;background:rgba(23,23,23,0.14);display:inline-block;"></span>
+                                                    <span style="width:8px;height:8px;border-radius:50%;background:rgba(23,23,23,0.14);display:inline-block;"></span>
                                                 </div>
-                                                <div class="atlas-website-template-frame-body">
-                                                    <div class="atlas-website-template-frame-hero atlas-website-template-frame-hero-<?php _esc($template['preview_theme']); ?>">
-                                                        <strong><?php _esc($template['title']) ?></strong>
-                                                        <span><?php echo $template['type'] === 'ecommerce' ? __('Built for converting visitors into buyers') : __('Built for converting visitors into bookings'); ?></span>
+                                                <div style="padding:16px;">
+                                                    <?php
+                                                    $heroBackground = 'linear-gradient(135deg, #171717 0%, #45413a 100%)';
+                                                    if ($template['preview_theme'] === 'editorial') {
+                                                        $heroBackground = 'linear-gradient(135deg, #54453d 0%, #b99d82 100%)';
+                                                    } elseif ($template['preview_theme'] === 'studio') {
+                                                        $heroBackground = 'linear-gradient(135deg, #8d7660 0%, #c4ae97 100%)';
+                                                    } elseif ($template['preview_theme'] === 'local') {
+                                                        $heroBackground = 'linear-gradient(135deg, #6f6558 0%, #c8b49f 100%)';
+                                                    }
+                                                    ?>
+                                                    <div style="min-height:132px;border-radius:18px;padding:20px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;color:#fff;background:<?php echo $heroBackground; ?>;">
+                                                        <strong style="font-size:22px;line-height:1;letter-spacing:-0.04em;"><?php _esc($template['title']) ?></strong>
+                                                        <span style="font-size:13px;line-height:1.4;color:rgba(255,255,255,0.82);"><?php echo $template['type'] === 'ecommerce' ? __('Built for converting visitors into buyers') : __('Built for converting visitors into bookings'); ?></span>
                                                     </div>
-                                                    <div class="atlas-website-template-frame-sections">
+                                                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
                                                         <?php foreach ($template['preview_sections'] as $section) { ?>
-                                                            <span><?php _esc($section) ?></span>
+                                                            <span style="display:inline-flex;align-items:center;min-height:28px;padding:6px 10px;border-radius:999px;background:rgba(247,246,242,0.9);border:1px solid rgba(23,23,23,0.06);color:#6f6658;font-size:11px;font-weight:600;letter-spacing:0.01em;"><?php _esc($section) ?></span>
                                                         <?php } ?>
                                                     </div>
-                                                    <div class="atlas-website-template-frame-grid">
-                                                        <span></span><span></span><span></span>
-                                                        <span></span><span></span><span></span>
+                                                    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;">
+                                                        <span style="display:block;aspect-ratio:1/1;border-radius:14px;background:linear-gradient(180deg, rgba(247,246,242,0.95), rgba(236,229,216,0.9));border:1px solid rgba(23,23,23,0.05);"></span>
+                                                        <span style="display:block;aspect-ratio:1/1;border-radius:14px;background:linear-gradient(180deg, rgba(247,246,242,0.95), rgba(236,229,216,0.9));border:1px solid rgba(23,23,23,0.05);"></span>
+                                                        <span style="display:block;aspect-ratio:1/1;border-radius:14px;background:linear-gradient(180deg, rgba(247,246,242,0.95), rgba(236,229,216,0.9));border:1px solid rgba(23,23,23,0.05);"></span>
+                                                        <span style="display:block;aspect-ratio:1/1;border-radius:14px;background:linear-gradient(180deg, rgba(247,246,242,0.95), rgba(236,229,216,0.9));border:1px solid rgba(23,23,23,0.05);"></span>
+                                                        <span style="display:block;aspect-ratio:1/1;border-radius:14px;background:linear-gradient(180deg, rgba(247,246,242,0.95), rgba(236,229,216,0.9));border:1px solid rgba(23,23,23,0.05);"></span>
+                                                        <span style="display:block;aspect-ratio:1/1;border-radius:14px;background:linear-gradient(180deg, rgba(247,246,242,0.95), rgba(236,229,216,0.9));border:1px solid rgba(23,23,23,0.05);"></span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="atlas-automation-card-top margin-top-18">
-                                                <span class="atlas-automation-icon"><i class="<?php echo $template['type'] === 'ecommerce' ? 'icon-feather-shopping-bag' : 'icon-feather-calendar'; ?>"></i></span>
-                                                <span class="atlas-automation-pill"><?php _esc($template['badge']) ?></span>
+                                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;margin-bottom:10px;">
+                                                <span style="width:52px;height:52px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;background:rgba(244,240,230,0.95);color:#1d1d1f;font-size:21px;"><i class="<?php echo $template['type'] === 'ecommerce' ? 'icon-feather-shopping-bag' : 'icon-feather-calendar'; ?>"></i></span>
+                                                <span style="display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:7px 12px;border-radius:999px;background:rgba(244,240,230,0.92);color:#9a9386;border:1px solid rgba(54,45,30,0.08);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;"><?php _esc($template['badge']) ?></span>
                                             </div>
-                                            <h4><?php _esc($template['title']) ?></h4>
-                                            <p><?php _esc($template['description']) ?></p>
-                                            <ul class="atlas-automation-feature-list">
+                                            <h4 style="margin-bottom:10px;font-size:24px;line-height:1.15;letter-spacing:-0.03em;"><?php _esc($template['title']) ?></h4>
+                                            <p style="margin:0;color:#746c5f;line-height:1.65;font-size:15px;"><?php _esc($template['description']) ?></p>
+                                            <ul style="list-style:none;padding:0;margin:20px 0 0;display:flex;flex-direction:column;gap:10px;">
                                                 <?php foreach ($template['features'] as $feature) { ?>
-                                                    <li><?php _esc($feature) ?></li>
+                                                    <li style="position:relative;padding-left:18px;color:#5f594f;line-height:1.5;font-size:14px;"><?php _esc($feature) ?></li>
                                                 <?php } ?>
                                             </ul>
                                             <?php if (!empty($template['source'])) { ?>
-                                                <div class="atlas-website-template-meta">
-                                                    <span><strong><?php _e("Source") ?>:</strong> <?php _esc($template['source']) ?></span>
+                                                <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px;color:#746c5f;font-size:13px;">
+                                                    <span><strong style="color:#1d1d1f;"><?php _e("Source") ?>:</strong> <?php _esc($template['source']) ?></span>
                                                     <?php if (!empty($template['source_path'])) { ?>
-                                                        <span><strong><?php _e("Primary view") ?>:</strong> <?php _esc($template['source_path']) ?></span>
+                                                        <span><strong style="color:#1d1d1f;"><?php _e("Primary view") ?>:</strong> <?php _esc($template['source_path']) ?></span>
                                                     <?php } ?>
                                                 </div>
                                             <?php } ?>
