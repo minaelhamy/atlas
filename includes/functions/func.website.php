@@ -278,6 +278,90 @@ function website_builder_generation_context($userId)
     ];
 }
 
+function website_builder_company_profile_status($profile, $intelligence)
+{
+    $missing = [];
+
+    if (empty($profile['company_name'])) {
+        $missing[] = __('Company name');
+    }
+    if (empty($profile['company_website']) && empty($profile['company_description'])) {
+        $missing[] = __('Website or company description');
+    }
+    if (empty($intelligence['company_summary'])) {
+        $missing[] = __('Company summary');
+    }
+    if (empty($profile['target_audience']) && empty($profile['ideal_customer_profile'])) {
+        $missing[] = __('Ideal customer profile');
+    }
+    if (empty($profile['top_problems_solved'])) {
+        $missing[] = __('Problems solved');
+    }
+    if (empty($profile['unique_selling_points']) && empty($profile['differentiators'])) {
+        $missing[] = __('Unique selling points');
+    }
+    if (empty($profile['brand_colors'])) {
+        $missing[] = __('Brand colors');
+    }
+    if (empty($profile['tone_attributes']) && empty($profile['brand_voice'])) {
+        $missing[] = __('Tone of voice');
+    }
+
+    return [
+        'ready' => empty($missing),
+        'missing' => $missing,
+    ];
+}
+
+function website_builder_infer_site_type($profile, $intelligence)
+{
+    $haystack = strtolower(trim(implode(' ', array_filter([
+        !empty($profile['company_industry']) ? $profile['company_industry'] : '',
+        !empty($profile['company_description']) ? $profile['company_description'] : '',
+        !empty($profile['key_products']) ? $profile['key_products'] : '',
+        !empty($profile['content_goals']) ? $profile['content_goals'] : '',
+        !empty($profile['differentiators']) ? $profile['differentiators'] : '',
+        !empty($intelligence['company_summary']) ? $intelligence['company_summary'] : '',
+        !empty($intelligence['market_research']) ? $intelligence['market_research'] : '',
+    ]))));
+
+    $ecommerceSignals = [
+        'shop', 'store', 'ecommerce', 'e-commerce', 'product', 'products', 'catalog',
+        'skincare', 'fashion', 'merch', 'merchandise', 'supplement', 'jewelry',
+        'accessories', 'leash', 'leashes', 'inventory', 'sell online', 'checkout'
+    ];
+    $serviceSignals = [
+        'booking', 'bookings', 'appointment', 'appointments', 'service', 'services',
+        'consulting', 'consultant', 'barber', 'salon', 'clinic', 'coaching', 'training',
+        'dog walking', 'grooming', 'agency', 'call', 'session', 'sessions'
+    ];
+
+    $ecommerceScore = 0;
+    $serviceScore = 0;
+
+    foreach ($ecommerceSignals as $signal) {
+        if ($signal !== '' && strpos($haystack, $signal) !== false) {
+            $ecommerceScore++;
+        }
+    }
+    foreach ($serviceSignals as $signal) {
+        if ($signal !== '' && strpos($haystack, $signal) !== false) {
+            $serviceScore++;
+        }
+    }
+
+    return $ecommerceScore > $serviceScore ? 'ecommerce' : 'service';
+}
+
+function website_builder_site_is_launched($site)
+{
+    if (empty($site)) {
+        return false;
+    }
+
+    return !empty($site['published_at']) || in_array($site['status'], ['published', 'active', 'launched'], true);
+}
+
 function website_builder_generate_structured_fields($userId, $siteType, $fields = [])
 {
     $context = website_builder_generation_context($userId);

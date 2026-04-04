@@ -2,6 +2,7 @@
 overall_header(__("Your Website"));
 $companyName = !empty($social_profile['company_name']) ? $social_profile['company_name'] : __('your business');
 $selectedTemplateKey = !empty($selected_template['key']) ? $selected_template['key'] : '';
+$businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('service');
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
@@ -22,12 +23,15 @@ $selectedTemplateKey = !empty($selected_template['key']) ? $selected_template['k
             <div class="atlas-workflow-hero margin-bottom-30">
                 <span class="atlas-workflow-eyebrow"><?php _e("Launch faster") ?></span>
                 <h2><?php _e("Create a customer-ready website from your company intelligence") ?></h2>
-                <p><?php echo sprintf(__('Atlas can turn %s into a service website or a storefront draft, styled to your brand and connected to Atlas checkout and wallet flows.'), _esc($companyName, 0)); ?></p>
+                <p><?php echo sprintf(__('Atlas can turn %s into a polished %s website, styled to your brand and connected to Atlas checkout and wallet flows.'), _esc($companyName, 0), _esc($businessTypeLabel, 0)); ?></p>
             </div>
 
             <?php if (!$profile_ready) { ?>
                 <div class="notification warning margin-bottom-25">
                     <p class="margin-bottom-10"><?php _e("Finish Company Intelligence first so Atlas has enough context to generate a strong website draft."); ?></p>
+                    <?php if (!empty($profile_status['missing'])) { ?>
+                        <p class="margin-bottom-10"><?php echo sprintf(__('Still missing: %s'), _esc(implode(', ', $profile_status['missing']), 0)); ?></p>
+                    <?php } ?>
                     <a href="<?php url("COMPANY_INTELLIGENCE") ?>" class="button"><?php _e("Open Company Intelligence") ?></a>
                 </div>
             <?php } ?>
@@ -62,85 +66,60 @@ $selectedTemplateKey = !empty($selected_template['key']) ? $selected_template['k
             <div class="dashboard-box margin-bottom-30">
                 <div class="content with-padding">
                     <div class="atlas-workflow-stepper">
-                        <span class="atlas-workflow-step atlas-workflow-step-active"><?php _e("1. Business type") ?></span>
-                        <span class="atlas-workflow-step <?php echo !empty($selected_type) ? 'atlas-workflow-step-active' : ''; ?>"><?php _e("2. Template") ?></span>
-                        <span class="atlas-workflow-step <?php echo !empty($selected_template) ? 'atlas-workflow-step-active' : ''; ?>"><?php _e("3. Launch details") ?></span>
-                        <span class="atlas-workflow-step"><?php _e("4. Build & edit") ?></span>
+                        <span class="atlas-workflow-step atlas-workflow-step-active"><?php _e("1. Template") ?></span>
+                        <span class="atlas-workflow-step <?php echo !empty($selected_template) ? 'atlas-workflow-step-active' : ''; ?>"><?php _e("2. Launch details") ?></span>
+                        <span class="atlas-workflow-step"><?php _e("3. Build & edit") ?></span>
                     </div>
                 </div>
             </div>
 
-            <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished margin-bottom-20">
-                <div class="col-lg-6 margin-bottom-30">
-                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?type=ecommerce" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selected_type === 'ecommerce' ? 'atlas-website-template-selected' : ''; ?>">
-                        <div class="content with-padding">
-                            <div class="atlas-automation-card-top">
-                                <span class="atlas-automation-icon"><i class="icon-feather-shopping-bag"></i></span>
-                                <span class="atlas-automation-pill"><?php _e("Sell products") ?></span>
-                            </div>
-                            <h4><?php _e("Ecommerce website") ?></h4>
-                            <p><?php _e("Choose this if your business sells a small curated catalog and needs a polished storefront, checkout, and wallet-based payouts inside Atlas."); ?></p>
-                            <ul class="atlas-automation-feature-list">
-                                <li><?php _e("2 storefront templates to start from") ?></li>
-                                <li><?php _e("Atlas checkout and website wallet flow") ?></li>
-                                <li><?php _e("Product-focused homepage and catalog") ?></li>
-                            </ul>
+            <div class="dashboard-box margin-bottom-30">
+                <div class="content with-padding">
+                    <div class="atlas-website-section-heading">
+                        <div>
+                            <span class="atlas-workflow-eyebrow"><?php _e("Choose a template") ?></span>
+                            <h4 class="margin-bottom-5"><?php echo $selected_type === 'ecommerce' ? __('Pick one ecommerce template') : __('Pick one service template'); ?></h4>
+                            <p class="margin-bottom-0"><?php echo sprintf(__('Based on your Company Intelligence, Atlas believes you need a %s website. Pick one of the two matching templates below and we will generate the first version for you.'), _esc($businessTypeLabel, 0)); ?></p>
                         </div>
-                    </a>
-                </div>
-                <div class="col-lg-6 margin-bottom-30">
-                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?type=service" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selected_type === 'service' ? 'atlas-website-template-selected' : ''; ?>">
-                        <div class="content with-padding">
-                            <div class="atlas-automation-card-top">
-                                <span class="atlas-automation-icon"><i class="icon-feather-calendar"></i></span>
-                                <span class="atlas-automation-pill"><?php _e("Sell services") ?></span>
-                            </div>
-                            <h4><?php _e("Service & booking website") ?></h4>
-                            <p><?php _e("Choose this if you run a service business like grooming, barbering, consulting, training, or dog walking and want customers booking through your site."); ?></p>
-                            <ul class="atlas-automation-feature-list">
-                                <li><?php _e("2 booking-first templates to start from") ?></li>
-                                <li><?php _e("Request capture, bookings, and payouts") ?></li>
-                                <li><?php _e("Built for small service brands that need trust fast") ?></li>
-                            </ul>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            <?php if (!empty($selected_type)) { ?>
-                <div class="dashboard-box margin-bottom-30">
-                    <div class="content with-padding">
-                        <div class="atlas-website-section-heading">
-                            <div>
-                                <span class="atlas-workflow-eyebrow"><?php _e("Choose a template") ?></span>
-                                <h4 class="margin-bottom-5"><?php echo $selected_type === 'ecommerce' ? __('Pick one ecommerce template') : __('Pick one service template'); ?></h4>
-                                <p class="margin-bottom-0"><?php _e("Start from one of the two matching templates. Atlas will reshape the structure, copy, and brand styling around your company intelligence."); ?></p>
-                            </div>
-                        </div>
-                        <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished margin-top-20">
-                            <?php foreach ($templates as $template) { if ($template['type'] !== $selected_type) { continue; } ?>
-                                <div class="col-lg-6 margin-bottom-24">
-                                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?type=<?php _esc($selected_type); ?>&template=<?php _esc($template['key']); ?>" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
-                                        <div class="content with-padding">
-                                            <div class="atlas-automation-card-top">
-                                                <span class="atlas-automation-icon"><i class="<?php echo $template['type'] === 'ecommerce' ? 'icon-feather-shopping-bag' : 'icon-feather-calendar'; ?>"></i></span>
-                                                <span class="atlas-automation-pill"><?php _esc($template['badge']) ?></span>
+                    </div>
+                    <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished margin-top-20">
+                        <?php foreach ($templates as $template) { ?>
+                            <div class="col-lg-6 margin-bottom-24">
+                                <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
+                                    <div class="content with-padding">
+                                        <div class="atlas-website-template-frame">
+                                            <div class="atlas-website-template-frame-browser">
+                                                <span></span><span></span><span></span>
                                             </div>
-                                            <h4><?php _esc($template['title']) ?></h4>
-                                            <p><?php _esc($template['description']) ?></p>
-                                            <ul class="atlas-automation-feature-list">
-                                                <?php foreach ($template['features'] as $feature) { ?>
-                                                    <li><?php _esc($feature) ?></li>
-                                                <?php } ?>
-                                            </ul>
+                                            <div class="atlas-website-template-frame-body">
+                                                <div class="atlas-website-template-frame-hero atlas-website-template-frame-hero-<?php _esc($template['type']) ?>">
+                                                    <strong><?php _esc($template['title']) ?></strong>
+                                                    <span><?php echo $template['type'] === 'ecommerce' ? __('Built for converting visitors into buyers') : __('Built for converting visitors into bookings'); ?></span>
+                                                </div>
+                                                <div class="atlas-website-template-frame-grid">
+                                                    <span></span><span></span><span></span>
+                                                    <span></span><span></span><span></span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </a>
-                                </div>
-                            <?php } ?>
-                        </div>
+                                        <div class="atlas-automation-card-top margin-top-18">
+                                            <span class="atlas-automation-icon"><i class="<?php echo $template['type'] === 'ecommerce' ? 'icon-feather-shopping-bag' : 'icon-feather-calendar'; ?>"></i></span>
+                                            <span class="atlas-automation-pill"><?php _esc($template['badge']) ?></span>
+                                        </div>
+                                        <h4><?php _esc($template['title']) ?></h4>
+                                        <p><?php _esc($template['description']) ?></p>
+                                        <ul class="atlas-automation-feature-list">
+                                            <?php foreach ($template['features'] as $feature) { ?>
+                                                <li><?php _esc($feature) ?></li>
+                                            <?php } ?>
+                                        </ul>
+                                    </div>
+                                </a>
+                            </div>
+                        <?php } ?>
                     </div>
                 </div>
-            <?php } ?>
+            </div>
 
             <?php if (!empty($selected_template)) { ?>
                 <div class="dashboard-box margin-bottom-30">
