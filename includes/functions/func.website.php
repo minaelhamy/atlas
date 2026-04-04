@@ -152,56 +152,102 @@ function website_builder_ensure_tables()
 function website_builder_template_catalog()
 {
     return [
-        'commerce-minimal' => [
-            'key' => 'commerce-minimal',
+        'aimeos-commerce-minimal' => [
+            'key' => 'aimeos-commerce-minimal',
             'type' => 'ecommerce',
-            'title' => __('Minimal product store'),
+            'title' => __('Aimeos Minimal Store'),
             'badge' => __('Products'),
-            'description' => __('A clean storefront for focused product brands with featured products, testimonials, FAQ, checkout, and a simple conversion path.'),
-            'source' => __('Aimeos-inspired storefront flow'),
+            'description' => __('A clean product storefront shaped from the Aimeos catalog home flow, ideal for a focused small catalog and a straightforward path to checkout.'),
+            'source' => __('Aimeos catalog home + basket flow'),
             'source_path' => 'aimeos/views/catalog/home.blade.php',
+            'source_paths' => [
+                'aimeos/views/catalog/home.blade.php',
+                'aimeos/views/basket/index.blade.php',
+                'aimeos/views/checkout/index.blade.php',
+            ],
+            'preview_theme' => 'minimal',
+            'preview_sections' => [
+                __('Hero offer'),
+                __('Featured products'),
+                __('Benefits'),
+                __('Checkout CTA'),
+            ],
             'features' => [
                 __('Product grid, featured collection, and quick checkout flow'),
                 __('Designed for brands selling a small curated catalog'),
                 __('Best for modern DTC products and minimal commerce brands'),
             ],
         ],
-        'commerce-editorial' => [
-            'key' => 'commerce-editorial',
+        'aimeos-commerce-editorial' => [
+            'key' => 'aimeos-commerce-editorial',
             'type' => 'ecommerce',
-            'title' => __('Editorial commerce'),
+            'title' => __('Aimeos Editorial Commerce'),
             'badge' => __('Products'),
-            'description' => __('A richer story-led store layout with stronger brand storytelling, lifestyle imagery, product education, and trust-building sections.'),
-            'source' => __('Aimeos catalog + editorial landing structure'),
+            'description' => __('A richer Aimeos storefront shaped around product storytelling, product detail education, and premium conversion sections.'),
+            'source' => __('Aimeos detail + checkout confirm flow'),
             'source_path' => 'aimeos/views/catalog/detail.blade.php',
+            'source_paths' => [
+                'aimeos/views/catalog/detail.blade.php',
+                'aimeos/views/checkout/confirm.blade.php',
+                'aimeos/views/catalog/list.blade.php',
+            ],
+            'preview_theme' => 'editorial',
+            'preview_sections' => [
+                __('Story-led hero'),
+                __('Best sellers'),
+                __('Product education'),
+                __('Trust section'),
+            ],
             'features' => [
                 __('Story-first homepage paired with product highlights'),
                 __('Works well for premium, lifestyle, and aesthetic brands'),
                 __('Built to support product education and brand positioning'),
             ],
         ],
-        'service-booking-studio' => [
-            'key' => 'service-booking-studio',
+        'aimeos-service-studio' => [
+            'key' => 'aimeos-service-studio',
             'type' => 'service',
-            'title' => __('Service booking studio'),
+            'title' => __('Aimeos Service Studio'),
             'badge' => __('Bookings'),
-            'description' => __('A polished service-business website with clear offer positioning, service packages, social proof, and an appointment-first conversion path.'),
-            'source' => __('Atlas booking-first structure'),
-            'source_path' => '',
+            'description' => __('A service website adapted from the Aimeos page and checkout structure, rebuilt around offers, proof, and a booking-first conversion path.'),
+            'source' => __('Aimeos page + Atlas booking flow'),
+            'source_path' => 'aimeos/views/page/index.blade.php',
+            'source_paths' => [
+                'aimeos/views/page/index.blade.php',
+                'aimeos/views/checkout/index.blade.php',
+            ],
+            'preview_theme' => 'studio',
+            'preview_sections' => [
+                __('Offer overview'),
+                __('Service cards'),
+                __('Testimonials'),
+                __('Booking CTA'),
+            ],
             'features' => [
                 __('Service cards, booking CTA, testimonials, and FAQ'),
                 __('Ideal for dog walkers, barbers, consultants, clinics, and studios'),
                 __('Made for businesses that need bookings more than a large catalog'),
             ],
         ],
-        'service-local-pro' => [
-            'key' => 'service-local-pro',
+        'aimeos-service-local' => [
+            'key' => 'aimeos-service-local',
             'type' => 'service',
-            'title' => __('Local service pro'),
+            'title' => __('Aimeos Local Service Pro'),
             'badge' => __('Bookings'),
-            'description' => __('A conversion-focused website for local and small professional businesses, built around credibility, location trust, and simple service requests.'),
-            'source' => __('Atlas local business structure'),
-            'source_path' => '',
+            'description' => __('A local-service website adapted from Aimeos page and update flows, focused on trust, availability, and simple booking conversion.'),
+            'source' => __('Aimeos page + update flow'),
+            'source_path' => 'aimeos/views/page/index.blade.php',
+            'source_paths' => [
+                'aimeos/views/page/index.blade.php',
+                'aimeos/views/checkout/update.blade.php',
+            ],
+            'preview_theme' => 'local',
+            'preview_sections' => [
+                __('Local trust hero'),
+                __('Services'),
+                __('FAQ'),
+                __('Schedule request'),
+            ],
             'features' => [
                 __('Optimized for trust, contact, and recurring bookings'),
                 __('Great for service businesses with a few offers and a clear CTA'),
@@ -209,6 +255,26 @@ function website_builder_template_catalog()
             ],
         ],
     ];
+}
+
+function website_builder_templates_for_type($type)
+{
+    $catalog = website_builder_template_catalog();
+    $matches = [];
+
+    foreach ($catalog as $template) {
+        if (!empty($template['type']) && (string) $template['type'] === (string) $type) {
+            $matches[] = $template;
+        }
+    }
+
+    if (!empty($matches)) {
+        return $matches;
+    }
+
+    return array_values(array_filter($catalog, function ($template) {
+        return !empty($template['type']) && $template['type'] === 'service';
+    }));
 }
 
 function website_builder_get_template($templateKey)

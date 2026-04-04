@@ -22,9 +22,7 @@ if (isset($current_user['id'])) {
         $selected_template = null;
         $selected_template_key = '';
     }
-    $templates = array_values(array_filter(website_builder_template_catalog(), function ($template) use ($selected_type) {
-        return $template['type'] === $selected_type;
-    }));
+    $templates = website_builder_templates_for_type($selected_type);
 
     $setup_defaults = !empty($selected_type)
         ? website_builder_generate_structured_fields($_SESSION['user']['id'], $selected_type, ['website_title', 'subdomain', 'first_item_title', 'first_item_description', 'first_item_price', 'first_item_duration'])

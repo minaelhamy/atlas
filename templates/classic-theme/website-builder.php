@@ -82,42 +82,62 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                             <p class="margin-bottom-0"><?php echo sprintf(__('Based on your Company Intelligence, Atlas believes you need a %s website. Pick one of the two matching templates below and we will generate the first version for you.'), _esc($businessTypeLabel, 0)); ?></p>
                         </div>
                     </div>
-                    <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished margin-top-20">
-                        <?php foreach ($templates as $template) { ?>
-                            <div class="col-lg-6 margin-bottom-24">
-                                <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
-                                    <div class="content with-padding">
-                                        <div class="atlas-website-template-frame">
-                                            <div class="atlas-website-template-frame-browser">
-                                                <span></span><span></span><span></span>
-                                            </div>
-                                            <div class="atlas-website-template-frame-body">
-                                                <div class="atlas-website-template-frame-hero atlas-website-template-frame-hero-<?php _esc($template['type']) ?>">
-                                                    <strong><?php _esc($template['title']) ?></strong>
-                                                    <span><?php echo $template['type'] === 'ecommerce' ? __('Built for converting visitors into buyers') : __('Built for converting visitors into bookings'); ?></span>
-                                                </div>
-                                                <div class="atlas-website-template-frame-grid">
-                                                    <span></span><span></span><span></span>
+                    <?php if (!empty($templates)) { ?>
+                        <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished margin-top-20">
+                            <?php foreach ($templates as $template) { ?>
+                                <div class="col-lg-6 margin-bottom-24">
+                                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
+                                        <div class="content with-padding">
+                                            <div class="atlas-website-template-frame">
+                                                <div class="atlas-website-template-frame-browser">
                                                     <span></span><span></span><span></span>
                                                 </div>
+                                                <div class="atlas-website-template-frame-body">
+                                                    <div class="atlas-website-template-frame-hero atlas-website-template-frame-hero-<?php _esc($template['preview_theme']); ?>">
+                                                        <strong><?php _esc($template['title']) ?></strong>
+                                                        <span><?php echo $template['type'] === 'ecommerce' ? __('Built for converting visitors into buyers') : __('Built for converting visitors into bookings'); ?></span>
+                                                    </div>
+                                                    <div class="atlas-website-template-frame-sections">
+                                                        <?php foreach ($template['preview_sections'] as $section) { ?>
+                                                            <span><?php _esc($section) ?></span>
+                                                        <?php } ?>
+                                                    </div>
+                                                    <div class="atlas-website-template-frame-grid">
+                                                        <span></span><span></span><span></span>
+                                                        <span></span><span></span><span></span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="atlas-automation-card-top margin-top-18">
-                                            <span class="atlas-automation-icon"><i class="<?php echo $template['type'] === 'ecommerce' ? 'icon-feather-shopping-bag' : 'icon-feather-calendar'; ?>"></i></span>
-                                            <span class="atlas-automation-pill"><?php _esc($template['badge']) ?></span>
-                                        </div>
-                                        <h4><?php _esc($template['title']) ?></h4>
-                                        <p><?php _esc($template['description']) ?></p>
-                                        <ul class="atlas-automation-feature-list">
-                                            <?php foreach ($template['features'] as $feature) { ?>
-                                                <li><?php _esc($feature) ?></li>
+                                            <div class="atlas-automation-card-top margin-top-18">
+                                                <span class="atlas-automation-icon"><i class="<?php echo $template['type'] === 'ecommerce' ? 'icon-feather-shopping-bag' : 'icon-feather-calendar'; ?>"></i></span>
+                                                <span class="atlas-automation-pill"><?php _esc($template['badge']) ?></span>
+                                            </div>
+                                            <h4><?php _esc($template['title']) ?></h4>
+                                            <p><?php _esc($template['description']) ?></p>
+                                            <ul class="atlas-automation-feature-list">
+                                                <?php foreach ($template['features'] as $feature) { ?>
+                                                    <li><?php _esc($feature) ?></li>
+                                                <?php } ?>
+                                            </ul>
+                                            <?php if (!empty($template['source'])) { ?>
+                                                <div class="atlas-website-template-meta">
+                                                    <span><strong><?php _e("Source") ?>:</strong> <?php _esc($template['source']) ?></span>
+                                                    <?php if (!empty($template['source_path'])) { ?>
+                                                        <span><strong><?php _e("Primary view") ?>:</strong> <?php _esc($template['source_path']) ?></span>
+                                                    <?php } ?>
+                                                </div>
                                             <?php } ?>
-                                        </ul>
-                                    </div>
-                                </a>
-                            </div>
-                        <?php } ?>
-                    </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            <?php } ?>
+                        </div>
+                    <?php } else { ?>
+                        <div class="atlas-website-empty-state margin-top-20">
+                            <h5><?php _e("No matching templates are available yet") ?></h5>
+                            <p class="margin-bottom-0"><?php _e("Atlas could not load the matching template set for this business type. Refresh the page or return to Company Intelligence and try again."); ?></p>
+                        </div>
+                    <?php } ?>
                 </div>
             </div>
 
