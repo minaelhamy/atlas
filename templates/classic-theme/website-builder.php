@@ -40,6 +40,32 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                 <div class="notification error margin-bottom-25"><?php _esc($website_error) ?></div>
             <?php } ?>
 
+            <?php if (!empty($website_debug)) { ?>
+                <div class="dashboard-box margin-bottom-25">
+                    <div class="content with-padding">
+                        <span class="atlas-workflow-eyebrow"><?php _e("Website builder debug") ?></span>
+                        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 18px;font-size:13px;color:#6f6658;">
+                            <div><strong style="color:#1d1d1f;"><?php _e("Selected type") ?>:</strong> <?php _esc(!empty($website_debug['selected_type']) ? $website_debug['selected_type'] : ''); ?></div>
+                            <div><strong style="color:#1d1d1f;"><?php _e("Template count") ?>:</strong> <?php _esc((string) (!empty($website_debug['template_count']) ? $website_debug['template_count'] : 0)); ?></div>
+                            <div><strong style="color:#1d1d1f;"><?php _e("Selected template key") ?>:</strong> <?php _esc(!empty($website_debug['selected_template_key']) ? $website_debug['selected_template_key'] : ''); ?></div>
+                            <div><strong style="color:#1d1d1f;"><?php _e("Profile ready") ?>:</strong> <?php _esc(!empty($website_debug['profile_ready']) ? 'yes' : 'no'); ?></div>
+                        </div>
+                        <?php if (!empty($website_debug['template_keys'])) { ?>
+                            <div style="margin-top:14px;font-size:13px;color:#6f6658;">
+                                <strong style="color:#1d1d1f;"><?php _e("Template keys") ?>:</strong>
+                                <?php _esc(implode(', ', $website_debug['template_keys'])); ?>
+                            </div>
+                        <?php } ?>
+                        <?php if (!empty($website_debug['missing_profile_fields'])) { ?>
+                            <div style="margin-top:10px;font-size:13px;color:#6f6658;">
+                                <strong style="color:#1d1d1f;"><?php _e("Missing profile fields") ?>:</strong>
+                                <?php _esc(implode(', ', $website_debug['missing_profile_fields'])); ?>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
+
             <?php if (!empty($existing_site)) { ?>
                 <div class="dashboard-box margin-bottom-30 atlas-website-existing-site">
                     <div class="content with-padding">
