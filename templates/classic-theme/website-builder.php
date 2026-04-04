@@ -82,7 +82,34 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                             <p class="margin-bottom-0"><?php echo sprintf(__('Based on your Company Intelligence, Atlas believes you need a %s website. Pick one of the two matching templates below and we will generate the first version for you.'), _esc($businessTypeLabel, 0)); ?></p>
                         </div>
                     </div>
+                    <div style="margin-top:18px;margin-bottom:8px;color:#8a8275;font-size:13px;">
+                        <?php echo sprintf(__('Templates loaded: %d'), count($templates)); ?>
+                    </div>
                     <?php if (!empty($templates)) { ?>
+                        <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px;margin-bottom:24px;">
+                            <?php foreach ($templates as $template) { ?>
+                                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 20px;border:1px solid rgba(54,45,30,0.08);border-radius:22px;background:#fbf8f2;">
+                                    <div style="min-width:0;">
+                                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+                                            <strong style="font-size:18px;line-height:1.2;color:#1d1d1f;"><?php _esc($template['title']) ?></strong>
+                                            <span style="display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:6px 10px;border-radius:999px;background:rgba(244,240,230,0.92);color:#9a9386;border:1px solid rgba(54,45,30,0.08);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;"><?php _esc($template['badge']) ?></span>
+                                        </div>
+                                        <p style="margin:0 0 10px;color:#6d665b;line-height:1.6;font-size:14px;"><?php _esc($template['description']) ?></p>
+                                        <div style="color:#8a8275;font-size:12px;line-height:1.5;">
+                                            <?php if (!empty($template['source'])) { ?>
+                                                <div><strong style="color:#1d1d1f;"><?php _e("Source") ?>:</strong> <?php _esc($template['source']) ?></div>
+                                            <?php } ?>
+                                            <?php if (!empty($template['source_path'])) { ?>
+                                                <div><strong style="color:#1d1d1f;"><?php _e("Primary view") ?>:</strong> <?php _esc($template['source_path']) ?></div>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                    <div style="flex:0 0 auto;">
+                                        <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:14px;background:#1d1d1f;color:#fff;text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;"><?php _e("Choose template") ?></a>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                        </div>
                         <div class="margin-top-20" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:stretch;">
                             <?php foreach ($templates as $template) { ?>
                                 <div>
