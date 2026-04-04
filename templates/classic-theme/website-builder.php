@@ -83,10 +83,10 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                         </div>
                     </div>
                     <?php if (!empty($templates)) { ?>
-                        <div class="row atlas-automation-card-grid atlas-automation-card-grid-polished margin-top-20">
+                        <div class="atlas-website-template-grid margin-top-20">
                             <?php foreach ($templates as $template) { ?>
-                                <div class="col-lg-6 margin-bottom-24">
-                                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" class="atlas-automation-card dashboard-box atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
+                                <div class="atlas-website-template-grid-item">
+                                    <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" class="atlas-automation-card atlas-website-template-card <?php echo $selectedTemplateKey === $template['key'] ? 'atlas-website-template-selected' : ''; ?>">
                                         <div class="content with-padding">
                                             <div class="atlas-website-template-frame">
                                                 <div class="atlas-website-template-frame-browser">

@@ -1253,6 +1253,16 @@ a.button:hover {
     border-radius: 28px;
 }
 
+.atlas-website-template-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.atlas-website-template-grid-item {
+    min-width: 0;
+}
+
 .atlas-website-existing-site-head {
     display: flex;
     align-items: flex-start;
@@ -1278,6 +1288,11 @@ a.button:hover {
 .atlas-website-template-card .button[disabled] {
     opacity: 0.45;
     cursor: not-allowed;
+}
+
+.atlas-website-template-card {
+    display: block;
+    min-height: 100%;
 }
 
 .atlas-website-template-meta {
@@ -2524,6 +2539,12 @@ table th {
 
 .atlas-website-empty-state h5 {
     margin-bottom: 8px;
+}
+
+@media (max-width: 991px) {
+    .atlas-website-template-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .atlas-website-calendar-settings {
