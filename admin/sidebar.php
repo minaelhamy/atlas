@@ -92,6 +92,16 @@
                     <i class="fa fa-money"></i><span><?php _e('Withdrawals') ?></span>
                 </a>
             </li>
+            <li data-page="website-payouts">
+                <a class="bar-icons" href="<?php echo ADMINURL; ?>global/website-payouts.php">
+                    <i class="icon-feather-credit-card"></i><span><?php _e('Website Payouts') ?></span>
+                </a>
+            </li>
+            <li data-page="websites">
+                <a class="bar-icons" href="<?php echo ADMINURL; ?>global/websites.php">
+                    <i class="icon-feather-monitor"></i><span><?php _e('Websites') ?></span>
+                </a>
+            </li>
             <li data-page="email-template">
                 <a class="bar-icons" href="<?php echo ADMINURL; ?>global/email-template.php">
                     <i class="icon-feather-mail"></i><span><?php _e('Email Template') ?></span>

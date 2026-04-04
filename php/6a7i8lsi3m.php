@@ -80,6 +80,15 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "refresh_company_intelligence") {
         refresh_company_intelligence();
     }
+    if ($_GET['action'] == "generate_website_setup_field") {
+        generate_website_setup_field();
+    }
+    if ($_GET['action'] == "build_website_draft") {
+        build_website_draft();
+    }
+    if ($_GET['action'] == "website_service_slots") {
+        website_service_slots();
+    }
     die(0);
 }
 
@@ -265,6 +274,124 @@ function extract_company_profile()
     $result['success'] = true;
     $result['message'] = __('Website extracted successfully.');
     $result['profile'] = $profile;
+    die(json_encode($result));
+}
+
+function generate_website_setup_field()
+{
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    $field = !empty($_POST['field']) ? validate_input($_POST['field']) : '';
+    $siteType = !empty($_POST['site_type']) ? validate_input($_POST['site_type']) : 'service';
+    if ($field === '') {
+        $result['error'] = __('Please choose a field first.');
+        die(json_encode($result));
+    }
+
+    $values = website_builder_generate_structured_fields($_SESSION['user']['id'], $siteType, [$field]);
+    $result['success'] = true;
+    $result['field'] = $field;
+    $result['value'] = !empty($values[$field]) ? $values[$field] : '';
+    die(json_encode($result));
+}
+
+function build_website_draft()
+{
+    global $link;
+
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    website_builder_ensure_tables();
+
+    $templateKey = !empty($_POST['template_key']) ? validate_input($_POST['template_key']) : '';
+    $template = website_builder_get_template($templateKey);
+    if (empty($template)) {
+        $result['error'] = __('Please choose a valid website template.');
+        die(json_encode($result));
+    }
+
+    $websiteTitle = !empty($_POST['website_title']) ? validate_input($_POST['website_title']) : '';
+    $subdomain = !empty($_POST['subdomain']) ? validate_input($_POST['subdomain']) : '';
+    $firstItemTitle = !empty($_POST['first_item_title']) ? validate_input($_POST['first_item_title']) : '';
+    $firstItemDescription = !empty($_POST['first_item_description']) ? validate_input($_POST['first_item_description']) : '';
+    $firstItemPrice = isset($_POST['first_item_price']) ? validate_input($_POST['first_item_price']) : '';
+    $firstItemDuration = isset($_POST['first_item_duration']) ? validate_input($_POST['first_item_duration']) : '';
+
+    if ($websiteTitle === '' || $subdomain === '') {
+        $result['error'] = __('Website name and .hatchers.ai domain are required.');
+        die(json_encode($result));
+    }
+    if ($firstItemTitle === '' || $firstItemDescription === '' || $firstItemPrice === '') {
+        $result['error'] = $template['type'] === 'ecommerce'
+            ? __('Please add at least one product title, description, and price.')
+            : __('Please add at least one service title, description, and price.');
+        die(json_encode($result));
+    }
+    if ($template['type'] === 'service' && $firstItemDuration === '') {
+        $result['error'] = __('Please add a duration for your first service.');
+        die(json_encode($result));
+    }
+
+    $site = website_builder_create_or_refresh_primary_site($_SESSION['user']['id'], $templateKey, [
+        'website_title' => $websiteTitle,
+        'subdomain' => $subdomain,
+        'first_item_title' => $firstItemTitle,
+        'first_item_description' => $firstItemDescription,
+        'first_item_price' => $firstItemPrice,
+        'first_item_duration' => $firstItemDuration,
+    ]);
+
+    if (empty($site['id'])) {
+        $result['error'] = __('Unable to build your website right now.');
+        die(json_encode($result));
+    }
+
+    $result['success'] = true;
+    $result['redirect'] = $link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'];
+    die(json_encode($result));
+}
+
+function website_service_slots()
+{
+    $result = [
+        'success' => false,
+        'message' => __('Unable to load booking slots right now.'),
+        'slots' => [],
+    ];
+
+    $slug = !empty($_GET['slug']) ? validate_input($_GET['slug']) : '';
+    $serviceId = !empty($_GET['service_id']) ? (int) $_GET['service_id'] : 0;
+    $date = !empty($_GET['date']) ? validate_input($_GET['date']) : '';
+    $bookingId = !empty($_GET['booking_id']) ? (int) $_GET['booking_id'] : 0;
+
+    if ($slug === '' || !$serviceId || $date === '') {
+        die(json_encode($result));
+    }
+
+    $site = website_builder_get_site_by_slug($slug);
+    if (empty($site) || $site['site_type'] !== 'service') {
+        $result['message'] = __('Service website not found.');
+        die(json_encode($result));
+    }
+
+    $service = website_builder_get_service($site['id'], $serviceId);
+    if (empty($service)) {
+        $result['message'] = __('Service not found.');
+        die(json_encode($result));
+    }
+
+    $slotData = website_builder_get_service_slots($site, $service, $date, $bookingId);
+    $result['success'] = !empty($slotData['success']);
+    $result['message'] = !empty($slotData['message']) ? $slotData['message'] : '';
+    $result['slots'] = !empty($slotData['slots']) ? $slotData['slots'] : [];
     die(json_encode($result));
 }
 

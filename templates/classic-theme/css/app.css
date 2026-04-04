@@ -1247,6 +1247,554 @@ a.button:hover {
     padding: 22px;
 }
 
+.atlas-website-existing-site,
+.atlas-website-template-card,
+.atlas-website-preview-box {
+    border-radius: 28px;
+}
+
+.atlas-website-existing-site-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.atlas-website-existing-site-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 18px;
+    color: var(--atlas-muted);
+    font-size: 14px;
+}
+
+.atlas-website-existing-site-meta strong,
+.atlas-website-template-meta strong {
+    color: var(--atlas-text);
+    font-weight: 600;
+}
+
+.atlas-website-template-card .button[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.atlas-website-template-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+    color: var(--atlas-muted);
+    font-size: 13px;
+}
+
+.atlas-website-how-card {
+    height: 100%;
+    padding: 10px 4px;
+}
+
+.atlas-website-how-card h5 {
+    margin: 8px 0 10px;
+    font-size: 20px;
+}
+
+.atlas-website-how-card p {
+    margin: 0;
+    color: var(--atlas-muted);
+    line-height: 1.65;
+}
+
+.atlas-website-preview-browser {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 1px solid rgba(54, 45, 30, 0.08);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    font-size: 13px;
+    color: var(--atlas-muted);
+}
+
+.atlas-website-preview-browser span {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(54, 45, 30, 0.14);
+}
+
+.atlas-website-preview-browser strong {
+    margin-left: 4px;
+    color: var(--atlas-text);
+    font-weight: 600;
+}
+
+.atlas-website-preview-toolbar,
+.atlas-website-editor-heading,
+.atlas-website-editor-footer,
+.atlas-public-site-header,
+.atlas-public-site-hero,
+.atlas-public-site-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.atlas-website-preview-toolbar {
+    margin-top: 18px;
+}
+
+.atlas-website-preview-canvas {
+    margin-top: 18px;
+    border-radius: 28px;
+    padding: 30px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--website-secondary) 84%, white 16%) 0%, #ffffff 100%);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+}
+
+.atlas-website-preview-hero {
+    padding: 20px 0 30px;
+}
+
+.atlas-website-preview-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--website-accent);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.atlas-website-preview-hero h1 {
+    margin: 18px 0 12px;
+    font-size: clamp(34px, 4vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    color: var(--website-primary);
+}
+
+.atlas-website-preview-hero p {
+    max-width: 620px;
+    margin: 0;
+    color: var(--atlas-muted);
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.atlas-website-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.atlas-website-preview-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--atlas-text);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.atlas-website-preview-button-primary {
+    background: var(--website-primary);
+    color: #fff;
+    border-color: transparent;
+}
+
+.atlas-website-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.atlas-website-preview-card {
+    padding: 18px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+}
+
+.atlas-website-preview-card strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    color: var(--website-primary);
+}
+
+.atlas-website-preview-card p {
+    margin: 0;
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.atlas-website-preview-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.atlas-website-preview-proof span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+    color: var(--website-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.atlas-website-preview-faq {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(54, 45, 30, 0.08);
+}
+
+.atlas-website-preview-faq h3 {
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.atlas-website-preview-faq-item + .atlas-website-preview-faq-item {
+    margin-top: 14px;
+}
+
+.atlas-website-preview-faq-item strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.atlas-website-preview-faq-item p {
+    margin: 0;
+    color: var(--atlas-muted);
+    line-height: 1.65;
+}
+
+.atlas-website-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.atlas-website-meta-list div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(54, 45, 30, 0.08);
+}
+
+.atlas-website-meta-list div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.atlas-website-meta-list span {
+    color: var(--atlas-muted);
+}
+
+.atlas-website-editor-heading {
+    margin-bottom: 20px;
+    align-items: flex-start;
+}
+
+.atlas-website-editor-heading h4 {
+    margin: 8px 0 0;
+    font-size: 24px;
+}
+
+.atlas-website-editor-form .submit-field small {
+    display: block;
+    margin-top: 8px;
+    color: var(--atlas-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.atlas-website-editor-footer {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(54, 45, 30, 0.08);
+    align-items: flex-end;
+}
+
+.atlas-website-editor-footer p {
+    margin: 0;
+    max-width: 460px;
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.atlas-website-inline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.atlas-public-site {
+    padding: 36px 0 60px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--website-secondary) 72%, white 28%) 0%, #fff 100%);
+}
+
+.atlas-public-site-header {
+    padding: 20px 0 28px;
+}
+
+.atlas-public-site-brand {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none !important;
+}
+
+.atlas-public-site-brand strong {
+    color: var(--website-primary);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.atlas-public-site-brand span,
+.atlas-public-site-nav a {
+    color: var(--atlas-muted);
+}
+
+.atlas-public-site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+}
+
+.atlas-public-site-nav a {
+    text-decoration: none !important;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.atlas-public-site-hero {
+    padding: 34px;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+    box-shadow: 0 18px 48px rgba(22, 22, 22, 0.05);
+    align-items: stretch;
+}
+
+.atlas-public-site-hero-copy {
+    flex: 1 1 0;
+}
+
+.atlas-public-site-hero-panel {
+    flex: 0 0 320px;
+}
+
+.atlas-public-site-hero-stats,
+.atlas-public-site-grid,
+.atlas-public-site-faq {
+    display: grid;
+    gap: 16px;
+}
+
+.atlas-public-site-hero-stats {
+    grid-template-columns: 1fr;
+}
+
+.atlas-public-site-hero-stats div,
+.atlas-public-site-card,
+.atlas-public-site-content-card,
+.atlas-public-site-faq-item {
+    padding: 22px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+}
+
+.atlas-public-site-hero-stats span,
+.atlas-public-site-section-head p,
+.atlas-public-site-card p,
+.atlas-public-site-content-card p,
+.atlas-public-site-faq-item p,
+.atlas-public-site-cta p {
+    color: var(--atlas-muted);
+}
+
+.atlas-public-site-hero-stats strong,
+.atlas-public-site-card strong,
+.atlas-public-site-faq-item strong,
+.atlas-public-site-section-head h2,
+.atlas-public-site-content-card h2,
+.atlas-public-site-cta h2 {
+    color: var(--website-primary);
+}
+
+.atlas-public-site-hero-stats strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 18px;
+}
+
+.atlas-public-site-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 18px 0 0;
+    padding: 12px 0 8px;
+}
+
+.atlas-public-site-proof span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+    color: var(--website-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.atlas-public-site-section {
+    margin-top: 28px;
+}
+
+.atlas-public-site-section-head {
+    margin-bottom: 18px;
+}
+
+.atlas-public-site-section-head h2 {
+    margin: 8px 0 8px;
+    font-size: clamp(28px, 3.4vw, 44px);
+    letter-spacing: -0.04em;
+}
+
+.atlas-public-site-section-head p,
+.atlas-public-site-card p,
+.atlas-public-site-content-card p,
+.atlas-public-site-faq-item p,
+.atlas-public-site-cta p {
+    margin: 0;
+    line-height: 1.7;
+    font-size: 15px;
+}
+
+.atlas-public-site-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.atlas-public-site-card strong {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.atlas-public-site-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    color: var(--atlas-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.atlas-public-site-content-card h2,
+.atlas-public-site-cta h2 {
+    margin: 8px 0 10px;
+    font-size: clamp(28px, 3vw, 40px);
+    letter-spacing: -0.04em;
+}
+
+.atlas-public-site-form .button,
+.atlas-public-site-form .atlas-website-preview-button {
+    margin-top: 6px;
+}
+
+.atlas-website-status-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 220px;
+}
+
+.atlas-website-status-form .small-input {
+    min-height: 40px;
+}
+
+.atlas-public-site-faq {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.atlas-public-site-faq-item strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.atlas-public-site-cta {
+    margin-top: 30px;
+    padding: 28px 30px;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(54, 45, 30, 0.08);
+    box-shadow: 0 18px 48px rgba(22, 22, 22, 0.04);
+}
+
+@media (max-width: 991px) {
+    .atlas-website-existing-site-head {
+        flex-direction: column;
+    }
+
+    .atlas-website-preview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .atlas-website-preview-toolbar,
+    .atlas-website-editor-footer,
+    .atlas-public-site-header,
+    .atlas-public-site-hero,
+    .atlas-public-site-cta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .atlas-public-site-nav {
+        justify-content: flex-start;
+    }
+
+    .atlas-public-site-hero-panel {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .atlas-public-site-grid,
+    .atlas-public-site-faq {
+        grid-template-columns: 1fr;
+    }
+}
+
 .atlas-instagram-phone {
     width: 100%;
     max-width: 380px;
@@ -1755,6 +2303,390 @@ table th {
     color: var(--atlas-muted);
 }
 
+.atlas-workflow-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.atlas-workflow-step {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--atlas-muted);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+.atlas-workflow-step-active {
+    background: var(--atlas-button-bg);
+    color: var(--atlas-button-text);
+    border-color: rgba(23, 23, 23, 0.08);
+}
+
+.atlas-website-template-selected {
+    border-color: rgba(23, 23, 23, 0.14) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 18px 44px rgba(31, 27, 18, 0.10);
+}
+
+.atlas-website-section-heading,
+.atlas-website-existing-site-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.atlas-website-existing-site-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.atlas-website-field-group {
+    margin-bottom: 18px;
+}
+
+.atlas-website-field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.atlas-website-field-head h5 {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.atlas-inline-suffix-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.atlas-inline-suffix-field input {
+    margin-bottom: 0;
+}
+
+.atlas-inline-suffix-field span {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 14px;
+    background: rgba(247, 246, 242, 0.96);
+    border: 1px solid var(--atlas-line);
+    color: var(--atlas-muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.atlas-website-company-context-box {
+    border: 1px solid rgba(23, 23, 23, 0.06);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(249, 247, 241, 0.94));
+}
+
+.atlas-website-build-progress .atlas-website-progress-stage {
+    color: var(--atlas-muted);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+
+.atlas-website-calendar-settings {
+    border: 1px solid var(--atlas-line);
+    border-radius: 20px;
+    padding: 18px;
+    background: rgba(247, 246, 242, 0.6);
+    margin-bottom: 18px;
+}
+
+.atlas-website-schedule-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.atlas-website-schedule-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 1.2fr) 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.atlas-website-schedule-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--atlas-text);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.atlas-public-site-card-note {
+    margin-top: 12px;
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.atlas-booking-helper-copy {
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.atlas-booking-slot-feedback {
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.atlas-booking-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.atlas-booking-slot-button {
+    appearance: none;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--atlas-text);
+    border-radius: 999px;
+    min-height: 42px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.atlas-booking-slot-button:hover,
+.atlas-booking-slot-button-active {
+    background: var(--atlas-button-bg);
+    border-color: rgba(23, 23, 23, 0.08);
+    color: var(--atlas-button-text);
+}
+
+.atlas-booking-calendar-list {
+    display: grid;
+    gap: 12px;
+}
+
+.atlas-booking-calendar-item {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--atlas-line);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.atlas-booking-calendar-date {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 64px;
+    border-radius: 16px;
+    background: var(--atlas-button-bg);
+    color: var(--atlas-button-text);
+}
+
+.atlas-booking-calendar-date strong {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.atlas-booking-calendar-date span {
+    font-size: 12px;
+    color: var(--atlas-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+}
+
+.atlas-booking-calendar-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.atlas-booking-calendar-copy strong {
+    font-size: 15px;
+}
+
+.atlas-booking-calendar-copy span,
+.atlas-booking-calendar-status {
+    color: var(--atlas-muted);
+    font-size: 13px;
+}
+
+.atlas-booking-month-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.atlas-booking-month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.atlas-booking-month-weekdays span {
+    color: var(--atlas-muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.atlas-booking-month-day {
+    min-height: 90px;
+    border: 1px solid var(--atlas-line);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.88);
+    padding: 12px;
+}
+
+.atlas-booking-month-day-muted {
+    opacity: 0.46;
+}
+
+.atlas-booking-month-day-blackout {
+    background: rgba(243, 239, 229, 0.92);
+}
+
+.atlas-booking-month-day-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.atlas-booking-month-day-top strong {
+    font-size: 14px;
+}
+
+.atlas-booking-month-day-top span {
+    min-width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--atlas-button-bg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--atlas-muted);
+}
+
+.atlas-booking-month-day small {
+    color: var(--atlas-muted);
+    line-height: 1.45;
+    display: block;
+}
+
+.atlas-booking-week-list {
+    display: grid;
+    gap: 12px;
+}
+
+.atlas-booking-week-day {
+    border: 1px solid var(--atlas-line);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.84);
+    padding: 14px;
+}
+
+.atlas-booking-week-day-blackout {
+    background: rgba(243, 239, 229, 0.92);
+}
+
+.atlas-booking-week-day-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.atlas-booking-week-day-head span,
+.atlas-booking-week-day small {
+    color: var(--atlas-muted);
+    font-size: 13px;
+}
+
+.atlas-booking-week-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border-top: 1px solid var(--atlas-line);
+}
+
+.atlas-booking-week-item:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.atlas-booking-blackout-list {
+    display: grid;
+    gap: 10px;
+}
+
+.atlas-booking-blackout-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--atlas-line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.atlas-booking-blackout-item div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.atlas-booking-blackout-item span {
+    color: var(--atlas-muted);
+    font-size: 13px;
+}
+
+.atlas-website-reschedule-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 @media (max-width: 1199px) {
     .dashboard-container {
         flex-direction: column;
@@ -1835,6 +2767,12 @@ table th {
     .messages-container-inner {
         grid-template-columns: 1fr;
     }
+
+    .atlas-website-schedule-row,
+    .atlas-booking-calendar-item,
+    .atlas-booking-month-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 767px) {
@@ -1903,5 +2841,25 @@ table th {
     .ud-hero-content {
         padding: 32px 24px;
         border-radius: 22px;
+    }
+
+    .atlas-workflow-stepper {
+        gap: 8px;
+    }
+
+    .atlas-website-section-heading,
+    .atlas-website-existing-site-head,
+    .atlas-website-field-head,
+    .atlas-inline-suffix-field {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .atlas-inline-suffix-field span {
+        justify-content: center;
+    }
+
+    .atlas-website-existing-site-actions {
+        width: 100%;
     }
 }

@@ -38,6 +38,7 @@ if(isset($_REQUEST['action'])){
     if ($_REQUEST['action'] == "saveEmailTemplate") { saveEmailTemplate(); }
     if ($_REQUEST['action'] == "testEmailTemplate") { testEmailTemplate(); }
     if ($_REQUEST['action'] == "editWithdrawal") { editWithdrawal(); }
+    if ($_REQUEST['action'] == "editWebsitePayout") { editWebsitePayout(); }
     if ($_REQUEST['action'] == "editAdvertise") { editAdvertise(); }
 
     if ($_REQUEST['action'] == "editAIDocument") { editAIDocument(); }
@@ -1718,6 +1719,26 @@ function editWithdrawal() {
     }
 
     die(json_encode($result));
+}
+
+function editWebsitePayout() {
+    if (!isset($_POST['id'], $_POST['status'])) {
+        die(json_encode([
+            'status' => 'error',
+            'message' => __('Unexpected error, please try again.')
+        ]));
+    }
+
+    list($success, $message) = website_builder_update_payout_status(
+        (int) validate_input($_POST['id']),
+        validate_input($_POST['status']),
+        validate_input($_POST['notes'])
+    );
+
+    die(json_encode([
+        'status' => $success ? 'success' : 'error',
+        'message' => $message,
+    ]));
 }
 
 function editAdvertise() {

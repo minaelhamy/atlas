@@ -37,6 +37,9 @@ $plan_settings = $current_user['plan']['settings']; ?>
                         <li class="<?php echo CURRENT_PAGE == 'global/company-intelligence' ? 'active' : ''; ?>"><a
                                     href="<?php url("COMPANY_INTELLIGENCE") ?>"><i
                                         class="icon-feather-activity"></i> <?php _e("Company Intelligence") ?></a></li>
+                        <li class="<?php echo CURRENT_PAGE == 'app/website-builder' || CURRENT_PAGE == 'app/website-editor' ? 'active' : ''; ?>"><a
+                                    href="<?php url("YOUR_WEBSITE") ?>"><i
+                                        class="icon-feather-monitor"></i> <?php _e("Your Website") ?></a></li>
                         <?php if ($config['enable_ai_images']) {
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                 <li class="<?php echo in_array(CURRENT_PAGE, ['app/ai-images', 'app/ai-images-campaign', 'app/ai-images-grid'], true) ? 'active' : ''; ?>"><a
