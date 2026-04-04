@@ -47,7 +47,7 @@ if (isset($current_user['id'])) {
         HtmlTemplate::display('website-builder', [
             'social_profile' => $social_profile,
             'company_intelligence' => $company_intelligence,
-            'templates' => $templates,
+            'website_templates' => $templates,
             'existing_site' => $existing_site,
             'profile_status' => $profile_status,
             'profile_ready' => $profile_ready,

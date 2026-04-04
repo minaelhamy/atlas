@@ -3,6 +3,7 @@ overall_header(__("Your Website"));
 $companyName = !empty($social_profile['company_name']) ? $social_profile['company_name'] : __('your business');
 $selectedTemplateKey = !empty($selected_template['key']) ? $selected_template['key'] : '';
 $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('service');
+$websiteTemplateItems = !empty($website_templates) && is_array($website_templates) ? $website_templates : [];
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
@@ -109,11 +110,11 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                         </div>
                     </div>
                     <div style="margin-top:18px;margin-bottom:8px;color:#8a8275;font-size:13px;">
-                        <?php echo sprintf(__('Templates loaded: %d'), count($templates)); ?>
+                        <?php echo sprintf(__('Templates loaded: %d'), count($websiteTemplateItems)); ?>
                     </div>
-                    <?php if (!empty($templates)) { ?>
+                    <?php if (!empty($websiteTemplateItems)) { ?>
                         <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px;margin-bottom:24px;">
-                            <?php foreach ($templates as $template) { ?>
+                            <?php foreach ($websiteTemplateItems as $template) { ?>
                                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 20px;border:1px solid rgba(54,45,30,0.08);border-radius:22px;background:#fbf8f2;">
                                     <div style="min-width:0;">
                                         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
@@ -137,7 +138,7 @@ $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('serv
                             <?php } ?>
                         </div>
                         <div class="margin-top-20" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:stretch;">
-                            <?php foreach ($templates as $template) { ?>
+                            <?php foreach ($websiteTemplateItems as $template) { ?>
                                 <div>
                                     <a href="<?php echo $link['YOUR_WEBSITE']; ?>?template=<?php _esc($template['key']); ?>" style="display:block;height:100%;text-decoration:none;color:#1d1d1f;background:#fbf8f2;border:1px solid rgba(54,45,30,0.08);border-radius:28px;overflow:hidden;box-shadow:<?php echo $selectedTemplateKey === $template['key'] ? '0 18px 44px rgba(31,27,18,0.10)' : 'none'; ?>;">
                                         <div style="padding:26px;">
