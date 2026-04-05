@@ -1,5 +1,8 @@
 <?php
 overall_header(__("Website Dashboard"));
+$websiteEditorUrl = $config['site_url'] . 'your-website/editor/' . $site['id'];
+$websitePublicUrl = $config['site_url'] . 'site/' . $site['slug'];
+$websiteDashboardBaseUrl = $config['site_url'] . 'your-website/dashboard/' . $site['id'];
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
@@ -21,8 +24,8 @@ overall_header(__("Website Dashboard"));
                 <h2><?php _esc($site['site_name']) ?></h2>
                 <p><?php _e("Track website-originated orders, bookings, and earnings as Atlas starts powering the transactional layer for this site."); ?></p>
                 <div class="atlas-workflow-actions margin-top-20">
-                    <a href="<?php echo $link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id']; ?>" class="button"><?php _e("Open editor") ?></a>
-                    <a href="<?php echo $link['YOUR_WEBSITE_PUBLIC'] . '/' . $site['slug']; ?>" target="_blank" class="button"><?php _e("Open public site") ?></a>
+                    <a href="<?php echo $websiteEditorUrl; ?>" class="button"><?php _e("Open editor") ?></a>
+                    <a href="<?php echo $websitePublicUrl; ?>" target="_blank" class="button"><?php _e("Open public site") ?></a>
                 </div>
             </div>
 
@@ -109,9 +112,9 @@ overall_header(__("Website Dashboard"));
                         </div>
                         <div class="content with-padding">
                             <div class="atlas-booking-month-toolbar margin-bottom-15">
-                                <a href="<?php echo $link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'] . '?month=' . $booking_calendar['prev_month']; ?>" class="button gray"><?php _e("Previous") ?></a>
+                                <a href="<?php echo $websiteDashboardBaseUrl . '?month=' . $booking_calendar['prev_month']; ?>" class="button gray"><?php _e("Previous") ?></a>
                                 <strong><?php _esc($booking_calendar['label']) ?></strong>
-                                <a href="<?php echo $link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'] . '?month=' . $booking_calendar['next_month']; ?>" class="button gray"><?php _e("Next") ?></a>
+                                <a href="<?php echo $websiteDashboardBaseUrl . '?month=' . $booking_calendar['next_month']; ?>" class="button gray"><?php _e("Next") ?></a>
                             </div>
                             <div class="atlas-booking-month-grid atlas-booking-month-weekdays">
                                 <span><?php _e("Mon") ?></span>

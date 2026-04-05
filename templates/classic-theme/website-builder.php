@@ -4,6 +4,8 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
 $selectedTemplateKey = !empty($selected_template['key']) ? $selected_template['key'] : '';
 $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('service');
 $websiteTemplateItems = !empty($website_templates) && is_array($website_templates) ? $website_templates : [];
+$websiteEditorBaseUrl = $config['site_url'] . 'your-website/editor';
+$websiteDashboardBaseUrl = $config['site_url'] . 'your-website/dashboard';
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
@@ -77,8 +79,8 @@ $websiteTemplateItems = !empty($website_templates) && is_array($website_template
                                 <p class="margin-bottom-0"><?php echo sprintf(__('Template: %s. Site type: %s. Status: %s.'), _esc($existing_site['template']['title'], 0), _esc(ucfirst($existing_site['site_type']), 0), _esc(ucfirst($existing_site['status']), 0)); ?></p>
                             </div>
                             <div class="atlas-website-existing-site-actions">
-                                <a href="<?php echo $link['YOUR_WEBSITE_EDITOR'] . '/' . $existing_site['id']; ?>" class="button ripple-effect"><?php _e("Open editor") ?></a>
-                                <a href="<?php echo $link['YOUR_WEBSITE_DASHBOARD'] . '/' . $existing_site['id']; ?>" class="button gray"><?php _e("Open dashboard") ?></a>
+                                <a href="<?php echo $websiteEditorBaseUrl . '/' . $existing_site['id']; ?>" class="button ripple-effect"><?php _e("Open editor") ?></a>
+                                <a href="<?php echo $websiteDashboardBaseUrl . '/' . $existing_site['id']; ?>" class="button gray"><?php _e("Open dashboard") ?></a>
                             </div>
                         </div>
                         <div class="atlas-website-existing-site-meta">

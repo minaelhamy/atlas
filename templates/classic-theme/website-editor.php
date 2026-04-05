@@ -13,7 +13,10 @@ $hero = $selectedPageKey === 'home' ? (!empty($selectedPageContent['hero']) ? $s
 $offerings = $selectedPageKey === 'home' && !empty($selectedPageContent['offerings']) ? $selectedPageContent['offerings'] : $offerings;
 $faq = $selectedPageKey === 'home' && !empty($selectedPageContent['faq']) ? $selectedPageContent['faq'] : $faq;
 $proof = $selectedPageKey === 'home' && !empty($selectedPageContent['proof']) ? $selectedPageContent['proof'] : (!empty($homePage['content']['proof']) ? $homePage['content']['proof'] : []);
-$previewUrl = $link['YOUR_WEBSITE_PUBLIC'] . '/' . $site['slug'];
+$previewUrl = $config['site_url'] . 'site/' . $site['slug'];
+$websiteBuilderUrl = $config['site_url'] . 'your-website';
+$websiteDashboardUrl = $config['site_url'] . 'your-website/dashboard/' . $site['id'];
+$websiteEditorBaseUrl = $config['site_url'] . 'your-website/editor/' . $site['id'];
 $weekdayLabels = function_exists('website_builder_weekday_labels') ? website_builder_weekday_labels() : [];
 $defaultServiceSchedule = function_exists('website_builder_default_service_schedule') ? website_builder_default_service_schedule() : [];
 ?>
@@ -40,8 +43,8 @@ $defaultServiceSchedule = function_exists('website_builder_default_service_sched
                 <p><?php echo sprintf(__('This draft uses the %s template and is shaped by Company Intelligence, your brand colors, and your business positioning.'), _esc($template['title'], 0)); ?></p>
                 <div class="atlas-workflow-actions margin-top-20">
                     <a href="<?php echo $previewUrl; ?>" target="_blank" class="button"><?php _e("Open public preview") ?></a>
-                    <a href="<?php echo $link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id']; ?>" class="button gray"><?php _e("Open dashboard") ?></a>
-                    <a href="<?php url("YOUR_WEBSITE") ?>" class="button button-sliding-icon ripple-effect"><?php _e("Back to templates") ?><i class="icon-material-outline-arrow-forward"></i></a>
+                    <a href="<?php echo $websiteDashboardUrl; ?>" class="button gray"><?php _e("Open dashboard") ?></a>
+                    <a href="<?php echo $websiteBuilderUrl; ?>" class="button button-sliding-icon ripple-effect"><?php _e("Back to templates") ?><i class="icon-material-outline-arrow-forward"></i></a>
                 </div>
             </div>
 
@@ -126,7 +129,7 @@ $defaultServiceSchedule = function_exists('website_builder_default_service_sched
                         <div class="content with-padding">
                             <div class="atlas-dashboard-quick-list margin-bottom-24">
                                 <?php foreach ($pages as $page) { ?>
-                                    <a href="<?php echo $link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'] . '?page=' . $page['page_key']; ?>" class="atlas-dashboard-quick-item <?php echo $page['page_key'] === $selectedPageKey ? 'atlas-dashboard-quick-item-active' : ''; ?>">
+                                    <a href="<?php echo $websiteEditorBaseUrl . '?page=' . $page['page_key']; ?>" class="atlas-dashboard-quick-item <?php echo $page['page_key'] === $selectedPageKey ? 'atlas-dashboard-quick-item-active' : ''; ?>">
                                         <span class="atlas-dashboard-quick-avatar"><i class="icon-feather-file-text"></i></span>
                                         <span class="atlas-dashboard-quick-copy">
                                             <strong><?php _esc($page['title']) ?></strong>
