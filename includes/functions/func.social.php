@@ -1044,6 +1044,102 @@ function social_media_extract_profile_from_website($url, $existingProfile = [])
     }));
 }
 
+function social_media_generate_profile_field_suggestion($user_id, $field, $profile = [])
+{
+    $profile = array_merge(social_media_get_profile($user_id), is_array($profile) ? $profile : []);
+    $snapshot = !empty($profile['website_snapshot']) && is_array($profile['website_snapshot']) ? $profile['website_snapshot'] : [];
+    $intelligence = social_media_get_company_intelligence($user_id);
+
+    $fallbacks = [
+        'company_description' => !empty($snapshot['description']) ? $snapshot['description'] : (!empty($profile['company_description']) ? $profile['company_description'] : ''),
+        'ideal_customer_profile' => !empty($profile['ideal_customer_profile']) ? $profile['ideal_customer_profile'] : (!empty($profile['target_audience']) ? $profile['target_audience'] : ''),
+        'top_problems_solved' => !empty($profile['top_problems_solved']) ? array_values($profile['top_problems_solved']) : array_slice((array) (!empty($snapshot['summary_points']) ? $snapshot['summary_points'] : []), 0, 4),
+        'unique_selling_points' => !empty($profile['unique_selling_points']) ? array_values($profile['unique_selling_points']) : array_slice((array) (!empty($snapshot['headings']) ? $snapshot['headings'] : []), 0, 4),
+        'brand_colors' => !empty($profile['brand_colors']) ? array_values($profile['brand_colors']) : ['#111111', '#F5F3EE', '#D6D0C4'],
+        'visual_mood' => !empty($profile['visual_mood']) ? array_values($profile['visual_mood']) : ['Warm & minimal', 'Documentary grid'],
+        'tone_attributes' => !empty($profile['tone_attributes']) ? array_values($profile['tone_attributes']) : ['Professional', 'Grounded / real'],
+        'reference_brands' => !empty($profile['reference_brands']) ? array_values($profile['reference_brands']) : [],
+        'competitors' => !empty($profile['competitors']) ? array_values($profile['competitors']) : [],
+    ];
+
+    if (trim((string) get_api_key()) === '') {
+        return isset($fallbacks[$field]) ? $fallbacks[$field] : null;
+    }
+
+    $allowed = [
+        'company_description' => ['type' => 'text'],
+        'ideal_customer_profile' => ['type' => 'text'],
+        'top_problems_solved' => ['type' => 'list'],
+        'unique_selling_points' => ['type' => 'list'],
+        'brand_colors' => ['type' => 'colors'],
+        'visual_mood' => ['type' => 'list'],
+        'tone_attributes' => ['type' => 'list'],
+        'reference_brands' => ['type' => 'list'],
+        'competitors' => ['type' => 'list'],
+    ];
+
+    if (empty($allowed[$field])) {
+        return isset($fallbacks[$field]) ? $fallbacks[$field] : null;
+    }
+
+    require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/OpenAi.php';
+    require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
+
+    $models = social_media_get_chat_model_candidates();
+    $model = !empty($models[0]) ? $models[0] : get_default_openai_chat_model();
+    $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
+
+    $instructions = [
+        'company_description' => 'Write a concise 2-4 sentence company description. It should clearly say what the company does, who it helps, and what makes it credible.',
+        'ideal_customer_profile' => 'Write a specific ICP paragraph. Include audience type, stage, pain, goals, and useful qualifiers like channel or business size if relevant.',
+        'top_problems_solved' => 'Return 4 short problem statements as an array. Each item should be specific and phrased in customer language.',
+        'unique_selling_points' => 'Return 4 short USP statements as an array. Make them concrete, credible, and differentiated.',
+        'brand_colors' => 'Return 3 to 5 hex colors as an array, chosen to match the brand, website, and company category.',
+        'visual_mood' => 'Return 2 to 4 short visual mood labels as an array. Use labels like "Warm & minimal", "Documentary grid", "Soft lifestyle", or similarly concise directions.',
+        'tone_attributes' => 'Return 3 to 5 tone attributes as an array. Use short labels like "Bold & direct", "Educational", "Grounded / real".',
+        'reference_brands' => 'Return 2 to 4 brand references as an array. Prefer well-known brand websites or social handles whose communication style is relevant.',
+        'competitors' => 'Return 2 to 4 competitor websites as an array if they are inferable from the website, industry, and positioning. Only include realistic competitors.',
+    ];
+
+    $payload = [
+        'profile' => $profile,
+        'website_snapshot' => $snapshot,
+        'company_intelligence' => $intelligence,
+        'field' => $field,
+        'instruction' => $instructions[$field],
+    ];
+
+    $response = $openAi->chat([
+        'model' => $model,
+        'messages' => [
+            ['role' => 'system', 'content' => 'You help fill business onboarding forms. Return JSON only.'],
+            ['role' => 'user', 'content' => "Fill the requested Company Intelligence field.\nReturn JSON with one key named value.\nPayload:\n" . json_encode($payload)],
+        ],
+        'temperature' => 0.5,
+        'response_format' => ['type' => 'json_object'],
+        'max_tokens' => 700,
+    ]);
+
+    $decoded = json_decode($response, true);
+    if (empty($decoded['choices'][0]['message']['content'])) {
+        return isset($fallbacks[$field]) ? $fallbacks[$field] : null;
+    }
+
+    $json = social_media_extract_json($decoded['choices'][0]['message']['content']);
+    if (!is_array($json) || !array_key_exists('value', $json)) {
+        return isset($fallbacks[$field]) ? $fallbacks[$field] : null;
+    }
+
+    $value = $json['value'];
+    if ($allowed[$field]['type'] === 'list') {
+        return social_media_normalize_list($value);
+    }
+    if ($allowed[$field]['type'] === 'colors') {
+        return social_media_normalize_color_list($value);
+    }
+    return is_string($value) ? trim($value) : (isset($fallbacks[$field]) ? $fallbacks[$field] : null);
+}
+
 function social_media_generate_intelligence_via_openai($profile, $companySite, $competitors, $historyContext = '')
 {
     if (trim((string) get_api_key()) === '') {

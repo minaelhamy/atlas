@@ -80,6 +80,12 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "refresh_company_intelligence") {
         refresh_company_intelligence();
     }
+    if ($_GET['action'] == "generate_company_intelligence_field") {
+        generate_company_intelligence_field();
+    }
+    if ($_GET['action'] == "save_company_intelligence_draft") {
+        save_company_intelligence_draft();
+    }
     if ($_GET['action'] == "generate_website_setup_field") {
         generate_website_setup_field();
     }
@@ -275,6 +281,161 @@ function extract_company_profile()
     $result['message'] = __('Website extracted successfully.');
     $result['profile'] = $profile;
     die(json_encode($result));
+}
+
+function generate_company_intelligence_field()
+{
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    $field = !empty($_POST['field']) ? validate_input($_POST['field']) : '';
+    if ($field === '') {
+        $result['error'] = __('Please choose a field first.');
+        die(json_encode($result));
+    }
+
+    $profile = social_media_get_profile($_SESSION['user']['id']);
+    $context = [];
+    foreach ([
+        'company_name',
+        'company_website',
+        'company_industry',
+        'company_description',
+        'ideal_customer_profile',
+        'target_audience',
+        'differentiators',
+        'brand_voice',
+        'website_snapshot_json',
+        'website_extracted_at',
+    ] as $key) {
+        if (isset($_POST[$key])) {
+            $context[$key] = $_POST[$key];
+        }
+    }
+
+    if (!empty($_POST['website_snapshot_json'])) {
+        $snapshot = json_decode($_POST['website_snapshot_json'], true);
+        if (is_array($snapshot)) {
+            $context['website_snapshot'] = $snapshot;
+        }
+    }
+
+    foreach ([
+        'top_problems_solved',
+        'unique_selling_points',
+        'brand_colors',
+        'visual_mood',
+        'tone_attributes',
+        'reference_brands',
+        'competitors',
+    ] as $listKey) {
+        if (isset($_POST[$listKey])) {
+            $context[$listKey] = $_POST[$listKey];
+        }
+    }
+
+    $suggestion = social_media_generate_profile_field_suggestion($_SESSION['user']['id'], $field, array_merge($profile, $context));
+    if ($suggestion === null) {
+        $result['error'] = __('Atlas could not generate that field right now.');
+        die(json_encode($result));
+    }
+
+    $result['success'] = true;
+    $result['field'] = $field;
+    $result['value'] = $suggestion;
+    die(json_encode($result));
+}
+
+function save_company_intelligence_draft()
+{
+    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
+
+    if (!checkloggedin()) {
+        die(json_encode($result));
+    }
+
+    $step = !empty($_POST['step']) ? max(1, min(4, (int) $_POST['step'])) : 1;
+    $existingProfile = social_media_get_profile($_SESSION['user']['id']);
+    $profileData = company_intelligence_collect_profile_payload($existingProfile);
+
+    if (!empty($_FILES['company_logo']['name'])) {
+        $profileData['company_logo'] = social_media_upload_company_logo($_SESSION['user']['id'], $existingProfile['company_logo']);
+    } else {
+        $profileData['company_logo'] = $existingProfile['company_logo'];
+    }
+
+    $profileData['moodboard_images'] = social_media_upload_moodboard_images($_SESSION['user']['id'], $profileData['moodboard_images']);
+    $savedProfile = social_media_save_profile($_SESSION['user']['id'], $profileData);
+
+    $result['success'] = true;
+    $result['message'] = __('Step saved successfully.');
+    $result['step'] = $step;
+    $result['saved_at'] = date('Y-m-d H:i:s');
+    $result['profile'] = [
+        'company_name' => !empty($savedProfile['company_name']) ? $savedProfile['company_name'] : '',
+        'company_website' => !empty($savedProfile['company_website']) ? $savedProfile['company_website'] : '',
+        'company_industry' => !empty($savedProfile['company_industry']) ? $savedProfile['company_industry'] : '',
+        'company_description' => !empty($savedProfile['company_description']) ? $savedProfile['company_description'] : '',
+        'ideal_customer_profile' => !empty($savedProfile['ideal_customer_profile']) ? $savedProfile['ideal_customer_profile'] : '',
+        'top_problems_solved' => !empty($savedProfile['top_problems_solved']) ? $savedProfile['top_problems_solved'] : [],
+        'unique_selling_points' => !empty($savedProfile['unique_selling_points']) ? $savedProfile['unique_selling_points'] : [],
+        'brand_colors' => !empty($savedProfile['brand_colors']) ? $savedProfile['brand_colors'] : [],
+        'visual_mood' => !empty($savedProfile['visual_mood']) ? $savedProfile['visual_mood'] : [],
+        'tone_attributes' => !empty($savedProfile['tone_attributes']) ? $savedProfile['tone_attributes'] : [],
+        'reference_brands' => !empty($savedProfile['reference_brands']) ? $savedProfile['reference_brands'] : [],
+        'competitors' => !empty($savedProfile['competitors']) ? $savedProfile['competitors'] : [],
+        'moodboard_images' => !empty($savedProfile['moodboard_images']) ? $savedProfile['moodboard_images'] : [],
+        'company_logo' => !empty($savedProfile['company_logo']) ? $savedProfile['company_logo'] : '',
+    ];
+    die(json_encode($result));
+}
+
+function company_intelligence_collect_profile_payload($existingProfile)
+{
+    $profileData = [
+        'founder_name' => isset($_POST['founder_name']) ? validate_input($_POST['founder_name']) : $existingProfile['founder_name'],
+        'founder_title' => isset($_POST['founder_title']) ? validate_input($_POST['founder_title']) : $existingProfile['founder_title'],
+        'company_name' => isset($_POST['company_name']) ? validate_input($_POST['company_name']) : $existingProfile['company_name'],
+        'company_website' => isset($_POST['company_website']) ? validate_input($_POST['company_website']) : $existingProfile['company_website'],
+        'company_industry' => isset($_POST['company_industry']) ? validate_input($_POST['company_industry']) : $existingProfile['company_industry'],
+        'company_description' => isset($_POST['company_description']) ? validate_input($_POST['company_description']) : $existingProfile['company_description'],
+        'target_audience' => isset($_POST['target_audience']) ? validate_input($_POST['target_audience']) : $existingProfile['target_audience'],
+        'brand_voice' => isset($_POST['brand_voice']) ? validate_input($_POST['brand_voice']) : $existingProfile['brand_voice'],
+        'content_goals' => isset($_POST['content_goals']) ? validate_input($_POST['content_goals']) : $existingProfile['content_goals'],
+        'key_products' => isset($_POST['key_products']) ? validate_input($_POST['key_products']) : $existingProfile['key_products'],
+        'differentiators' => isset($_POST['differentiators']) ? validate_input($_POST['differentiators']) : $existingProfile['differentiators'],
+        'ideal_customer_profile' => isset($_POST['ideal_customer_profile']) ? validate_input($_POST['ideal_customer_profile']) : $existingProfile['ideal_customer_profile'],
+        'top_problems_solved' => isset($_POST['top_problems_solved']) ? social_media_normalize_list($_POST['top_problems_solved']) : $existingProfile['top_problems_solved'],
+        'unique_selling_points' => isset($_POST['unique_selling_points']) ? social_media_normalize_list($_POST['unique_selling_points']) : $existingProfile['unique_selling_points'],
+        'instagram_handle' => isset($_POST['instagram_handle']) ? validate_input($_POST['instagram_handle']) : $existingProfile['instagram_handle'],
+        'brand_colors' => isset($_POST['brand_colors']) ? social_media_normalize_color_list($_POST['brand_colors']) : $existingProfile['brand_colors'],
+        'visual_mood' => isset($_POST['visual_mood']) ? social_media_normalize_list($_POST['visual_mood']) : $existingProfile['visual_mood'],
+        'tone_attributes' => isset($_POST['tone_attributes']) ? social_media_normalize_list($_POST['tone_attributes']) : $existingProfile['tone_attributes'],
+        'reference_brands' => isset($_POST['reference_brands']) ? social_media_normalize_list($_POST['reference_brands']) : $existingProfile['reference_brands'],
+        'competitors' => isset($_POST['competitors']) ? social_media_normalize_list($_POST['competitors']) : $existingProfile['competitors'],
+        'competitor_notes' => isset($_POST['competitor_notes']) ? validate_input($_POST['competitor_notes']) : $existingProfile['competitor_notes'],
+        'website_snapshot' => $existingProfile['website_snapshot'],
+        'website_extracted_at' => $existingProfile['website_extracted_at'],
+        'moodboard_images' => $existingProfile['moodboard_images'],
+    ];
+
+    if (!empty($_POST['website_snapshot_json'])) {
+        $snapshot = json_decode($_POST['website_snapshot_json'], true);
+        if (is_array($snapshot)) {
+            $profileData['website_snapshot'] = $snapshot;
+        }
+    }
+    if (!empty($_POST['website_extracted_at'])) {
+        $profileData['website_extracted_at'] = validate_input($_POST['website_extracted_at']);
+    }
+    if (!empty($_POST['existing_moodboard_images'])) {
+        $profileData['moodboard_images'] = social_media_normalize_list($_POST['existing_moodboard_images']);
+    }
+
+    return $profileData;
 }
 
 function generate_website_setup_field()
