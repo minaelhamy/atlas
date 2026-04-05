@@ -584,7 +584,7 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
 <script>
 $(function () {
     var currentStep = 1;
-    var socialMediaAutomationUrl = '<?php echo addslashes($link['AI_IMAGES']); ?>';
+    var socialMediaAutomationUrl = '<?php echo addslashes($config['site_url'] . 'ai-images'); ?>';
     var stepMeta = {
         1: {title: 'Tell us about your business', sub: 'This takes 2 minutes. Your answers power everything Atlas generates.'},
         2: {title: "What's your visual direction?", sub: 'We pulled your brand colors from your website. Confirm them, add your logo, then set your tone and references.'},
