@@ -13,110 +13,115 @@ $allToneOptions = ['Bold & direct', 'Educational', 'Playful', 'Inspirational', '
 $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid', 'Soft lifestyle', 'Bold & direct'];
 ?>
 <style>
-.ci-flow{max-width:980px;margin:0 auto}
-.ci-shell{background:#fff;border:1px solid #ebe6dc;border-radius:28px;box-shadow:0 18px 44px rgba(31,27,18,.05);overflow:hidden}
-.ci-header{padding:24px 28px 20px;border-bottom:1px solid #f0ece4}
-.ci-kicker{font-size:10px;font-weight:700;letter-spacing:.12em;color:#b6ada0;text-transform:uppercase;margin-bottom:7px}
-.ci-title{font-size:27px;line-height:1.04;letter-spacing:-.04em;font-weight:700;color:#1e1d1a;margin-bottom:7px}
-.ci-sub{font-size:13px;line-height:1.55;color:#8d8477;max-width:720px}
-.ci-stepbar{display:flex;align-items:center;gap:12px;margin-top:20px;flex-wrap:wrap}
-.ci-step{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;color:#b7aea1}
-.ci-step-circle{width:26px;height:26px;border-radius:50%;border:1px solid #e7e1d7;display:flex;align-items:center;justify-content:center;background:#fff;color:#b7aea1;font-size:10px;font-weight:700}
-.ci-step-badge{display:none;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#34a853;background:#edf7ef;border:1px solid #d4e7d7;border-radius:999px;padding:4px 7px;line-height:1}
-.ci-step.active{color:#1e1d1a}
-.ci-step.active .ci-step-circle{background:#1e1d1a;border-color:#1e1d1a;color:#fff}
-.ci-step.done{color:#34a853}
-.ci-step.done .ci-step-circle{background:#34a853;border-color:#34a853;color:#fff}
-.ci-step.done .ci-step-badge{display:inline-flex}
-.ci-step-line{flex:1 1 48px;min-width:28px;height:1px;background:#ece7df}
-.ci-body{padding:24px 28px 26px}
+.ci-wrap{background:#f2f0eb;padding:28px 20px 40px;min-height:100vh}
+.ci-shell{background:#fff;border:.5px solid #e0ddd6;border-radius:16px;max-width:780px;margin:0 auto;overflow:hidden}
+.ci-hdr{padding:24px 28px 20px;border-bottom:.5px solid #eee}
+.ci-hdr-title{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:4px;letter-spacing:-.01em}
+.ci-hdr-sub{font-size:13px;color:#888;line-height:1.5;margin-bottom:18px}
+.ci-steps{display:flex;align-items:center}
+.ci-step{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:#bbb;flex:1}
+.ci-step.active{color:#1a1a1a}
+.ci-step.done{color:#2FAF49}
+.ci-step-num{width:24px;height:24px;border-radius:50%;border:1.5px solid #e0ddd6;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;background:#fff;flex-shrink:0;color:#bbb}
+.ci-step.active .ci-step-num{border-color:#1a1a1a;background:#1a1a1a;color:#fff}
+.ci-step.done .ci-step-num{border-color:#2FAF49;background:#2FAF49;color:#fff}
+.ci-step-connector{flex:1;height:1px;background:#e0ddd6;margin:0 10px;max-width:60px}
+.ci-body{padding:24px 28px}
 .ci-panel{display:none}
 .ci-panel.active{display:block}
-.ci-card{background:#fff;border:1px solid #eee8de;border-radius:20px;padding:18px 18px 16px;margin-bottom:16px}
-.ci-card-muted{background:#fbfaf7}
-.ci-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}
-.ci-card-title{font-size:11px;font-weight:700;letter-spacing:.12em;color:#b3ab9f;text-transform:uppercase}
-.ci-card-title-main{font-size:21px;letter-spacing:-.03em;line-height:1.08;color:#201f1a;font-weight:700;margin:2px 0 5px}
-.ci-card-copy{font-size:13px;line-height:1.6;color:#8d8477;max-width:720px}
-.ci-generate-btn,.ci-ai-btn,.ci-ghost-btn,.ci-next-btn,.ci-back-btn{font-family:inherit;border-radius:12px;cursor:pointer;transition:.18s ease}
-.ci-generate-btn,.ci-ai-btn,.ci-ghost-btn{height:36px;padding:0 14px;font-size:11.5px;font-weight:700;letter-spacing:.02em}
-.ci-ai-btn{border:1px solid #e7d7ec;background:linear-gradient(180deg,#fbf6fd 0%,#f3e8f8 100%);color:#8f3b8e;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
-.ci-ai-btn:hover{background:linear-gradient(180deg,#faf1fc 0%,#f0e2f6 100%)}
-.ci-generate-btn{border:1px solid #e8e1d8;background:#fff;color:#534d43}
-.ci-generate-btn:hover,.ci-ghost-btn:hover{background:#f8f5ee}
-.ci-ghost-btn{border:1px solid #e8e1d8;background:#fff;color:#534d43}
-.ci-note{display:flex;align-items:center;gap:8px;font-size:10px;color:#b3ab9f;margin-top:8px}
-.ci-note:before{content:'';width:6px;height:6px;border-radius:50%;background:#ddd2c8}
-.ci-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.ci-field{margin-bottom:15px}
-.ci-field-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:7px}
-.ci-label{font-size:11.5px;font-weight:700;color:#57524a}
-.ci-label small{font-size:9px;color:#b4ac9e;font-weight:700;margin-left:6px;text-transform:uppercase;letter-spacing:.08em}
-.ci-help{font-size:10.5px;line-height:1.42;color:#b0a79a;margin-bottom:7px}
-.ci-input,.ci-textarea{width:100%;font-family:inherit;border:1px solid #e8e1d8;border-radius:14px;background:#fff;color:#201f1a;outline:none;transition:border-color .18s ease,box-shadow .18s ease}
-.ci-input{height:44px;padding:0 14px;font-size:13px}
-.ci-textarea{padding:12px 14px;resize:vertical;font-size:13px;line-height:1.55}
-.ci-input:focus,.ci-textarea:focus{border-color:#d2c9bc;box-shadow:0 0 0 3px rgba(219,211,198,.18)}
-.ci-input::placeholder,.ci-textarea::placeholder{color:#c5bdae}
-.ci-ai-zone{border:1px dashed #d9b7d7;background:#fdf8fd;border-radius:18px;padding:16px}
-.ci-ai-badge{display:inline-flex;align-items:center;gap:6px;background:#f6ebf6;border:1px solid #ead7ea;border-radius:999px;padding:5px 10px;color:#8d2f8d;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
-.ci-divider{display:flex;align-items:center;gap:10px;margin:18px 0}
-.ci-divider:before,.ci-divider:after{content:'';flex:1;height:1px;background:#f0ebe2}
-.ci-divider span{font-size:10px;font-weight:800;letter-spacing:.14em;color:#c2b8aa;text-transform:uppercase}
-.ci-tag-box{display:flex;flex-wrap:wrap;gap:8px;border:1px solid #e8e1d8;border-radius:14px;background:#fff;padding:10px 12px;min-height:52px;cursor:text}
-.ci-tag-chip{display:inline-flex;align-items:center;gap:7px;background:#eef6ef;border:1px solid #d4e7d7;border-radius:999px;padding:6px 10px;font-size:11px;color:#3f7251;line-height:1}
-.ci-tag-chip button{background:none;border:none;padding:0;cursor:pointer;font-size:14px;color:#90b29b}
-.ci-tag-input{flex:1;min-width:140px;border:none;outline:none;background:transparent;font-family:inherit;font-size:12px;color:#201f1a}
-.ci-hidden{display:none!important}
-.ci-color-card{background:#fbfaf7;border:1px solid #eee8de;border-radius:18px;padding:16px}
-.ci-swatches{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-.ci-swatch{display:flex;flex-direction:column;align-items:center;gap:5px}
-.ci-swatch-circle{width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.08)}
-.ci-swatch-label{font-size:9px;color:#aea495;font-weight:700;letter-spacing:.05em}
-.ci-choice-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.ci-choice{border:1px solid #ece5db;border-radius:16px;background:#fff;padding:13px 11px;min-height:88px;cursor:pointer;transition:.18s ease}
-.ci-choice strong{display:block;font-size:12px;color:#26231e;margin-bottom:5px}
-.ci-choice span{display:block;font-size:10.5px;line-height:1.45;color:#9b9286}
-.ci-choice.selected{border-color:#c984d5;box-shadow:0 0 0 2px rgba(201,132,213,.12);background:#fffafd}
+.ci-ai-zone{border:1.5px dashed #c8a8c4;border-radius:12px;padding:18px 20px;margin-bottom:22px;background:#fdf8fd}
+.ci-ai-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#871F7A;background:#f5eaf4;border:1px solid #e0d0de;border-radius:20px;padding:3px 10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.ci-ai-zone-title{font-size:13.5px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
+.ci-ai-zone-sub{font-size:12px;color:#888;line-height:1.5;margin-bottom:14px}
+.ci-ai-input-row{display:flex;gap:8px}
+.ci-ai-input{flex:1;height:42px;border:1px solid #e0ddd6;border-radius:9px;padding:0 14px;font-size:13px;font-family:inherit;color:#1a1a1a;outline:none;background:#fff}
+.ci-ai-input:focus{border-color:#871F7A}
+.ci-ai-input::placeholder{color:#bbb}
+.ci-btn-atlas{height:42px;padding:0 20px;background:#f5eaf4;color:#871F7A;border:1px solid #e0d0de;border-radius:9px;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap}
+.ci-btn-atlas:hover{background:#eddceb}
+.ci-ai-note{font-size:11px;color:#aaa;margin-top:8px;display:flex;align-items:center;gap:4px}
+.ci-divider-label{display:flex;align-items:center;gap:10px;margin:20px 0}
+.ci-divider-label::before,.ci-divider-label::after{content:'';flex:1;height:.5px;background:#e8e6e0}
+.ci-divider-label span{font-size:10.5px;color:#bbb;font-weight:600;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
+.ci-field-group{margin-bottom:20px}
+.ci-field-label{font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.ci-field-badge{font-size:10px;color:#bbb;background:#f4f2ee;border-radius:4px;padding:1px 6px;font-weight:500}
+.ci-field-hint{font-size:11.5px;color:#aaa;margin-bottom:8px;line-height:1.4}
+.ci-generate-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.ci-generate-row .ci-field-label,.ci-generate-row .ci-field-hint{margin-bottom:0}
+.ci-generate-copy{flex:1}
+.ci-generate-btn{height:34px;padding:0 14px;background:#f5eaf4;border:1px solid #e0d0de;border-radius:8px;font-size:11.5px;font-weight:600;color:#871F7A;font-family:inherit;cursor:pointer;white-space:nowrap}
+.ci-generate-btn:hover{background:#eddceb}
+.ci-textarea,.ci-input{width:100%;border:1px solid #e0ddd6;border-radius:9px;font-size:13px;font-family:inherit;color:#1a1a1a;background:#fff;outline:none;transition:border-color .15s}
+.ci-textarea{padding:11px 14px;resize:vertical;line-height:1.6}
+.ci-input{height:40px;padding:0 14px}
+.ci-textarea:focus,.ci-input:focus{border-color:#c8c4bc}
+.ci-textarea::placeholder,.ci-input::placeholder{color:#c8c8c8}
+.ci-tag-field{border:1px solid #e0ddd6;border-radius:9px;padding:8px 10px;background:#fff;min-height:44px;display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;cursor:text;transition:border-color .15s}
+.ci-tag-field:focus-within{border-color:#c8c4bc}
+.ci-tag{display:inline-flex;align-items:center;gap:5px;background:#edf5ee;border:.5px solid #c8e0cc;border-radius:6px;padding:4px 10px;font-size:12px;color:#2d6636}
+.ci-tag button{background:none;border:none;cursor:pointer;color:#a0c8a8;padding:0;font-size:14px;line-height:1}
+.ci-tag button:hover{color:#2d6636}
+.ci-tag-input{border:none;outline:none;font-size:12.5px;font-family:inherit;color:#1a1a1a;background:transparent;min-width:120px;flex:1}
+.ci-tag-input::placeholder{color:#c8c8c8}
+.ci-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ci-section-block{margin-bottom:32px}
+.ci-section-num{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ccc;margin-bottom:3px}
+.ci-section-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.ci-section-title{font-size:14px;font-weight:600;color:#1a1a1a;letter-spacing:-.01em}
+.ci-section-sub{font-size:12.5px;color:#888;line-height:1.5;margin-bottom:14px}
+.ci-opt-badge{font-size:10px;color:#aaa;background:#f4f2ee;border:.5px solid #e0ddd6;border-radius:4px;padding:1px 7px;font-weight:500;margin-left:6px;letter-spacing:.02em;vertical-align:middle}
+.ci-color-zone{background:#faf9f5;border:1px solid #e8e5de;border-radius:12px;padding:16px}
+.ci-swatches-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.ci-swatch-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;position:relative}
+.ci-swatch-circle{width:42px;height:42px;border-radius:50%;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.ci-swatch-item.selected .ci-swatch-circle{border-color:#1a1a1a;transform:scale(1.08)}
+.ci-swatch-hex{font-size:9.5px;color:#aaa;font-weight:500;letter-spacing:.04em}
+.ci-upload-area{border:1.5px dashed #e0ddd6;border-radius:10px;padding:28px 20px;text-align:center;background:#fafaf8}
+.ci-upload-sub{font-size:11.5px;color:#bbb;margin-top:6px}
 .ci-pill-row{display:flex;flex-wrap:wrap;gap:8px}
-.ci-pill{border:1px solid #e7dfd4;background:#fff;border-radius:999px;padding:7px 13px;font-size:11px;font-weight:600;color:#57524a;cursor:pointer}
-.ci-pill.selected{background:#1f1d1a;border-color:#1f1d1a;color:#fff}
-.ci-upload{border:1px dashed #e2dacd;background:#fcfbf8;border-radius:18px;padding:20px;text-align:center}
-.ci-upload small{display:block;color:#b4ab9f;font-size:10px;margin-top:4px}
+.ci-pill{font-size:12.5px;font-weight:500;padding:7px 16px;border:1.5px solid #e0ddd6;border-radius:20px;cursor:pointer;color:#666;background:#fff;font-family:inherit;transition:all .15s}
+.ci-pill:hover{border-color:#aaa;color:#333}
+.ci-pill.selected{border-color:#1a1a1a;background:#1a1a1a;color:#fff}
+.ci-brand-input-wrap{border:1px solid #e0ddd6;border-radius:9px;padding:0 14px;background:#fff;height:44px;display:flex;align-items:center;transition:border-color .15s}
+.ci-brand-input-wrap:focus-within{border-color:#c8c4bc}
+.ci-brand-input{border:none;outline:none;font-size:13px;font-family:inherit;color:#1a1a1a;background:transparent;width:100%}
+.ci-brand-input::placeholder{color:#c8c8c8}
 .ci-moodboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
-.ci-moodboard img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;border:1px solid #e9e3da}
-.ci-review-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#f6effd;border:1px solid #ddcdec;border-radius:18px;padding:14px 16px;margin-bottom:16px}
-.ci-review-strip strong{display:block;font-size:14px;color:#341737;margin-bottom:3px}
-.ci-review-strip span{display:block;font-size:11.5px;line-height:1.5;color:#886690}
-.ci-completion-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#eef8f0;border:1px solid #d6ead9;border-radius:18px;padding:13px 16px;margin-bottom:12px}
-.ci-completion-summary strong{display:block;font-size:13px;color:#2a6b3f;margin-bottom:3px}
-.ci-completion-summary span{display:block;font-size:11px;color:#5f8768;line-height:1.45}
-.ci-completion-pill{display:inline-flex;align-items:center;justify-content:center;min-width:106px;height:32px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid #d6ead9;font-size:11px;font-weight:800;color:#2a6b3f;letter-spacing:.02em}
-.ci-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.ci-review-card{border:1px solid #ece6dc;border-radius:18px;background:#fff;overflow:hidden}
-.ci-review-card.full{grid-column:1 / -1}
-.ci-review-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #f3eee7;background:#fcfbf8}
-.ci-review-head span{font-size:9px;font-weight:800;letter-spacing:.12em;color:#b4ab9f;text-transform:uppercase}
-.ci-review-body{padding:14px}
-.ci-review-text{font-size:12px;line-height:1.6;color:#5a554b}
-.ci-review-tags{display:flex;flex-wrap:wrap;gap:7px}
-.ci-review-tag{display:inline-flex;align-items:center;background:#f4f1eb;border:1px solid #e7dfd4;border-radius:999px;padding:6px 9px;font-size:11px;color:#5b554d}
-.ci-review-tag.green{background:#eef6ef;border-color:#d4e7d7;color:#3f7251}
-.ci-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 28px;border-top:1px solid #f0ece4;background:#fcfbf8}
-.ci-footer-note{font-size:10.5px;color:#b4aa9c;text-align:center;flex:1}
-.ci-save-state{display:block;margin-top:4px;font-size:10px;color:#9f9587}
-.ci-save-state.success{color:#3f7251}
-.ci-save-state.error{color:#a85454}
-.ci-saved-at{display:block;margin-top:4px;font-size:10px;color:#b8af9f}
-.ci-back-btn,.ci-next-btn{height:40px;padding:0 18px;font-size:12px;font-weight:700}
-.ci-back-btn{border:1px solid #e8e1d8;background:#fff;color:#625d54}
-.ci-next-btn{border:none;background:#1f1d1a;color:#fff}
-.ci-next-btn:hover{background:#33302b}
-.ci-compact-btn{padding:0 12px!important;height:30px!important;font-size:10.5px!important}
-.ci-spinner{opacity:.72;pointer-events:none}
+.ci-moodboard img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;border:1px solid #e8e5de}
+.ci-review-strip{background:#f5f0ff;border:1px solid #d8cced;border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.ci-review-strip-body{flex:1;min-width:0}
+.ci-review-strip-title{font-size:13.5px;font-weight:600;color:#2d0a2a;margin-bottom:2px;letter-spacing:-.01em}
+.ci-review-strip-sub{font-size:12px;color:#7a4a78;line-height:1.5}
+.ci-website-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;background:#faf9f5;border:1px solid #e8e5de;border-radius:10px}
+.ci-website-url{font-size:13px;font-weight:500;color:#3E93E8;flex:1}
+.ci-website-meta{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ci-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.ci-review-card{border:1px solid #e8e5de;border-radius:10px;overflow:hidden}
+.ci-review-card.full-width{grid-column:1/-1}
+.ci-review-head{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:#faf9f5;border-bottom:.5px solid #e8e5de}
+.ci-review-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#aaa}
+.ci-review-body{padding:12px 13px}
+.ci-review-text{font-size:12.5px;color:#444;line-height:1.6}
+.ci-review-tags{display:flex;flex-wrap:wrap;gap:5px}
+.ci-review-tag{font-size:11.5px;background:#f2f0eb;border:.5px solid #e0ddd6;border-radius:5px;padding:3px 9px;color:#555}
+.ci-review-tag.green{background:#edf5ee;border-color:#c8e0cc;color:#2d6636}
+.ci-color-swatches-preview{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ci-color-swatch{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ci-color-swatch-circle{width:32px;height:32px;border-radius:50%}
+.ci-color-swatch-hex{font-size:9px;color:#aaa;font-weight:500;letter-spacing:.03em}
+.ci-footer-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-top:.5px solid #eee;background:#fafaf8;gap:12px}
+.ci-btn-back{height:38px;padding:0 18px;background:transparent;color:#888;border:1px solid #e0ddd6;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer}
+.ci-btn-back:hover{background:#f0eee8}
+.ci-btn-next{height:38px;padding:0 22px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.ci-btn-next:hover{background:#333}
+.ci-footer-note{font-size:11.5px;color:#bbb;display:flex;flex-direction:column;gap:4px;text-align:center}
+.ci-save-state{font-size:11px;color:#2FAF49;font-weight:500}
+.ci-hidden{display:none!important}
+.ci-spinner{opacity:.7;pointer-events:none}
 @media (max-width: 991px){
-  .ci-grid,.ci-review-grid,.ci-choice-grid{grid-template-columns:1fr}
-  .ci-card-head,.ci-field-row,.ci-footer,.ci-review-strip{flex-direction:column;align-items:stretch}
+  .ci-grid-2,.ci-review-grid{grid-template-columns:1fr}
+  .ci-ai-input-row,.ci-footer-bar,.ci-section-title-row,.ci-review-strip{flex-direction:column;align-items:stretch}
   .ci-footer-note{text-align:left}
 }
 </style>
@@ -135,20 +140,17 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                 </nav>
             </div>
 
-            <div class="ci-flow">
+            <div class="ci-wrap">
                 <div class="ci-shell">
-                    <div class="ci-header">
-                        <div class="ci-kicker"><?php _e("Build your profile") ?></div>
-                        <div class="ci-title" id="ci-header-title"><?php _e("Tell us about your business") ?></div>
-                        <div class="ci-sub" id="ci-header-sub"><?php _e("Atlas uses this profile to shape your AI agents, social campaigns, Instagram grid, and website generation.") ?></div>
-                        <div class="ci-stepbar">
-                            <div class="ci-step active" data-ci-step="1"><div class="ci-step-circle">1</div><span><?php _e("Your website") ?></span><span class="ci-step-badge"><?php _e("Done") ?></span></div>
-                            <div class="ci-step-line"></div>
-                            <div class="ci-step" data-ci-step="2"><div class="ci-step-circle">2</div><span><?php _e("Business info") ?></span><span class="ci-step-badge"><?php _e("Done") ?></span></div>
-                            <div class="ci-step-line"></div>
-                            <div class="ci-step" data-ci-step="3"><div class="ci-step-circle">3</div><span><?php _e("Inspiration") ?></span><span class="ci-step-badge"><?php _e("Done") ?></span></div>
-                            <div class="ci-step-line"></div>
-                            <div class="ci-step" data-ci-step="4"><div class="ci-step-circle">4</div><span><?php _e("Review") ?></span><span class="ci-step-badge"><?php _e("Done") ?></span></div>
+                    <div class="ci-hdr">
+                        <div class="ci-hdr-title" id="ci-header-title"><?php _e("Tell us about your business") ?></div>
+                        <div class="ci-hdr-sub" id="ci-header-sub"><?php _e("This takes 2 minutes. Your answers power everything Atlas generates.") ?></div>
+                        <div class="ci-steps">
+                            <div class="ci-step active" data-ci-step="1"><div class="ci-step-num">1</div><span><?php _e("Business info") ?></span></div>
+                            <div class="ci-step-connector"></div>
+                            <div class="ci-step" data-ci-step="2"><div class="ci-step-num">2</div><span><?php _e("Brand guidelines") ?></span></div>
+                            <div class="ci-step-connector"></div>
+                            <div class="ci-step" data-ci-step="3"><div class="ci-step-num">3</div><span><?php _e("Review") ?></span></div>
                         </div>
                     </div>
 
@@ -159,330 +161,260 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
 
                         <div class="ci-body">
                             <div class="ci-panel active" data-panel="1">
-                                <div class="ci-card ci-ai-zone">
+                                <div class="ci-ai-zone">
                                     <div class="ci-ai-badge"><?php _e("AI Extract") ?></div>
-                                    <div class="ci-card-title-main"><?php _e("Let Atlas read your website and fill this in") ?></div>
-                                    <div class="ci-card-copy"><?php _e("Paste your URL and Atlas will extract your company summary, ideal customer, problems, and strategic context. You can edit everything after.") ?></div>
-                                    <div class="ci-grid" style="margin-top:14px;">
-                                        <div class="ci-field" style="margin-bottom:0;">
-                                            <input class="ci-input" type="text" name="company_website" id="company_website" value="<?php _esc($social_profile['company_website']) ?>" placeholder="https://yourwebsite.com">
-                                            <div class="ci-note"><?php _e("Your site is only used for extraction and profile building.") ?></div>
+                                    <div class="ci-ai-zone-title"><?php _e("Let Atlas read your website and fill this in") ?></div>
+                                    <div class="ci-ai-zone-sub"><?php _e("Paste your URL and Atlas will extract your ICP, problems, USPs, and company summary automatically. You can edit everything after.") ?></div>
+                                    <div class="ci-ai-input-row">
+                                        <input class="ci-ai-input" type="text" name="company_website" id="company_website" value="<?php _esc($social_profile['company_website']) ?>" placeholder="https://yourwebsite.com">
+                                        <button type="button" class="ci-btn-atlas atlas-extract-button"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <div class="ci-ai-note"><?php _e("Your site is only read for extraction and profile building."); ?></div>
+                                </div>
+
+                                <div class="ci-divider-label"><span><?php _e("or fill in manually") ?></span></div>
+
+                                <div class="ci-field-group">
+                                    <div class="ci-generate-row">
+                                        <div class="ci-generate-copy">
+                                            <div class="ci-field-label"><?php _e("Company description") ?></div>
+                                            <div class="ci-field-hint"><?php _e("What does your company do and who is it for? 2–4 sentences.") ?></div>
                                         </div>
-                                        <div class="ci-field" style="margin-bottom:0;">
-                                            <button type="button" class="ci-ai-btn atlas-extract-button" style="width:100%;height:48px;"><?php _e("Generate with Atlas") ?></button>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="company_description"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <textarea class="ci-textarea" rows="3" name="company_description" id="company_description" placeholder="<?php _e("Describe what your company does, who it serves, and why it matters.") ?>"><?php _esc($social_profile['company_description']) ?></textarea>
+                                </div>
+
+                                <div class="ci-field-group">
+                                    <div class="ci-generate-row">
+                                        <div class="ci-generate-copy">
+                                            <div class="ci-field-label"><?php _e("Ideal customer profile (ICP)") ?></div>
+                                            <div class="ci-field-hint"><?php _e("Who is your best customer? Think job title, situation, goals, and pain points.") ?></div>
                                         </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="ideal_customer_profile"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <textarea class="ci-textarea" rows="3" name="ideal_customer_profile" id="ideal_customer_profile" placeholder="<?php _e("e.g. independent musicians with 1K–25K followers who struggle to monetize beyond streaming...") ?>"><?php _esc($social_profile['ideal_customer_profile']) ?></textarea>
+                                </div>
+
+                                <div class="ci-field-group">
+                                    <div class="ci-generate-row">
+                                        <div class="ci-generate-copy">
+                                            <div class="ci-field-label"><?php _e("Top problems you solve") ?> <span class="ci-field-badge">3–5</span></div>
+                                            <div class="ci-field-hint"><?php _e("Press Enter after each problem to add it as a tag.") ?></div>
+                                        </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="top_problems_solved"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <div class="ci-tag-field" data-target="top_problems_solved">
+                                        <textarea class="ci-hidden" name="top_problems_solved" id="top_problems_solved"><?php _esc($topProblemsSolved) ?></textarea>
+                                        <input class="ci-tag-input" type="text" placeholder="<?php _e("Add a problem...") ?>">
                                     </div>
                                 </div>
 
-                                <div class="ci-divider"><span><?php _e("or fill in manually") ?></span></div>
-
-                                <div class="ci-card">
-                                    <div class="ci-grid">
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Company name") ?></label></div>
-                                            <input class="ci-input" type="text" name="company_name" id="company_name" value="<?php _esc($social_profile['company_name']) ?>" placeholder="<?php _e("Your company name") ?>">
+                                <div class="ci-field-group">
+                                    <div class="ci-generate-row">
+                                        <div class="ci-generate-copy">
+                                            <div class="ci-field-label"><?php _e("Unique selling points (USPs)") ?> <span class="ci-field-badge">3–5</span></div>
+                                            <div class="ci-field-hint"><?php _e("What makes you different or better than the alternatives?") ?></div>
                                         </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Industry") ?></label></div>
-                                            <input class="ci-input" type="text" name="company_industry" id="company_industry" value="<?php _esc($social_profile['company_industry']) ?>" placeholder="<?php _e("eCommerce, local services, SaaS...") ?>">
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Founder name") ?></label></div>
-                                            <input class="ci-input" type="text" name="founder_name" id="founder_name" value="<?php _esc($social_profile['founder_name']) ?>" placeholder="<?php _e("Who is behind the business?") ?>">
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Founder title") ?></label></div>
-                                            <input class="ci-input" type="text" name="founder_title" id="founder_title" value="<?php _esc($social_profile['founder_title']) ?>" placeholder="<?php _e("Founder, CEO, Creative director...") ?>">
-                                        </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="unique_selling_points"><?php _e("Generate with Atlas") ?></button>
                                     </div>
-                                    <div class="ci-field" style="margin-bottom:0;">
-                                        <div class="ci-field-row">
-                                            <div>
-                                                <label class="ci-label"><?php _e("Company description") ?></label>
-                                                <div class="ci-help"><?php _e("What do you do, who do you serve, and why should someone trust you?") ?></div>
-                                            </div>
-                                            <button type="button" class="ci-generate-btn" data-generate-field="company_description"><?php _e("Generate with Atlas") ?></button>
-                                        </div>
-                                        <textarea class="ci-textarea" rows="5" name="company_description" id="company_description" placeholder="<?php _e("Describe your company in a few concise sentences.") ?>"><?php _esc($social_profile['company_description']) ?></textarea>
+                                    <div class="ci-tag-field" data-target="unique_selling_points">
+                                        <textarea class="ci-hidden" name="unique_selling_points" id="unique_selling_points"><?php _esc($uniqueSellingPoints) ?></textarea>
+                                        <input class="ci-tag-input" type="text" placeholder="<?php _e("Add a USP...") ?>">
                                     </div>
                                 </div>
+
+                                <div class="ci-divider-label"><span><?php _e("optional") ?></span></div>
+
+                                <div class="ci-field-group">
+                                    <div class="ci-field-label"><?php _e("Competitor websites") ?> <span class="ci-field-badge"><?php _e("optional") ?></span></div>
+                                    <div class="ci-field-hint"><?php _e("We'll analyse their positioning to sharpen yours. Add up to 5 URLs.") ?></div>
+                                    <div class="ci-tag-field" data-target="competitors">
+                                        <textarea class="ci-hidden" name="competitors" id="competitors"><?php _esc($competitors) ?></textarea>
+                                        <input class="ci-tag-input" type="text" placeholder="<?php _e("Add a competitor URL...") ?>">
+                                    </div>
+                                </div>
+
+                                <div class="ci-grid-2">
+                                    <div class="ci-field-group">
+                                        <div class="ci-field-label"><?php _e("Company name") ?></div>
+                                        <input class="ci-input" type="text" name="company_name" id="company_name" value="<?php _esc($social_profile['company_name']) ?>">
+                                    </div>
+                                    <div class="ci-field-group">
+                                        <div class="ci-field-label"><?php _e("Industry") ?></div>
+                                        <input class="ci-input" type="text" name="company_industry" id="company_industry" value="<?php _esc($social_profile['company_industry']) ?>">
+                                    </div>
+                                    <div class="ci-field-group">
+                                        <div class="ci-field-label"><?php _e("Founder name") ?></div>
+                                        <input class="ci-input" type="text" name="founder_name" id="founder_name" value="<?php _esc($social_profile['founder_name']) ?>">
+                                    </div>
+                                    <div class="ci-field-group">
+                                        <div class="ci-field-label"><?php _e("Founder title") ?></div>
+                                        <input class="ci-input" type="text" name="founder_title" id="founder_title" value="<?php _esc($social_profile['founder_title']) ?>">
+                                    </div>
+                                </div>
+
+                                <textarea class="ci-hidden" name="target_audience" id="target_audience"><?php _esc($social_profile['target_audience']) ?></textarea>
+                                <textarea class="ci-hidden" name="content_goals" id="content_goals"><?php _esc($social_profile['content_goals']) ?></textarea>
+                                <textarea class="ci-hidden" name="key_products" id="key_products"><?php _esc($social_profile['key_products']) ?></textarea>
+                                <textarea class="ci-hidden" name="differentiators" id="differentiators"><?php _esc($social_profile['differentiators']) ?></textarea>
+                                <textarea class="ci-hidden" name="competitor_notes" id="competitor_notes"><?php _esc($social_profile['competitor_notes']) ?></textarea>
                             </div>
 
                             <div class="ci-panel" data-panel="2">
-                                <div class="ci-card">
-                                    <div class="ci-card-head">
+                                <div class="ci-section-block">
+                                    <div class="ci-section-num">01 — <?php _e("Brand colors") ?></div>
+                                    <div class="ci-section-title-row">
                                         <div>
-                                            <div class="ci-card-title"><?php _e("Business info") ?></div>
-                                            <div class="ci-card-title-main"><?php _e("Tell Atlas who you serve and why people choose you") ?></div>
-                                            <div class="ci-card-copy"><?php _e("We use this to write stronger hooks, CTAs, website copy, and positioning-aware content.") ?></div>
+                                            <div class="ci-section-title"><?php _e("Confirm your brand colors") ?></div>
+                                            <div class="ci-section-sub"><?php _e("Pick the colors Atlas should keep using across social media generation and your website.") ?></div>
                                         </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="brand_colors"><?php _e("Generate with Atlas") ?></button>
                                     </div>
-
-                                    <div class="ci-field">
-                                        <div class="ci-field-row">
-                                            <div>
-                                                <label class="ci-label"><?php _e("Ideal customer profile (ICP)") ?></label>
-                                                <div class="ci-help"><?php _e("Who is your best customer? Include stage, role, goals, and pain points.") ?></div>
-                                            </div>
-                                            <button type="button" class="ci-generate-btn" data-generate-field="ideal_customer_profile"><?php _e("Generate with Atlas") ?></button>
+                                    <div class="ci-color-zone">
+                                        <div class="ci-tag-field" data-target="brand_colors">
+                                            <textarea class="ci-hidden" name="brand_colors" id="brand_colors"><?php _esc($brandColors) ?></textarea>
+                                            <input class="ci-tag-input" type="text" placeholder="#111111">
                                         </div>
-                                        <textarea class="ci-textarea" rows="4" name="ideal_customer_profile" id="ideal_customer_profile" placeholder="<?php _e("Example: busy dog owners who want premium accessories but don’t know which products actually last.") ?>"><?php _esc($social_profile['ideal_customer_profile']) ?></textarea>
-                                    </div>
-
-                                    <div class="ci-grid">
-                                        <div class="ci-field">
-                                            <div class="ci-field-row">
-                                                <div>
-                                                    <label class="ci-label"><?php _e("Top problems you solve") ?><small>3-5</small></label>
-                                                    <div class="ci-help"><?php _e("Press Enter after each problem to add it as a chip.") ?></div>
-                                                </div>
-                                                <button type="button" class="ci-generate-btn ci-compact-btn" data-generate-field="top_problems_solved"><?php _e("Generate with Atlas") ?></button>
-                                            </div>
-                                            <div class="ci-tag-box" data-target="top_problems_solved">
-                                                <textarea class="ci-hidden" name="top_problems_solved" id="top_problems_solved"><?php _esc($topProblemsSolved) ?></textarea>
-                                                <input class="ci-tag-input" type="text" placeholder="<?php _e("Add a problem...") ?>">
-                                            </div>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row">
-                                                <div>
-                                                    <label class="ci-label"><?php _e("Unique selling points") ?><small>3-5</small></label>
-                                                    <div class="ci-help"><?php _e("What makes your offer better or different?") ?></div>
-                                                </div>
-                                                <button type="button" class="ci-generate-btn ci-compact-btn" data-generate-field="unique_selling_points"><?php _e("Generate with Atlas") ?></button>
-                                            </div>
-                                            <div class="ci-tag-box" data-target="unique_selling_points">
-                                                <textarea class="ci-hidden" name="unique_selling_points" id="unique_selling_points"><?php _esc($uniqueSellingPoints) ?></textarea>
-                                                <input class="ci-tag-input" type="text" placeholder="<?php _e("Add a USP...") ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ci-grid">
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Target audience") ?></label></div>
-                                            <textarea class="ci-textarea" rows="3" name="target_audience" id="target_audience" placeholder="<?php _e("Who exactly are you trying to attract?") ?>"><?php _esc($social_profile['target_audience']) ?></textarea>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Key products / services") ?></label></div>
-                                            <textarea class="ci-textarea" rows="3" name="key_products" id="key_products" placeholder="<?php _e("What do you sell or deliver most often?") ?>"><?php _esc($social_profile['key_products']) ?></textarea>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Differentiators") ?></label></div>
-                                            <textarea class="ci-textarea" rows="3" name="differentiators" id="differentiators" placeholder="<?php _e("Why should someone choose you over alternatives?") ?>"><?php _esc($social_profile['differentiators']) ?></textarea>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Content goals") ?></label></div>
-                                            <textarea class="ci-textarea" rows="3" name="content_goals" id="content_goals" placeholder="<?php _e("Awareness, leads, sales, trust building...") ?>"><?php _esc($social_profile['content_goals']) ?></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div class="ci-grid">
-                                        <div class="ci-field">
-                                            <div class="ci-field-row">
-                                                <div>
-                                                    <label class="ci-label"><?php _e("Competitor websites") ?><small><?php _e("optional") ?></small></label>
-                                                    <div class="ci-help"><?php _e("Add brands Atlas should analyze to sharpen your positioning.") ?></div>
-                                                </div>
-                                                <button type="button" class="ci-generate-btn ci-compact-btn" data-generate-field="competitors"><?php _e("Generate with Atlas") ?></button>
-                                            </div>
-                                            <div class="ci-tag-box" data-target="competitors">
-                                                <textarea class="ci-hidden" name="competitors" id="competitors"><?php _esc($competitors) ?></textarea>
-                                                <input class="ci-tag-input" type="text" placeholder="<?php _e("Add a URL...") ?>">
-                                            </div>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Competitor notes") ?></label></div>
-                                            <textarea class="ci-textarea" rows="3" name="competitor_notes" id="competitor_notes" placeholder="<?php _e("Anything specific Atlas should notice when comparing you?") ?>"><?php _esc($social_profile['competitor_notes']) ?></textarea>
-                                        </div>
+                                        <div class="ci-swatches-row" id="atlas-ci-color-preview" style="margin-top:14px;"></div>
                                     </div>
                                 </div>
+
+                                <div class="ci-section-block">
+                                    <div class="ci-section-num">02 — <?php _e("Logo") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
+                                    <div class="ci-section-title"><?php _e("Upload your logo") ?></div>
+                                    <div class="ci-section-sub"><?php _e("We'll use it to preview how your content and website will look before you generate.") ?></div>
+                                    <div class="ci-upload-area">
+                                        <div><?php _e("Drop your logo here") ?></div>
+                                        <div class="ci-upload-sub"><?php _e("SVG, PNG, or JPG — transparent background preferred") ?></div>
+                                        <input type="file" name="company_logo" accept="image/*" style="margin-top:10px;">
+                                    </div>
+                                </div>
+
+                                <div class="ci-section-block">
+                                    <div class="ci-section-num">03 — <?php _e("Visual mood") ?></div>
+                                    <div class="ci-section-title-row">
+                                        <div>
+                                            <div class="ci-section-title"><?php _e("Pick a visual mood") ?></div>
+                                            <div class="ci-section-sub"><?php _e("Based on your brand, choose the direction Atlas should follow visually.") ?></div>
+                                        </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="visual_mood"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <div class="ci-pill-row" data-pill-target="visual_mood">
+                                        <?php foreach ($allVisualMoodOptions as $option) { ?>
+                                            <button type="button" class="ci-pill <?php echo in_array($option, $visualMood, true) ? 'selected' : ''; ?>" data-value="<?php _esc($option) ?>"><?php _esc($option) ?></button>
+                                        <?php } ?>
+                                    </div>
+                                    <textarea class="ci-hidden" name="visual_mood" id="visual_mood"><?php _esc(implode("\n", $visualMood)) ?></textarea>
+                                </div>
+
+                                <div class="ci-section-block">
+                                    <div class="ci-section-num">04 — <?php _e("Tone of voice") ?></div>
+                                    <div class="ci-section-title-row">
+                                        <div>
+                                            <div class="ci-section-title"><?php _e("How should your content sound?") ?></div>
+                                            <div class="ci-section-sub"><?php _e("Pick the tone attributes Atlas should use when writing for your brand.") ?></div>
+                                        </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="tone_attributes"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <div class="ci-pill-row" data-pill-target="tone_attributes">
+                                        <?php foreach ($allToneOptions as $option) { ?>
+                                            <button type="button" class="ci-pill <?php echo in_array($option, $toneAttributes, true) ? 'selected' : ''; ?>" data-value="<?php _esc($option) ?>"><?php _esc($option) ?></button>
+                                        <?php } ?>
+                                    </div>
+                                    <textarea class="ci-hidden" name="tone_attributes" id="tone_attributes"><?php _esc(implode("\n", $toneAttributes)) ?></textarea>
+                                </div>
+
+                                <div class="ci-section-block">
+                                    <div class="ci-section-num">05 — <?php _e("Reference brands") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
+                                    <div class="ci-section-title-row">
+                                        <div>
+                                            <div class="ci-section-title"><?php _e("Brands or accounts you admire") ?></div>
+                                            <div class="ci-section-sub"><?php _e("Atlas can visit these and learn how they communicate, print, and present themselves.") ?></div>
+                                        </div>
+                                        <button type="button" class="ci-generate-btn" data-generate-field="reference_brands"><?php _e("Generate with Atlas") ?></button>
+                                    </div>
+                                    <div class="ci-tag-field" data-target="reference_brands">
+                                        <textarea class="ci-hidden" name="reference_brands" id="reference_brands"><?php _esc($referenceBrands) ?></textarea>
+                                        <input class="ci-tag-input" type="text" placeholder="<?php _e("@handle, brand name, or website URL — press Enter to add") ?>">
+                                    </div>
+                                </div>
+
+                                <div class="ci-section-block">
+                                    <div class="ci-section-num">06 — <?php _e("Moodboard") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
+                                    <div class="ci-section-title"><?php _e("Images that inspire you") ?></div>
+                                    <div class="ci-section-sub"><?php _e("Aesthetic references, campaign posts, or visuals that capture the feeling you’re going for.") ?></div>
+                                    <div class="ci-upload-area">
+                                        <div><?php _e("Drop images or paste URLs") ?></div>
+                                        <div class="ci-upload-sub"><?php _e("PNG, JPG, or any visual reference.") ?></div>
+                                        <input type="file" name="moodboard_images[]" multiple accept="image/*" style="margin-top:10px;">
+                                    </div>
+                                    <?php if (!empty($moodboardImages)) { ?>
+                                        <div class="ci-moodboard">
+                                            <?php foreach ($moodboardImages as $moodboardImage) { ?>
+                                                <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $moodboardImage; ?>" alt="">
+                                            <?php } ?>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+
+                                <textarea class="ci-hidden" name="brand_voice" id="brand_voice"><?php _esc($social_profile['brand_voice']) ?></textarea>
+                                <input class="ci-hidden" type="text" name="instagram_handle" id="instagram_handle" value="<?php _esc($social_profile['instagram_handle']) ?>">
                             </div>
 
                             <div class="ci-panel" data-panel="3">
-                                <div class="ci-card">
-                                    <div class="ci-card-head">
-                                        <div>
-                                            <div class="ci-card-title"><?php _e("Inspiration") ?></div>
-                                            <div class="ci-card-title-main"><?php _e("Shape how Atlas should look and sound") ?></div>
-                                            <div class="ci-card-copy"><?php _e("We’ll use your color system, visual direction, tone, references, and moodboard to keep all generated output on-brand.") ?></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ci-field">
-                                        <div class="ci-field-row">
-                                            <div>
-                                                <label class="ci-label"><?php _e("Brand colors") ?></label>
-                                                <div class="ci-help"><?php _e("Add hex colors Atlas should use across social generation and website drafts.") ?></div>
-                                            </div>
-                                            <button type="button" class="ci-generate-btn" data-generate-field="brand_colors"><?php _e("Generate with Atlas") ?></button>
-                                        </div>
-                                        <div class="ci-color-card">
-                                            <div class="ci-tag-box" data-target="brand_colors">
-                                                <textarea class="ci-hidden" name="brand_colors" id="brand_colors"><?php _esc($brandColors) ?></textarea>
-                                                <input class="ci-tag-input" type="text" placeholder="#111111">
-                                            </div>
-                                            <div class="ci-swatches" id="atlas-ci-color-preview"></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ci-grid">
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Upload your logo") ?><small><?php _e("optional") ?></small></label></div>
-                                            <div class="ci-upload">
-                                                <div><?php _e("Upload a logo Atlas can use in previews and generated assets.") ?></div>
-                                                <small><?php _e("PNG, JPG, or transparent logo preferred.") ?></small>
-                                                <input type="file" name="company_logo" accept="image/*" style="margin-top:12px;">
-                                            </div>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Instagram handle") ?><small><?php _e("optional") ?></small></label></div>
-                                            <input class="ci-input" type="text" name="instagram_handle" id="instagram_handle" value="<?php _esc($social_profile['instagram_handle']) ?>" placeholder="@yourbrand">
-                                        </div>
-                                    </div>
-
-                                    <div class="ci-field">
-                                        <div class="ci-field-row">
-                                            <div>
-                                                <label class="ci-label"><?php _e("Visual mood") ?></label>
-                                                <div class="ci-help"><?php _e("Choose 1–2 directions Atlas should use for visuals and layouts.") ?></div>
-                                            </div>
-                                            <button type="button" class="ci-generate-btn" data-generate-field="visual_mood"><?php _e("Generate with Atlas") ?></button>
-                                        </div>
-                                        <div class="ci-choice-grid" data-pill-target="visual_mood">
-                                            <?php foreach ($allVisualMoodOptions as $option) { ?>
-                                                <button type="button" class="ci-choice <?php echo in_array($option, $visualMood, true) ? 'selected' : ''; ?>" data-value="<?php _esc($option) ?>">
-                                                    <strong><?php _esc($option) ?></strong>
-                                                    <span><?php
-                                                        $descriptions = [
-                                                            'Dark & editorial' => __('High contrast, premium, polished, and cinematic.'),
-                                                            'Warm & minimal' => __('Soft neutrals, light layouts, and calm spacing.'),
-                                                            'Documentary grid' => __('Authentic, practical, lived-in brand storytelling.'),
-                                                            'Soft lifestyle' => __('Gentle lifestyle imagery with easy everyday energy.'),
-                                                            'Bold & direct' => __('Clear contrast, stronger type, and decisive visual hierarchy.')
-                                                        ];
-                                                        _esc($descriptions[$option]);
-                                                    ?></span>
-                                                </button>
-                                            <?php } ?>
-                                        </div>
-                                        <textarea class="ci-hidden" name="visual_mood" id="visual_mood"><?php _esc(implode("\n", $visualMood)) ?></textarea>
-                                    </div>
-
-                                    <div class="ci-field">
-                                        <div class="ci-field-row">
-                                            <div>
-                                                <label class="ci-label"><?php _e("Tone of voice") ?></label>
-                                                <div class="ci-help"><?php _e("Select the attributes Atlas should use when writing content.") ?></div>
-                                            </div>
-                                            <button type="button" class="ci-generate-btn" data-generate-field="tone_attributes"><?php _e("Generate with Atlas") ?></button>
-                                        </div>
-                                        <div class="ci-pill-row" data-pill-target="tone_attributes">
-                                            <?php foreach ($allToneOptions as $option) { ?>
-                                                <button type="button" class="ci-pill <?php echo in_array($option, $toneAttributes, true) ? 'selected' : ''; ?>" data-value="<?php _esc($option) ?>"><?php _esc($option) ?></button>
-                                            <?php } ?>
-                                        </div>
-                                        <textarea class="ci-hidden" name="tone_attributes" id="tone_attributes"><?php _esc(implode("\n", $toneAttributes)) ?></textarea>
-                                    </div>
-
-                                    <div class="ci-grid">
-                                        <div class="ci-field">
-                                            <div class="ci-field-row">
-                                                <div>
-                                                    <label class="ci-label"><?php _e("Reference brands") ?><small><?php _e("optional") ?></small></label>
-                                                    <div class="ci-help"><?php _e("Brands or creators Atlas should study to understand your desired style.") ?></div>
-                                                </div>
-                                                <button type="button" class="ci-generate-btn ci-compact-btn" data-generate-field="reference_brands"><?php _e("Generate with Atlas") ?></button>
-                                            </div>
-                                            <div class="ci-tag-box" data-target="reference_brands">
-                                                <textarea class="ci-hidden" name="reference_brands" id="reference_brands"><?php _esc($referenceBrands) ?></textarea>
-                                                <input class="ci-tag-input" type="text" placeholder="<?php _e("@handle, brand, or website URL") ?>">
-                                            </div>
-                                        </div>
-                                        <div class="ci-field">
-                                            <div class="ci-field-row"><label class="ci-label"><?php _e("Brand voice notes") ?></label></div>
-                                            <textarea class="ci-textarea" rows="3" name="brand_voice" id="brand_voice" placeholder="<?php _e("Anything Atlas should remember about how you speak or present yourself?") ?>"><?php _esc($social_profile['brand_voice']) ?></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div class="ci-field" style="margin-bottom:0;">
-                                        <div class="ci-field-row"><label class="ci-label"><?php _e("Moodboard / inspiration") ?><small><?php _e("optional") ?></small></label></div>
-                                        <div class="ci-upload">
-                                            <div><?php _e("Drop images or upload references Atlas can use to understand your visual direction.") ?></div>
-                                            <small><?php _e("PNG, JPG, or visual inspiration boards are all fine.") ?></small>
-                                            <input type="file" name="moodboard_images[]" multiple accept="image/*" style="margin-top:12px;">
-                                        </div>
-                                        <?php if (!empty($moodboardImages)) { ?>
-                                            <div class="ci-moodboard">
-                                                <?php foreach ($moodboardImages as $moodboardImage) { ?>
-                                                    <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $moodboardImage; ?>" alt="">
-                                                <?php } ?>
-                                            </div>
-                                        <?php } ?>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ci-panel" data-panel="4">
-                                <div class="ci-completion-summary">
-                                    <div>
-                                        <strong id="ci-completion-title"><?php _e("Profile complete · 0 of 8 sections filled") ?></strong>
-                                        <span id="ci-completion-sub"><?php _e("Complete the missing sections to give Atlas stronger context for content, website generation, and AI responses.") ?></span>
-                                    </div>
-                                    <div class="ci-completion-pill" id="ci-completion-pill">0 / 8</div>
-                                </div>
-
                                 <div class="ci-review-strip">
-                                    <div>
-                                        <strong><?php _e("Ready to generate your business profile") ?></strong>
-                                        <span><?php _e("Atlas will use this profile for AI agents, social content, website generation, and all future brand-aware decisions.") ?></span>
+                                    <div class="ci-review-strip-body">
+                                        <div class="ci-review-strip-title"><?php _e("Ready to generate your marketing statements") ?></div>
+                                        <div class="ci-review-strip-sub"><?php _e("Atlas will use this profile to write your hooks, value propositions, AI context, and Instagram content.") ?></div>
                                     </div>
-                                    <button type="button" class="ci-ai-btn intelligence-refresh-btn"><?php _e("Generate with Atlas") ?></button>
+                                    <button type="button" class="ci-btn-atlas intelligence-refresh-btn"><?php _e("Generate with Atlas") ?></button>
+                                </div>
+
+                                <div class="ci-website-row">
+                                    <div class="ci-website-url" id="review-website"><?php _esc(!empty($social_profile['company_website']) ? $social_profile['company_website'] : __('No website added yet.')) ?></div>
+                                    <div class="ci-website-meta"><?php _e("Profile source"); ?></div>
+                                    <button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button>
                                 </div>
 
                                 <div class="ci-review-grid">
-                                    <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Website") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
-                                        <div class="ci-review-body"><div class="ci-review-text" id="review-website"><?php _esc(!empty($social_profile['company_website']) ? $social_profile['company_website'] : __('No website added yet.')) ?></div></div>
-                                    </div>
-                                    <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Company description") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
+                                    <div class="ci-review-card full-width">
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Company description") ?></span><button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
                                         <div class="ci-review-body"><div class="ci-review-text" id="review-company-description"><?php _esc(!empty($social_profile['company_description']) ? $social_profile['company_description'] : __('Not added yet.')) ?></div></div>
                                     </div>
                                     <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Ideal customer") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
-                                        <div class="ci-review-body"><div class="ci-review-text" id="review-icp"></div></div>
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Ideal customer (ICP)") ?></span><button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-body"><div class="ci-review-text" id="review-icp"><?php _esc(!empty($social_profile['ideal_customer_profile']) ? $social_profile['ideal_customer_profile'] : __('Not added yet.')) ?></div></div>
                                     </div>
                                     <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Products / services") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
-                                        <div class="ci-review-body"><div class="ci-review-text" id="review-products"><?php _esc(!empty($social_profile['key_products']) ? $social_profile['key_products'] : __('Not added yet.')) ?></div></div>
-                                    </div>
-                                    <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Problems solved") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Problems solved") ?></span><button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
                                         <div class="ci-review-body"><div class="ci-review-tags" id="review-problems"></div></div>
                                     </div>
                                     <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("USPs") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("USPs") ?></span><button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
                                         <div class="ci-review-body"><div class="ci-review-tags" id="review-usps"></div></div>
                                     </div>
                                     <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Brand colors") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="3"><?php _e("Edit") ?></button></div>
-                                        <div class="ci-review-body"><div class="ci-review-tags" id="review-colors"></div></div>
-                                    </div>
-                                    <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Tone & mood") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="3"><?php _e("Edit") ?></button></div>
-                                        <div class="ci-review-body"><div class="ci-review-tags" id="review-tone"></div></div>
-                                    </div>
-                                    <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Competitors") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Competitors") ?></span><button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button></div>
                                         <div class="ci-review-body"><div class="ci-review-tags" id="review-competitors"></div></div>
                                     </div>
                                     <div class="ci-review-card">
-                                        <div class="ci-review-head"><span><?php _e("Reference brands") ?></span><button type="button" class="ci-generate-btn ci-compact-btn" data-jump-step="3"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Brand tone") ?></span><button type="button" class="ci-generate-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-body"><div class="ci-review-tags" id="review-tone"></div></div>
+                                    </div>
+                                    <div class="ci-review-card">
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Brand colors") ?></span><button type="button" class="ci-generate-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
+                                        <div class="ci-review-body">
+                                            <div class="ci-color-swatches-preview" id="review-colors-swatches"></div>
+                                            <div class="ci-review-tags" id="review-colors"></div>
+                                        </div>
+                                    </div>
+                                    <div class="ci-review-card">
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Reference brands") ?></span><button type="button" class="ci-generate-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
                                         <div class="ci-review-body"><div class="ci-review-tags" id="review-reference-brands"></div></div>
                                     </div>
-                                    <div class="ci-review-card full">
-                                        <div class="ci-review-head"><span><?php _e("Atlas company intelligence") ?></span></div>
+                                    <div class="ci-review-card full-width">
+                                        <div class="ci-review-head"><span class="ci-review-label"><?php _e("Atlas company intelligence") ?></span></div>
                                         <div class="ci-review-body">
                                             <div class="ci-review-text"><strong><?php _e("Company summary") ?>:</strong> <span id="review-company-summary"><?php _esc(!empty($company_intelligence['company_summary']) ? $company_intelligence['company_summary'] : __('Not generated yet.')) ?></span></div>
                                             <div class="ci-review-text" style="margin-top:10px;"><strong><?php _e("Market research") ?>:</strong> <span id="review-market-research"><?php _esc(!empty($company_intelligence['market_research']) ? $company_intelligence['market_research'] : __('Not generated yet.')) ?></span></div>
@@ -495,16 +427,15 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                             </div>
                         </div>
 
-                        <div class="ci-footer">
-                            <button type="button" class="ci-back-btn" id="ci-prev-btn"><?php _e("Back") ?></button>
+                        <div class="ci-footer-bar">
+                            <button type="button" class="ci-btn-back" id="ci-prev-btn"><?php _e("Back") ?></button>
                             <div class="ci-footer-note">
-                                <span id="ci-footer-note"><?php _e("Step 1 of 4 · Atlas saves your progress as you move"); ?></span>
+                                <span id="ci-footer-note"><?php _e("Step 1 of 3 · Progress saved automatically"); ?></span>
                                 <span class="ci-save-state" id="ci-save-state"><?php _e("Not saved yet."); ?></span>
-                                <span class="ci-saved-at" id="ci-saved-at"><?php _e("Last saved: not yet"); ?></span>
                             </div>
                             <div style="display:flex;gap:10px;">
-                                <button type="button" class="ci-next-btn" id="ci-next-btn"><?php _e("Save & continue") ?></button>
-                                <button type="submit" name="company-intelligence-submit" class="ci-next-btn ci-hidden" id="ci-save-btn"><?php _e("Save profile") ?></button>
+                                <button type="button" class="ci-btn-next" id="ci-next-btn"><?php _e("Save & continue") ?></button>
+                                <button type="submit" name="company-intelligence-submit" class="ci-btn-next ci-hidden" id="ci-save-btn"><?php _e("Save profile") ?></button>
                             </div>
                         </div>
                     </form>
@@ -531,12 +462,10 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
 <script>
 $(function () {
     var currentStep = 1;
-    var isSavingStep = false;
     var stepTitles = {
-        1: {title: "<?php echo addslashes(__('Tell us about your business')); ?>", sub: "<?php echo addslashes(__('Start with your website and core company basics. Atlas can extract the first draft for you.')); ?>"},
-        2: {title: "<?php echo addslashes(__('Clarify your business positioning')); ?>", sub: "<?php echo addslashes(__('Define your customer, the problems you solve, and what makes your offer different.')); ?>"},
-        3: {title: "<?php echo addslashes(__("What's your visual direction?")); ?>", sub: "<?php echo addslashes(__('Choose your colors, visual mood, tone of voice, and the references Atlas should study.')); ?>"},
-        4: {title: "<?php echo addslashes(__('Review your business profile')); ?>", sub: "<?php echo addslashes(__('Check the final profile before Atlas uses it across your workspace.')); ?>"}
+        1: {title: "<?php echo addslashes(__('Tell us about your business')); ?>", sub: "<?php echo addslashes(__('This takes 2 minutes. Your answers power everything Atlas generates.')); ?>"},
+        2: {title: "<?php echo addslashes(__("What's your visual direction?")); ?>", sub: "<?php echo addslashes(__('We pulled your brand colors from your website. Confirm them, add your logo, then set your tone and references.')); ?>"},
+        3: {title: "<?php echo addslashes(__('Review your business profile')); ?>", sub: "<?php echo addslashes(__('Check everything looks right. Edit any section before generating.')); ?>"}
     };
 
     function parseLines(value) {
@@ -544,10 +473,16 @@ $(function () {
         return value.split(/\n+/).map(function (item) { return $.trim(item); }).filter(Boolean);
     }
 
+    function setSaveState(message, type) {
+        var $state = $('#ci-save-state');
+        $state.css('color', type === 'error' ? '#c05959' : (type === 'success' ? '#2FAF49' : '#888'));
+        $state.text(message);
+    }
+
     function syncTagField($field) {
         var targetId = $field.data('target');
         var values = [];
-        $field.find('.ci-tag-chip').each(function () {
+        $field.find('.ci-tag').each(function () {
             values.push($(this).data('value'));
         });
         $('#' + targetId).val(values.join("\n"));
@@ -560,13 +495,13 @@ $(function () {
         value = $.trim(value || '');
         if (!value) return;
         var exists = false;
-        $field.find('.ci-tag-chip').each(function () {
+        $field.find('.ci-tag').each(function () {
             if ($(this).data('value').toLowerCase() === value.toLowerCase()) {
                 exists = true;
             }
         });
         if (exists) return;
-        var $tag = $('<span class="ci-tag-chip" data-value=""></span>');
+        var $tag = $('<span class="ci-tag" data-value=""></span>');
         $tag.attr('data-value', value).append(document.createTextNode(value));
         var $btn = $('<button type="button">×</button>');
         $btn.on('click', function () {
@@ -581,7 +516,7 @@ $(function () {
 
     function initTagField($field) {
         var targetId = $field.data('target');
-        $field.find('.ci-tag-chip').remove();
+        $field.find('.ci-tag').remove();
         parseLines($('#' + targetId).val()).forEach(function (value) {
             addTagValue($field, value);
         });
@@ -602,17 +537,22 @@ $(function () {
         var $wrap = $('#atlas-ci-color-preview');
         $wrap.empty();
         colors.forEach(function (color) {
-            $wrap.append(
-                $('<div class="ci-swatch"></div>')
-                    .append('<div class="ci-swatch-circle" style="background:' + color + ';"></div>')
-                    .append('<div class="ci-swatch-label">' + color + '</div>')
-            );
+            var $item = $('<div class="ci-swatch-item selected"></div>');
+            $item.append('<div class="ci-swatch-circle" style="background:' + color + ';border-color:' + color + ';"></div>');
+            $item.append('<div class="ci-swatch-hex">' + color + '</div>');
+            $wrap.append($item);
+        });
+
+        var $review = $('#review-colors-swatches');
+        $review.empty();
+        colors.forEach(function (color) {
+            $review.append('<div class="ci-color-swatch"><div class="ci-color-swatch-circle" style="background:' + color + ';border:1px solid rgba(0,0,0,.08)"></div><div class="ci-color-swatch-hex">' + color + '</div></div>');
         });
     }
 
-    function syncChoiceTarget(targetId) {
+    function syncPillTarget(targetId) {
         var values = [];
-        $('[data-pill-target="' + targetId + '"] .selected').each(function () {
+        $('[data-pill-target="' + targetId + '"] .ci-pill.selected').each(function () {
             values.push($(this).data('value'));
         });
         $('#' + targetId).val(values.join("\n"));
@@ -633,133 +573,57 @@ $(function () {
     function updateReview() {
         $('#review-website').text($('#company_website').val() || "<?php echo addslashes(__('No website added yet.')); ?>");
         $('#review-company-description').text($('#company_description').val() || "<?php echo addslashes(__('Not added yet.')); ?>");
-        $('#review-icp').text($('#ideal_customer_profile').val() || "<?php echo addslashes(__('No ICP added yet.')); ?>");
-        $('#review-products').text($('#key_products').val() || "<?php echo addslashes(__('Not added yet.')); ?>");
+        $('#review-icp').text($('#ideal_customer_profile').val() || "<?php echo addslashes(__('Not added yet.')); ?>");
         renderReviewTags('#review-problems', parseLines($('#top_problems_solved').val()), true);
         renderReviewTags('#review-usps', parseLines($('#unique_selling_points').val()), false);
-        renderReviewTags('#review-colors', parseLines($('#brand_colors').val()), false);
         renderReviewTags('#review-competitors', parseLines($('#competitors').val()), false);
         renderReviewTags('#review-reference-brands', parseLines($('#reference_brands').val()), false);
         renderReviewTags('#review-tone', parseLines($('#tone_attributes').val()).concat(parseLines($('#visual_mood').val())), false);
-        updateCompletionSummary();
+        renderReviewTags('#review-colors', parseLines($('#brand_colors').val()), false);
     }
 
-    function updateCompletionSummary() {
-        var sections = [
-            $.trim($('#company_website').val()) !== '' || $.trim($('#company_name').val()) !== '',
-            $.trim($('#company_description').val()) !== '',
-            $.trim($('#ideal_customer_profile').val()) !== '',
-            parseLines($('#top_problems_solved').val()).length > 0,
-            parseLines($('#unique_selling_points').val()).length > 0,
-            parseLines($('#brand_colors').val()).length > 0,
-            parseLines($('#tone_attributes').val()).length > 0 || parseLines($('#visual_mood').val()).length > 0,
-            parseLines($('#competitors').val()).length > 0 || parseLines($('#reference_brands').val()).length > 0 || $.trim($('#brand_voice').val()) !== '' || $('#existing_moodboard_images').val().trim() !== ''
-        ];
-        var completed = sections.filter(Boolean).length;
-        $('#ci-completion-title').text("<?php echo addslashes(__('Profile complete')); ?> · " + completed + " <?php echo addslashes(__('of 8 sections filled')); ?>");
-        $('#ci-completion-pill').text(completed + ' / 8');
-        $('#ci-completion-sub').text(
-            completed === 8
-                ? "<?php echo addslashes(__('Everything important is in place. Atlas now has strong context to generate on-brand output.')); ?>"
-                : "<?php echo addslashes(__('Complete the missing sections to give Atlas stronger context for content, website generation, and AI responses.')); ?>"
-        );
-    }
-
-    function setSaveState(message, type) {
-        var $state = $('#ci-save-state');
-        $state.removeClass('success error');
-        if (type) {
-            $state.addClass(type);
+    function setStep(step) {
+        currentStep = step;
+        $('.ci-panel').removeClass('active');
+        $('.ci-panel[data-panel="' + step + '"]').addClass('active');
+        $('.ci-step').removeClass('active done');
+        $('.ci-step').each(function () {
+            var idx = parseInt($(this).data('ci-step'), 10);
+            if (idx < step) $(this).addClass('done');
+            else if (idx === step) $(this).addClass('active');
+        });
+        $('#ci-header-title').text(stepTitles[step].title);
+        $('#ci-header-sub').text(stepTitles[step].sub);
+        $('#ci-footer-note').text('<?php echo addslashes(__('Step')); ?> ' + step + ' <?php echo addslashes(__('of 3 · Progress saved automatically')); ?>');
+        $('#ci-prev-btn').toggle(step > 1);
+        $('#ci-next-btn').toggle(step < 3);
+        $('#ci-save-btn').toggleClass('ci-hidden', step !== 3);
+        if (step === 3) {
+            updateReview();
         }
-        $state.text(message);
     }
 
-    function formatSavedAt(value) {
-        if (!value) return "<?php echo addslashes(__('Last saved: not yet')); ?>";
-        var normalized = value.replace(' ', 'T');
-        var date = new Date(normalized);
-        if (isNaN(date.getTime())) {
-            return "<?php echo addslashes(__('Last saved: ')); ?>" + value;
-        }
-        return "<?php echo addslashes(__('Last saved: ')); ?>" + date.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
-    }
-
-    function setSavedAt(value) {
-        $('#ci-saved-at').text(formatSavedAt(value));
-    }
-
-    function getStepStatus(step) {
+    function validateStep(step) {
         if (step === 1) {
-            var hasWebsite = $.trim($('#company_website').val()) !== '';
-            var hasManualCore = $.trim($('#company_name').val()) !== '' && $.trim($('#company_industry').val()) !== '' && $.trim($('#company_description').val()) !== '';
-            return hasWebsite || hasManualCore;
+            if ($.trim($('#company_description').val()) === '' || $.trim($('#ideal_customer_profile').val()) === '' || !parseLines($('#top_problems_solved').val()).length || !parseLines($('#unique_selling_points').val()).length) {
+                quick_alert("<?php echo addslashes(__('Please complete the key business information before continuing.')); ?>", 'error');
+                return false;
+            }
         }
         if (step === 2) {
-            return $.trim($('#ideal_customer_profile').val()) !== '' &&
-                parseLines($('#top_problems_solved').val()).length > 0 &&
-                parseLines($('#unique_selling_points').val()).length > 0;
-        }
-        if (step === 3) {
-            return parseLines($('#brand_colors').val()).length > 0 &&
-                parseLines($('#visual_mood').val()).length > 0 &&
-                parseLines($('#tone_attributes').val()).length > 0;
+            if (!parseLines($('#brand_colors').val()).length || !parseLines($('#visual_mood').val()).length || !parseLines($('#tone_attributes').val()).length) {
+                quick_alert("<?php echo addslashes(__('Please complete your brand guidelines before continuing.')); ?>", 'error');
+                return false;
+            }
         }
         return true;
     }
 
-    function validateStep(step) {
-        if (getStepStatus(step)) {
-            return true;
-        }
-        var messages = {
-            1: "<?php echo addslashes(__('Add your website or complete company name, industry, and description before continuing.')); ?>",
-            2: "<?php echo addslashes(__('Add your ICP, at least one problem you solve, and at least one USP before continuing.')); ?>",
-            3: "<?php echo addslashes(__('Choose at least one brand color, one visual mood, and one tone attribute before continuing.')); ?>"
-        };
-        quick_alert(messages[step] || "<?php echo addslashes(__('Please complete this step before continuing.')); ?>", 'error');
-        return false;
-    }
-
-    function updateStepStateUI() {
-        $('.ci-step').each(function () {
-            var idx = parseInt($(this).data('ci-step'), 10);
-            var completed = getStepStatus(idx);
-            $(this).removeClass('done');
-            if (completed && idx !== currentStep) {
-                $(this).addClass('done');
-            }
-            if (idx === currentStep) {
-                $(this).addClass('active');
-            } else {
-                $(this).removeClass('active');
-            }
-            $(this).find('.ci-step-badge').toggle(completed && idx !== currentStep);
-        });
-    }
-
-    function applySavedProfile(profile) {
-        if (!profile) return;
-        if (profile.company_logo) {
-            // saved server-side; no UI preview change needed here
-        }
-        if (profile.moodboard_images && profile.moodboard_images.length) {
-            $('#existing_moodboard_images').val(profile.moodboard_images.join("\n"));
-        }
-    }
-
-    function saveCurrentStep(step, options) {
-        options = options || {};
-        if (isSavingStep) {
-            return $.Deferred().reject().promise();
-        }
-        isSavingStep = true;
-        setSaveState("<?php echo addslashes(__('Saving...')); ?>", '');
-
-        var formEl = document.getElementById('company-intelligence-form');
-        var formData = new FormData(formEl);
+    function saveDraft(step, done) {
+        var formData = new FormData(document.getElementById('company-intelligence-form'));
         formData.append('step', step);
-
-        return $.ajax({
+        setSaveState("<?php echo addslashes(__('Saving...')); ?>", '');
+        $.ajax({
             url: ajaxurl + '?action=save_company_intelligence_draft',
             type: 'POST',
             data: formData,
@@ -769,52 +633,35 @@ $(function () {
             response = typeof response === 'string' ? JSON.parse(response) : response;
             if (!response.success) {
                 setSaveState(response.error || "<?php echo addslashes(__('Save failed.')); ?>", 'error');
-                if (!options.silent) {
-                    quick_alert(response.error || "<?php echo addslashes(__('Atlas could not save this step right now.')); ?>", 'error');
-                }
+                quick_alert(response.error || "<?php echo addslashes(__('Atlas could not save this step right now.')); ?>", 'error');
                 return;
             }
-            applySavedProfile(response.profile || {});
-            setSaveState(response.message || "<?php echo addslashes(__('Saved.')); ?>", 'success');
-            setSavedAt(response.saved_at || '');
+            if (response.profile && response.profile.moodboard_images) {
+                $('#existing_moodboard_images').val(response.profile.moodboard_images.join("\n"));
+            }
+            setSaveState(response.message || "<?php echo addslashes(__('Saved')); ?>", 'success');
+            if (typeof done === 'function') {
+                done();
+            }
         }).fail(function () {
             setSaveState("<?php echo addslashes(__('Save failed.')); ?>", 'error');
-            if (!options.silent) {
-                quick_alert("<?php echo addslashes(__('Atlas could not save this step right now.')); ?>", 'error');
-            }
-        }).always(function () {
-            isSavingStep = false;
+            quick_alert("<?php echo addslashes(__('Atlas could not save this step right now.')); ?>", 'error');
         });
     }
 
-    function setStep(step) {
-        currentStep = step;
-        $('.ci-panel').removeClass('active');
-        $('.ci-panel[data-panel="' + step + '"]').addClass('active');
-        $('.ci-step').removeClass('active done');
-        updateStepStateUI();
-        $('#ci-header-title').text(stepTitles[step].title);
-        $('#ci-header-sub').text(stepTitles[step].sub);
-        $('#ci-footer-note').text('<?php echo addslashes(__('Step')); ?> ' + step + ' <?php echo addslashes(__('of 4 · Atlas saves your progress as you move')); ?>');
-        $('#ci-prev-btn').toggle(step > 1);
-        $('#ci-next-btn').toggle(step < 4);
-        $('#ci-save-btn').toggleClass('ci-hidden', step !== 4);
-        if (step === 4) updateReview();
-    }
-
-    $('.ci-tag-box').each(function () {
+    $('.ci-tag-field').each(function () {
         initTagField($(this));
     });
 
-    $('[data-pill-target="visual_mood"]').on('click', '.ci-choice', function () {
+    $('[data-pill-target="visual_mood"]').on('click', '.ci-pill', function () {
         $(this).toggleClass('selected');
-        syncChoiceTarget('visual_mood');
+        syncPillTarget('visual_mood');
         updateReview();
     });
 
     $('[data-pill-target="tone_attributes"]').on('click', '.ci-pill', function () {
         $(this).toggleClass('selected');
-        syncChoiceTarget('tone_attributes');
+        syncPillTarget('tone_attributes');
         updateReview();
     });
 
@@ -823,25 +670,16 @@ $(function () {
     });
 
     $('#ci-next-btn').on('click', function () {
-        if (currentStep >= 4) return;
-        if (!validateStep(currentStep)) {
-            return;
-        }
-        saveCurrentStep(currentStep).done(function (response) {
-            response = typeof response === 'string' ? JSON.parse(response) : response;
-            if (response && response.success) {
-                updateStepStateUI();
+        if (!validateStep(currentStep)) return;
+        saveDraft(currentStep, function () {
+            if (currentStep < 3) {
                 setStep(currentStep + 1);
             }
         });
     });
 
     $(document).on('click', '[data-jump-step]', function () {
-        var targetStep = parseInt($(this).data('jump-step'), 10);
-        if (targetStep > currentStep && !validateStep(currentStep)) {
-            return;
-        }
-        setStep(targetStep);
+        setStep(parseInt($(this).data('jump-step'), 10));
     });
 
     function serializeContext(field) {
@@ -859,20 +697,14 @@ $(function () {
                 return;
             }
             var p = response.profile || {};
-            if (p.company_name) $('#company_name').val(p.company_name);
             if (p.company_website) $('#company_website').val(p.company_website);
-            if (p.company_description) $('#company_description').val(p.company_description);
+            if (p.company_name) $('#company_name').val(p.company_name);
             if (p.company_industry) $('#company_industry').val(p.company_industry);
-            if (p.ideal_customer_profile) $('#ideal_customer_profile').val(p.ideal_customer_profile);
             if (p.company_description) $('#company_description').val(p.company_description);
-            if (p.target_audience) $('#target_audience').val(p.target_audience);
-            if (p.key_products) $('#key_products').val(p.key_products);
-            if (p.differentiators) $('#differentiators').val(p.differentiators);
-            if (p.brand_voice) $('#brand_voice').val(p.brand_voice);
+            if (p.ideal_customer_profile) $('#ideal_customer_profile').val(p.ideal_customer_profile);
             if (p.website_snapshot) $('#website_snapshot_json').val(JSON.stringify(p.website_snapshot));
             if (p.website_extracted_at) $('#website_extracted_at').val(p.website_extracted_at);
-
-            ['top_problems_solved','unique_selling_points','brand_colors','reference_brands','competitors'].forEach(function (field) {
+            ['top_problems_solved','unique_selling_points','competitors','reference_brands','brand_colors'].forEach(function (field) {
                 if (p[field]) {
                     $('#' + field).val((p[field] || []).join("\n"));
                     initTagField($('[data-target="' + field + '"]'));
@@ -880,11 +712,11 @@ $(function () {
             });
             if (p.visual_mood) {
                 $('#visual_mood').val((p.visual_mood || []).join("\n"));
-                syncGeneratedChoices('visual_mood');
+                syncGeneratedPills('visual_mood');
             }
             if (p.tone_attributes) {
                 $('#tone_attributes').val((p.tone_attributes || []).join("\n"));
-                syncGeneratedChoices('tone_attributes');
+                syncGeneratedPills('tone_attributes');
             }
             renderColorPreview(parseLines($('#brand_colors').val()));
             updateReview();
@@ -896,10 +728,10 @@ $(function () {
         });
     });
 
-    function syncGeneratedChoices(field) {
-        var chosen = parseLines($('#' + field).val());
-        $('[data-pill-target="' + field + '"] [data-value]').each(function () {
-            $(this).toggleClass('selected', chosen.indexOf($(this).data('value')) !== -1);
+    function syncGeneratedPills(field) {
+        var values = parseLines($('#' + field).val());
+        $('[data-pill-target="' + field + '"] .ci-pill').each(function () {
+            $(this).toggleClass('selected', values.indexOf($(this).data('value')) !== -1);
         });
     }
 
@@ -921,7 +753,7 @@ $(function () {
                 initTagField($('[data-target="' + field + '"]'));
             } else if (field === 'visual_mood' || field === 'tone_attributes') {
                 $('#' + field).val((value || []).join("\n"));
-                syncGeneratedChoices(field);
+                syncGeneratedPills(field);
             }
             renderColorPreview(parseLines($('#brand_colors').val()));
             updateReview();
@@ -956,33 +788,17 @@ $(function () {
         });
     });
 
-    var autosaveTimer = null;
     $('#company-intelligence-form').on('input change', 'input, textarea', function () {
         updateReview();
-        updateStepStateUI();
-    setSaveState("<?php echo addslashes(__('Unsaved changes')); ?>", '');
-        clearTimeout(autosaveTimer);
-        if (currentStep < 4) {
-            autosaveTimer = setTimeout(function () {
-                if (getStepStatus(currentStep)) {
-                    saveCurrentStep(currentStep, {silent: true});
-                }
-            }, 900);
-        }
+        setSaveState("<?php echo addslashes(__('Unsaved changes')); ?>", '');
     });
 
-    $('#company-intelligence-form').on('submit', function () {
-        setSaveState("<?php echo addslashes(__('Saving final profile...')); ?>", '');
-    });
-
-    updateReview();
     renderColorPreview(parseLines($('#brand_colors').val()));
-    syncChoiceTarget('visual_mood');
-    syncChoiceTarget('tone_attributes');
-    syncGeneratedChoices('visual_mood');
-    syncGeneratedChoices('tone_attributes');
-    updateStepStateUI();
-    setSavedAt('');
+    syncPillTarget('visual_mood');
+    syncPillTarget('tone_attributes');
+    syncGeneratedPills('visual_mood');
+    syncGeneratedPills('tone_attributes');
+    updateReview();
     setStep(1);
 });
 </script>
