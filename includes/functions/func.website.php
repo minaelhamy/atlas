@@ -905,11 +905,54 @@ function website_builder_update_page($siteId, $pageKey, array $content, $title =
 function website_builder_get_site_by_slug($slug)
 {
     website_builder_ensure_tables();
-    $site = ORM::for_table(website_builder_table('website_sites'))
-        ->where('slug', $slug)
-        ->find_one();
+    $rawSlug = trim((string) $slug);
+    if ($rawSlug === '') {
+        return null;
+    }
 
-    return $site ? website_builder_format_site($site) : null;
+    $candidates = [$rawSlug];
+
+    $parsedHost = parse_url($rawSlug, PHP_URL_HOST);
+    if (!empty($parsedHost)) {
+        $candidates[] = $parsedHost;
+    }
+
+    $normalized = preg_replace('#^https?://#i', '', $rawSlug);
+    $normalized = preg_replace('#/.*$#', '', $normalized);
+    $normalized = trim((string) $normalized, '/');
+    if ($normalized !== '') {
+        $candidates[] = $normalized;
+    }
+
+    foreach (array_values(array_unique($candidates)) as $candidate) {
+        $site = ORM::for_table(website_builder_table('website_sites'))
+            ->where('slug', $candidate)
+            ->find_one();
+        if ($site) {
+            return website_builder_format_site($site);
+        }
+
+        $site = ORM::for_table(website_builder_table('website_sites'))
+            ->where('subdomain', $candidate)
+            ->find_one();
+        if ($site) {
+            return website_builder_format_site($site);
+        }
+
+        if (stripos($candidate, '.hatchers.ai') !== false) {
+            $shortCandidate = preg_replace('/\.hatchers\.ai$/i', '', $candidate);
+            if ($shortCandidate !== '') {
+                $site = ORM::for_table(website_builder_table('website_sites'))
+                    ->where('slug', $shortCandidate)
+                    ->find_one();
+                if ($site) {
+                    return website_builder_format_site($site);
+                }
+            }
+        }
+    }
+
+    return null;
 }
 
 function website_builder_seed_products($siteId, array $offerings)
