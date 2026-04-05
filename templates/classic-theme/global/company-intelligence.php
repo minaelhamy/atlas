@@ -202,7 +202,7 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
 .color-swatch{display:flex;flex-direction:column;align-items:center;gap:4px}
 .cs-circle{width:32px;height:32px;border-radius:50%}
 .cs-hex{font-size:9px;color:#aaa;font-weight:500;letter-spacing:0.03em}
-.footer-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-top:0.5px solid #eee;background:#fafaf8;gap:12px}
+.footer-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-top:0.5px solid #eee;background:#fafaf8;gap:12px;position:sticky;bottom:0;z-index:8;box-shadow:0 -10px 24px rgba(20,20,20,.04)}
 .btn-back{height:38px;padding:0 18px;background:transparent;color:#888;border:1px solid #e0ddd6;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
 .btn-back:hover{background:#f0eee8}
 .btn-next{height:38px;padding:0 22px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
@@ -214,6 +214,9 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
 .btn-generate{height:40px;padding:0 22px;background:#871F7A;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:background 0.1s}
 .btn-generate:hover{background:#6d1864}
 .btn-generate i{font-size:12px}
+.footer-center{flex:1}
+#prev-btn,#next-btn,#final-save-btn{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+#final-save-btn.atlas-hidden{display:none!important}
 .atlas-hidden{display:none!important}
 .atlas-saving{opacity:.7;pointer-events:none}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
@@ -229,6 +232,7 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
   .ai-input-row,.section-title-row,.gen-strip,.footer-bar,.website-row{flex-direction:column;align-items:stretch}
   .review-grid{grid-template-columns:1fr}
   .footer-center{align-items:flex-start}
+  #prev-btn,#next-btn,#final-save-btn{width:100%}
 }
 </style>
 
