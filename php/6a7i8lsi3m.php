@@ -516,7 +516,7 @@ function build_website_draft()
     }
 
     $result['success'] = true;
-    $result['redirect'] = $config['site_url'] . 'your-website/editor/' . $site['id'];
+    $result['redirect'] = $config['site_url'] . 'website-editor/' . $site['id'];
     die(json_encode($result));
 }
 

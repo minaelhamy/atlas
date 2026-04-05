@@ -1,8 +1,9 @@
 <?php
 global $config;
 
+$siteId = !empty($matches['id']) ? (int) $matches['id'] : 0;
 $slug = !empty($matches['slug']) ? validate_input($matches['slug']) : '';
-$site = $slug !== '' ? website_builder_get_site_by_slug($slug) : null;
+$site = $siteId > 0 ? website_builder_get_site($siteId) : ($slug !== '' ? website_builder_get_site_by_slug($slug) : null);
 
 if (empty($site)) {
     page_not_found();

@@ -4,8 +4,8 @@ $companyName = !empty($social_profile['company_name']) ? $social_profile['compan
 $selectedTemplateKey = !empty($selected_template['key']) ? $selected_template['key'] : '';
 $businessTypeLabel = $selected_type === 'ecommerce' ? __('ecommerce') : __('service');
 $websiteTemplateItems = !empty($website_templates) && is_array($website_templates) ? $website_templates : [];
-$websiteEditorBaseUrl = $config['site_url'] . 'your-website/editor';
-$websiteDashboardBaseUrl = $config['site_url'] . 'your-website/dashboard';
+$websiteEditorBaseUrl = $config['site_url'] . 'website-editor';
+$websiteDashboardBaseUrl = $config['site_url'] . 'website-dashboard';
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>

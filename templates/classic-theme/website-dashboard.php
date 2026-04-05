@@ -1,8 +1,8 @@
 <?php
 overall_header(__("Website Dashboard"));
-$websiteEditorUrl = $config['site_url'] . 'your-website/editor/' . $site['id'];
-$websitePublicUrl = $config['site_url'] . 'site/' . $site['slug'];
-$websiteDashboardBaseUrl = $config['site_url'] . 'your-website/dashboard/' . $site['id'];
+$websiteEditorUrl = $config['site_url'] . 'website-editor/' . $site['id'];
+$websitePublicUrl = $config['site_url'] . 'website-preview/' . $site['id'];
+$websiteDashboardBaseUrl = $config['site_url'] . 'website-dashboard/' . $site['id'];
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>

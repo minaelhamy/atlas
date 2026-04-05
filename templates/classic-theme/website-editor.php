@@ -13,10 +13,10 @@ $hero = $selectedPageKey === 'home' ? (!empty($selectedPageContent['hero']) ? $s
 $offerings = $selectedPageKey === 'home' && !empty($selectedPageContent['offerings']) ? $selectedPageContent['offerings'] : $offerings;
 $faq = $selectedPageKey === 'home' && !empty($selectedPageContent['faq']) ? $selectedPageContent['faq'] : $faq;
 $proof = $selectedPageKey === 'home' && !empty($selectedPageContent['proof']) ? $selectedPageContent['proof'] : (!empty($homePage['content']['proof']) ? $homePage['content']['proof'] : []);
-$previewUrl = $config['site_url'] . 'site/' . $site['slug'];
+$previewUrl = $config['site_url'] . 'website-preview/' . $site['id'];
 $websiteBuilderUrl = $config['site_url'] . 'your-website';
-$websiteDashboardUrl = $config['site_url'] . 'your-website/dashboard/' . $site['id'];
-$websiteEditorBaseUrl = $config['site_url'] . 'your-website/editor/' . $site['id'];
+$websiteDashboardUrl = $config['site_url'] . 'website-dashboard/' . $site['id'];
+$websiteEditorBaseUrl = $config['site_url'] . 'website-editor/' . $site['id'];
 $weekdayLabels = function_exists('website_builder_weekday_labels') ? website_builder_weekday_labels() : [];
 $defaultServiceSchedule = function_exists('website_builder_default_service_schedule') ? website_builder_default_service_schedule() : [];
 ?>
