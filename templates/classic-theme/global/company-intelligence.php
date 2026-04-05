@@ -8,13 +8,12 @@ $brandColors = !empty($social_profile['brand_colors']) ? implode("\n", $social_p
 $referenceBrands = !empty($social_profile['reference_brands']) ? implode("\n", $social_profile['reference_brands']) : '';
 $competitors = !empty($social_profile['competitors']) ? implode("\n", $social_profile['competitors']) : '';
 $toneAttributes = !empty($social_profile['tone_attributes']) ? $social_profile['tone_attributes'] : [];
-$visualMood = !empty($social_profile['visual_mood']) ? $social_profile['visual_mood'] : [];
+$current_logo = !empty($social_profile['company_logo']) ? $social_profile['company_logo'] : '';
 $allToneOptions = ['Bold & direct', 'Educational', 'Playful', 'Inspirational', 'Grounded / real', 'Professional', 'Conversational', 'Minimal / quiet'];
-$allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid', 'Soft lifestyle', 'Bold & direct'];
 ?>
 <style>
 .ci-wrap{background:#f2f0eb;padding:28px 20px 40px;min-height:100vh}
-.ci-shell{background:#fff;border:.5px solid #e0ddd6;border-radius:16px;max-width:780px;margin:0 auto;overflow:hidden}
+.ci-shell{background:#fff;border:.5px solid #e0ddd6;border-radius:16px;max-width:720px;margin:0 auto;overflow:hidden}
 .ci-hdr{padding:24px 28px 20px;border-bottom:.5px solid #eee}
 .ci-hdr-title{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:4px;letter-spacing:-.01em}
 .ci-hdr-sub{font-size:13px;color:#888;line-height:1.5;margin-bottom:18px}
@@ -67,18 +66,36 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
 .ci-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .ci-section-block{margin-bottom:32px}
 .ci-section-num{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ccc;margin-bottom:3px}
-.ci-section-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.ci-section-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
 .ci-section-title{font-size:14px;font-weight:600;color:#1a1a1a;letter-spacing:-.01em}
 .ci-section-sub{font-size:12.5px;color:#888;line-height:1.5;margin-bottom:14px}
 .ci-opt-badge{font-size:10px;color:#aaa;background:#f4f2ee;border:.5px solid #e0ddd6;border-radius:4px;padding:1px 7px;font-weight:500;margin-left:6px;letter-spacing:.02em;vertical-align:middle}
+.ci-btn-rescan{height:34px;padding:0 16px;background:#fff;border:1px solid #e0ddd6;border-radius:8px;font-size:12px;font-weight:500;color:#666;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:background .1s}
+.ci-btn-rescan:hover{background:#f5f3ee}
 .ci-color-zone{background:#faf9f5;border:1px solid #e8e5de;border-radius:12px;padding:16px}
+.ci-color-zone-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ci-color-source{display:flex;align-items:center;gap:6px;font-size:12px;color:#888}
+.ci-color-source-badge{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#555;background:#fff;border:1px solid #e0ddd6;border-radius:6px;padding:3px 10px}
+.ci-color-source-count{font-size:11px;color:#aaa}
 .ci-swatches-row{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
 .ci-swatch-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;position:relative}
 .ci-swatch-circle{width:42px;height:42px;border-radius:50%;border:2px solid transparent;transition:transform .15s,border-color .15s}
 .ci-swatch-item.selected .ci-swatch-circle{border-color:#1a1a1a;transform:scale(1.08)}
 .ci-swatch-hex{font-size:9.5px;color:#aaa;font-weight:500;letter-spacing:.04em}
-.ci-upload-area{border:1.5px dashed #e0ddd6;border-radius:10px;padding:28px 20px;text-align:center;background:#fafaf8}
-.ci-upload-sub{font-size:11.5px;color:#bbb;margin-top:6px}
+.ci-logo-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:12px}
+.ci-upload-area{border:1.5px dashed #e0ddd6;border-radius:10px;padding:28px 20px;text-align:center;background:#fafaf8;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.ci-upload-title{font-size:13px;font-weight:500;color:#888}
+.ci-upload-sub{font-size:11.5px;color:#bbb;line-height:1.5;max-width:230px}
+.ci-browse-btn{height:30px;padding:0 16px;border:1px solid #e0ddd6;border-radius:7px;background:#fff;color:#666;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;display:inline-flex;align-items:center;justify-content:center}
+.ci-browse-btn:hover{background:#f5f3ee}
+.ci-logo-preview{border:1px solid #e8e5de;border-radius:10px;background:#faf9f5;padding:14px;min-height:170px}
+.ci-logo-preview-label{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#bbb;margin-bottom:10px}
+.ci-logo-preview-strip{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ci-logo-preview-card-dark,.ci-logo-preview-card-light{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ci-logo-preview-card-dark{background:#111}
+.ci-logo-preview-card-light{background:#f2f0eb;border:1px solid #e0ddd6}
+.ci-logo-preview-card-dark img,.ci-logo-preview-card-light img{max-width:32px;max-height:32px;object-fit:contain}
+.ci-logo-preview-note{font-size:11.5px;color:#aaa;line-height:1.5}
 .ci-pill-row{display:flex;flex-wrap:wrap;gap:8px}
 .ci-pill{font-size:12.5px;font-weight:500;padding:7px 16px;border:1.5px solid #e0ddd6;border-radius:20px;cursor:pointer;color:#666;background:#fff;font-family:inherit;transition:all .15s}
 .ci-pill:hover{border-color:#aaa;color:#333}
@@ -87,15 +104,20 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
 .ci-brand-input-wrap:focus-within{border-color:#c8c4bc}
 .ci-brand-input{border:none;outline:none;font-size:13px;font-family:inherit;color:#1a1a1a;background:transparent;width:100%}
 .ci-brand-input::placeholder{color:#c8c8c8}
-.ci-moodboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
-.ci-moodboard img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;border:1px solid #e8e5de}
 .ci-review-strip{background:#f5f0ff;border:1px solid #d8cced;border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.ci-review-strip-icon{width:38px;height:38px;border-radius:10px;background:#871F7A;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ci-review-strip-icon i{font-size:16px;color:#fff}
 .ci-review-strip-body{flex:1;min-width:0}
 .ci-review-strip-title{font-size:13.5px;font-weight:600;color:#2d0a2a;margin-bottom:2px;letter-spacing:-.01em}
 .ci-review-strip-sub{font-size:12px;color:#7a4a78;line-height:1.5}
+.ci-review-strip .ci-btn-atlas{height:36px;padding:0 18px;background:#871F7A;color:#fff;border:none;border-radius:8px;font-size:12.5px;font-weight:600}
+.ci-review-strip .ci-btn-atlas:hover{background:#6d1864}
 .ci-website-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;background:#faf9f5;border:1px solid #e8e5de;border-radius:10px}
+.ci-website-icon{width:22px;height:22px;border-radius:5px;background:#f0eee5;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ci-website-icon i{font-size:11px;color:#888}
 .ci-website-url{font-size:13px;font-weight:500;color:#3E93E8;flex:1}
 .ci-website-meta{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ci-website-meta i{font-size:11px;color:#2FAF49}
 .ci-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .ci-review-card{border:1px solid #e8e5de;border-radius:10px;overflow:hidden}
 .ci-review-card.full-width{grid-column:1/-1}
@@ -110,6 +132,7 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
 .ci-color-swatch{display:flex;flex-direction:column;align-items:center;gap:4px}
 .ci-color-swatch-circle{width:32px;height:32px;border-radius:50%}
 .ci-color-swatch-hex{font-size:9px;color:#aaa;font-weight:500;letter-spacing:.03em}
+.ci-color-review-note{font-size:11px;color:#aaa}
 .ci-footer-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-top:.5px solid #eee;background:#fafaf8;gap:12px}
 .ci-btn-back{height:38px;padding:0 18px;background:transparent;color:#888;border:1px solid #e0ddd6;border-radius:8px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer}
 .ci-btn-back:hover{background:#f0eee8}
@@ -120,7 +143,7 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
 .ci-hidden{display:none!important}
 .ci-spinner{opacity:.7;pointer-events:none}
 @media (max-width: 991px){
-  .ci-grid-2,.ci-review-grid{grid-template-columns:1fr}
+  .ci-grid-2,.ci-review-grid,.ci-logo-grid{grid-template-columns:1fr}
   .ci-ai-input-row,.ci-footer-bar,.ci-section-title-row,.ci-review-strip{flex-direction:column;align-items:stretch}
   .ci-footer-note{text-align:left}
 }
@@ -267,11 +290,18 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                                     <div class="ci-section-title-row">
                                         <div>
                                             <div class="ci-section-title"><?php _e("Confirm your brand colors") ?></div>
-                                            <div class="ci-section-sub"><?php _e("Pick the colors Atlas should keep using across social media generation and your website.") ?></div>
+                                            <div class="ci-section-sub"><?php _e("We extracted these from your website. Select the ones to keep, remove the rest, or add new ones.") ?></div>
                                         </div>
-                                        <button type="button" class="ci-generate-btn" data-generate-field="brand_colors"><?php _e("Generate with Atlas") ?></button>
+                                        <button type="button" class="ci-btn-rescan" data-generate-field="brand_colors"><?php _e("Generate with Atlas") ?></button>
                                     </div>
                                     <div class="ci-color-zone">
+                                        <div class="ci-color-zone-top">
+                                            <div class="ci-color-source">
+                                                <?php _e("Extracted from") ?>
+                                                <div class="ci-color-source-badge"><?php _esc(!empty($social_profile['company_website']) ? $social_profile['company_website'] : __('your website')) ?></div>
+                                            </div>
+                                            <div class="ci-color-source-count" id="ci-color-count"><?php echo count(!empty($social_profile['brand_colors']) ? $social_profile['brand_colors'] : []) . ' ' . __('colors found'); ?></div>
+                                        </div>
                                         <div class="ci-tag-field" data-target="brand_colors">
                                             <textarea class="ci-hidden" name="brand_colors" id="brand_colors"><?php _esc($brandColors) ?></textarea>
                                             <input class="ci-tag-input" type="text" placeholder="#111111">
@@ -283,33 +313,37 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                                 <div class="ci-section-block">
                                     <div class="ci-section-num">02 — <?php _e("Logo") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
                                     <div class="ci-section-title"><?php _e("Upload your logo") ?></div>
-                                    <div class="ci-section-sub"><?php _e("We'll use it to preview how your content and website will look before you generate.") ?></div>
-                                    <div class="ci-upload-area">
-                                        <div><?php _e("Drop your logo here") ?></div>
-                                        <div class="ci-upload-sub"><?php _e("SVG, PNG, or JPG — transparent background preferred") ?></div>
-                                        <input type="file" name="company_logo" accept="image/*" style="margin-top:10px;">
-                                    </div>
-                                </div>
-
-                                <div class="ci-section-block">
-                                    <div class="ci-section-num">03 — <?php _e("Visual mood") ?></div>
-                                    <div class="ci-section-title-row">
-                                        <div>
-                                            <div class="ci-section-title"><?php _e("Pick a visual mood") ?></div>
-                                            <div class="ci-section-sub"><?php _e("Based on your brand, choose the direction Atlas should follow visually.") ?></div>
+                                    <div class="ci-section-sub"><?php _e("We'll use it to preview how your content will look before you generate.") ?></div>
+                                    <div class="ci-logo-grid">
+                                        <div class="ci-upload-area">
+                                            <div class="ci-upload-title"><?php _e("Drop your logo here") ?></div>
+                                            <div class="ci-upload-sub"><?php _e("SVG, PNG, or JPG — transparent background preferred") ?></div>
+                                            <label class="ci-browse-btn">
+                                                <?php _e("Browse files") ?>
+                                                <input type="file" name="company_logo" accept="image/*" style="display:none;">
+                                            </label>
                                         </div>
-                                        <button type="button" class="ci-generate-btn" data-generate-field="visual_mood"><?php _e("Generate with Atlas") ?></button>
+                                        <div class="ci-logo-preview">
+                                            <div class="ci-logo-preview-label"><?php _e("Live preview") ?></div>
+                                            <div class="ci-logo-preview-strip">
+                                                <div class="ci-logo-preview-card-dark">
+                                                    <?php if(!empty($current_logo)){ ?>
+                                                        <img src="<?php echo UPLOAD_URI . '/' . _esc($current_logo, 0); ?>" alt="<?php _e("Logo") ?>">
+                                                    <?php } ?>
+                                                </div>
+                                                <div class="ci-logo-preview-card-light">
+                                                    <?php if(!empty($current_logo)){ ?>
+                                                        <img src="<?php echo UPLOAD_URI . '/' . _esc($current_logo, 0); ?>" alt="<?php _e("Logo") ?>">
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                            <div class="ci-logo-preview-note"><?php _e("Upload your logo to preview it on dark and light post tiles."); ?></div>
+                                        </div>
                                     </div>
-                                    <div class="ci-pill-row" data-pill-target="visual_mood">
-                                        <?php foreach ($allVisualMoodOptions as $option) { ?>
-                                            <button type="button" class="ci-pill <?php echo in_array($option, $visualMood, true) ? 'selected' : ''; ?>" data-value="<?php _esc($option) ?>"><?php _esc($option) ?></button>
-                                        <?php } ?>
-                                    </div>
-                                    <textarea class="ci-hidden" name="visual_mood" id="visual_mood"><?php _esc(implode("\n", $visualMood)) ?></textarea>
                                 </div>
 
                                 <div class="ci-section-block">
-                                    <div class="ci-section-num">04 — <?php _e("Tone of voice") ?></div>
+                                    <div class="ci-section-num">03 — <?php _e("Tone of voice") ?></div>
                                     <div class="ci-section-title-row">
                                         <div>
                                             <div class="ci-section-title"><?php _e("How should your content sound?") ?></div>
@@ -326,7 +360,7 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                                 </div>
 
                                 <div class="ci-section-block">
-                                    <div class="ci-section-num">05 — <?php _e("Reference brands") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
+                                    <div class="ci-section-num">04 — <?php _e("Reference brands") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
                                     <div class="ci-section-title-row">
                                         <div>
                                             <div class="ci-section-title"><?php _e("Brands or accounts you admire") ?></div>
@@ -340,30 +374,14 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                                     </div>
                                 </div>
 
-                                <div class="ci-section-block">
-                                    <div class="ci-section-num">06 — <?php _e("Moodboard") ?> <span class="ci-opt-badge"><?php _e("optional") ?></span></div>
-                                    <div class="ci-section-title"><?php _e("Images that inspire you") ?></div>
-                                    <div class="ci-section-sub"><?php _e("Aesthetic references, campaign posts, or visuals that capture the feeling you’re going for.") ?></div>
-                                    <div class="ci-upload-area">
-                                        <div><?php _e("Drop images or paste URLs") ?></div>
-                                        <div class="ci-upload-sub"><?php _e("PNG, JPG, or any visual reference.") ?></div>
-                                        <input type="file" name="moodboard_images[]" multiple accept="image/*" style="margin-top:10px;">
-                                    </div>
-                                    <?php if (!empty($moodboardImages)) { ?>
-                                        <div class="ci-moodboard">
-                                            <?php foreach ($moodboardImages as $moodboardImage) { ?>
-                                                <img src="<?php echo _esc($config['site_url'], 0) . 'storage/company/' . $moodboardImage; ?>" alt="">
-                                            <?php } ?>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-
                                 <textarea class="ci-hidden" name="brand_voice" id="brand_voice"><?php _esc($social_profile['brand_voice']) ?></textarea>
                                 <input class="ci-hidden" type="text" name="instagram_handle" id="instagram_handle" value="<?php _esc($social_profile['instagram_handle']) ?>">
+                                <textarea class="ci-hidden" name="visual_mood" id="visual_mood"><?php _esc('') ?></textarea>
                             </div>
 
                             <div class="ci-panel" data-panel="3">
                                 <div class="ci-review-strip">
+                                    <div class="ci-review-strip-icon"><i class="fa fa-star-o"></i></div>
                                     <div class="ci-review-strip-body">
                                         <div class="ci-review-strip-title"><?php _e("Ready to generate your marketing statements") ?></div>
                                         <div class="ci-review-strip-sub"><?php _e("Atlas will use this profile to write your hooks, value propositions, AI context, and Instagram content.") ?></div>
@@ -372,8 +390,9 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                                 </div>
 
                                 <div class="ci-website-row">
+                                    <div class="ci-website-icon"><i class="fa fa-globe"></i></div>
                                     <div class="ci-website-url" id="review-website"><?php _esc(!empty($social_profile['company_website']) ? $social_profile['company_website'] : __('No website added yet.')) ?></div>
-                                    <div class="ci-website-meta"><?php _e("Profile source"); ?></div>
+                                    <div class="ci-website-meta"><i class="fa fa-check-circle-o"></i><?php _e("Scanned successfully"); ?></div>
                                     <button type="button" class="ci-generate-btn" data-jump-step="1"><?php _e("Edit") ?></button>
                                 </div>
 
@@ -406,7 +425,7 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
                                         <div class="ci-review-head"><span class="ci-review-label"><?php _e("Brand colors") ?></span><button type="button" class="ci-generate-btn" data-jump-step="2"><?php _e("Edit") ?></button></div>
                                         <div class="ci-review-body">
                                             <div class="ci-color-swatches-preview" id="review-colors-swatches"></div>
-                                            <div class="ci-review-tags" id="review-colors"></div>
+                                            <div class="ci-color-review-note" id="review-colors-note"><?php _e("No colors confirmed yet."); ?></div>
                                         </div>
                                     </div>
                                     <div class="ci-review-card">
@@ -464,7 +483,7 @@ $(function () {
     var currentStep = 1;
     var stepTitles = {
         1: {title: "<?php echo addslashes(__('Tell us about your business')); ?>", sub: "<?php echo addslashes(__('This takes 2 minutes. Your answers power everything Atlas generates.')); ?>"},
-        2: {title: "<?php echo addslashes(__("What's your visual direction?")); ?>", sub: "<?php echo addslashes(__('We pulled your brand colors from your website. Confirm them, add your logo, then set your tone and references.')); ?>"},
+        2: {title: "<?php echo addslashes(__("What's your visual direction?")); ?>", sub: "<?php echo addslashes(__('Confirm your brand colors, upload your logo, define your tone, and add reference brands Atlas should learn from.')); ?>"},
         3: {title: "<?php echo addslashes(__('Review your business profile')); ?>", sub: "<?php echo addslashes(__('Check everything looks right. Edit any section before generating.')); ?>"}
     };
 
@@ -536,6 +555,7 @@ $(function () {
     function renderColorPreview(colors) {
         var $wrap = $('#atlas-ci-color-preview');
         $wrap.empty();
+        $('#ci-color-count').text(colors.length + ' <?php echo addslashes(__('colors found')); ?>');
         colors.forEach(function (color) {
             var $item = $('<div class="ci-swatch-item selected"></div>');
             $item.append('<div class="ci-swatch-circle" style="background:' + color + ';border-color:' + color + ';"></div>');
@@ -578,8 +598,9 @@ $(function () {
         renderReviewTags('#review-usps', parseLines($('#unique_selling_points').val()), false);
         renderReviewTags('#review-competitors', parseLines($('#competitors').val()), false);
         renderReviewTags('#review-reference-brands', parseLines($('#reference_brands').val()), false);
-        renderReviewTags('#review-tone', parseLines($('#tone_attributes').val()).concat(parseLines($('#visual_mood').val())), false);
-        renderReviewTags('#review-colors', parseLines($('#brand_colors').val()), false);
+        renderReviewTags('#review-tone', parseLines($('#tone_attributes').val()), false);
+        var colors = parseLines($('#brand_colors').val());
+        $('#review-colors-note').text(colors.length ? (colors.length + ' <?php echo addslashes(__('colors confirmed from your brand profile')); ?>') : "<?php echo addslashes(__('No colors confirmed yet.')); ?>");
     }
 
     function setStep(step) {
@@ -611,8 +632,9 @@ $(function () {
             }
         }
         if (step === 2) {
-            if (!parseLines($('#brand_colors').val()).length || !parseLines($('#visual_mood').val()).length || !parseLines($('#tone_attributes').val()).length) {
+            if (!parseLines($('#brand_colors').val()).length || !parseLines($('#tone_attributes').val()).length) {
                 quick_alert("<?php echo addslashes(__('Please complete your brand guidelines before continuing.')); ?>", 'error');
+                setSaveState("<?php echo addslashes(__('Brand guidelines are incomplete.')); ?>", 'error');
                 return false;
             }
         }
@@ -639,7 +661,7 @@ $(function () {
             if (response.profile && response.profile.moodboard_images) {
                 $('#existing_moodboard_images').val(response.profile.moodboard_images.join("\n"));
             }
-            setSaveState(response.message || "<?php echo addslashes(__('Saved')); ?>", 'success');
+            setSaveState(response.message || "<?php echo addslashes(__('Saved successfully.')); ?>", 'success');
             if (typeof done === 'function') {
                 done();
             }
@@ -651,12 +673,6 @@ $(function () {
 
     $('.ci-tag-field').each(function () {
         initTagField($(this));
-    });
-
-    $('[data-pill-target="visual_mood"]').on('click', '.ci-pill', function () {
-        $(this).toggleClass('selected');
-        syncPillTarget('visual_mood');
-        updateReview();
     });
 
     $('[data-pill-target="tone_attributes"]').on('click', '.ci-pill', function () {
@@ -673,6 +689,7 @@ $(function () {
         if (!validateStep(currentStep)) return;
         saveDraft(currentStep, function () {
             if (currentStep < 3) {
+                setSaveState("<?php echo addslashes(__('Saved successfully. Moving to the next step...')); ?>", 'success');
                 setStep(currentStep + 1);
             }
         });
@@ -710,10 +727,6 @@ $(function () {
                     initTagField($('[data-target="' + field + '"]'));
                 }
             });
-            if (p.visual_mood) {
-                $('#visual_mood').val((p.visual_mood || []).join("\n"));
-                syncGeneratedPills('visual_mood');
-            }
             if (p.tone_attributes) {
                 $('#tone_attributes').val((p.tone_attributes || []).join("\n"));
                 syncGeneratedPills('tone_attributes');
@@ -751,7 +764,7 @@ $(function () {
             } else if (field === 'top_problems_solved' || field === 'unique_selling_points' || field === 'brand_colors' || field === 'reference_brands' || field === 'competitors') {
                 $('#' + field).val((value || []).join("\n"));
                 initTagField($('[data-target="' + field + '"]'));
-            } else if (field === 'visual_mood' || field === 'tone_attributes') {
+            } else if (field === 'tone_attributes') {
                 $('#' + field).val((value || []).join("\n"));
                 syncGeneratedPills(field);
             }
@@ -794,9 +807,7 @@ $(function () {
     });
 
     renderColorPreview(parseLines($('#brand_colors').val()));
-    syncPillTarget('visual_mood');
     syncPillTarget('tone_attributes');
-    syncGeneratedPills('visual_mood');
     syncGeneratedPills('tone_attributes');
     updateReview();
     setStep(1);
