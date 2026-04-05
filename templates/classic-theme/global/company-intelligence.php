@@ -558,7 +558,7 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                                 <div class="saved-note" id="saved-note"><i class="fa fa-check"></i> Not saved yet</div>
                             </div>
                             <button class="btn-next" type="button" id="next-btn">Save & continue <i class="fa fa-arrow-right"></i></button>
-                            <button class="btn-generate atlas-hidden" type="submit" name="company-intelligence-submit" id="final-save-btn"><i class="fa fa-star-o"></i> Try to generate content</button>
+                            <button class="btn-generate atlas-hidden" type="button" id="final-save-btn"><i class="fa fa-star-o"></i> Try to generate content</button>
                         </div>
                     </form>
                 </div>
@@ -584,6 +584,7 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
 <script>
 $(function () {
     var currentStep = 1;
+    var socialMediaAutomationUrl = '<?php echo addslashes($link['AI_IMAGES']); ?>';
     var stepMeta = {
         1: {title: 'Tell us about your business', sub: 'This takes 2 minutes. Your answers power everything Atlas generates.'},
         2: {title: "What's your visual direction?", sub: 'We pulled your brand colors from your website. Confirm them, add your logo, then set your tone and references.'},
@@ -780,6 +781,10 @@ $(function () {
             }
         }
         return true;
+    }
+
+    function goToSocialMediaAutomation() {
+        window.location.href = socialMediaAutomationUrl;
     }
 
     function saveDraft(step, callback) {
@@ -987,7 +992,8 @@ $(function () {
     $('#refresh-intelligence').on('click', function () {
         var $btn = $(this);
         $btn.addClass('atlas-saving').html('<i class="fa fa-star-o"></i> Generating...');
-        $.post(ajaxurl + '?action=refresh_company_intelligence', {}, function (response) {
+        saveDraft(3, function () {
+            $.post(ajaxurl + '?action=refresh_company_intelligence', {}, function (response) {
             response = typeof response === 'string' ? JSON.parse(response) : response;
             if (!response.success) {
                 quick_alert(response.error || 'Unable to refresh company intelligence right now.', 'error');
@@ -999,9 +1005,25 @@ $(function () {
                 $('#review-competitive-edges').text(response.intelligence.competitive_edges || '');
             }
             quick_alert(response.message || 'Company intelligence refreshed successfully.', 'success');
-        }).always(function () {
-            $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Generate now');
+            goToSocialMediaAutomation();
+            }).fail(function () {
+                quick_alert('Unable to refresh company intelligence right now.', 'error');
+            }).always(function () {
+                $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Generate now');
+            });
         });
+    });
+
+    $('#final-save-btn').on('click', function () {
+        if (!validateStep(2)) return;
+        var $btn = $(this);
+        $btn.addClass('atlas-saving').html('<i class="fa fa-star-o"></i> Saving...');
+        saveDraft(3, function () {
+            goToSocialMediaAutomation();
+        });
+        setTimeout(function () {
+            $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Try to generate content');
+        }, 600);
     });
 
     $('#company-intelligence-form').on('input change', 'textarea, input[type=text], input[type=file]', function () {
