@@ -8,6 +8,7 @@ $referenceBrands = !empty($social_profile['reference_brands']) ? array_values($s
 $competitors = !empty($social_profile['competitors']) ? array_values($social_profile['competitors']) : [];
 $toneAttributes = !empty($social_profile['tone_attributes']) ? array_values($social_profile['tone_attributes']) : [];
 $currentLogo = !empty($social_profile['company_logo']) ? $social_profile['company_logo'] : '';
+$currentLogoUrl = !empty($currentLogo) ? $config['site_url'] . 'storage/company/' . $currentLogo : '';
 $brandColorSource = !empty($social_profile['company_website']) ? $social_profile['company_website'] : 'your website';
 $allToneOptions = ['Bold & direct', 'Educational', 'Playful', 'Inspirational', 'Grounded / real', 'Professional', 'Conversational', 'Minimal / quiet'];
 
@@ -437,8 +438,8 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                                     <div id="logo-uploaded" style="<?php echo !empty($currentLogo) ? '' : 'display:none'; ?>">
                                         <div class="logo-upload-area has-logo">
                                             <div class="logo-preview-strip">
-                                                <div class="logo-thumb-dark"><?php if(!empty($currentLogo)){ ?><img src="<?php echo UPLOAD_URI . '/' . _esc($currentLogo, 0); ?>" alt="logo"><?php } ?></div>
-                                                <div class="logo-thumb-light"><?php if(!empty($currentLogo)){ ?><img src="<?php echo UPLOAD_URI . '/' . _esc($currentLogo, 0); ?>" alt="logo"><?php } ?></div>
+                                                <div class="logo-thumb-dark"><?php if(!empty($currentLogoUrl)){ ?><img src="<?php echo _esc($currentLogoUrl, 0); ?>" alt="logo"><?php } ?></div>
+                                                <div class="logo-thumb-light"><?php if(!empty($currentLogoUrl)){ ?><img src="<?php echo _esc($currentLogoUrl, 0); ?>" alt="logo"><?php } ?></div>
                                                 <div class="logo-info">
                                                     <div class="logo-name" id="logo-file-name"><?php _esc(!empty($currentLogo) ? basename($currentLogo) : 'brand-logo'); ?></div>
                                                     <div class="logo-meta" id="logo-file-meta"><?php _e("Uploaded"); ?></div>
