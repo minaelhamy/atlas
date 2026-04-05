@@ -5,11 +5,34 @@ if (isset($current_user['id'])) {
     try {
         website_builder_ensure_tables();
 
+        $websiteView = !empty($_GET['view']) ? validate_input($_GET['view']) : '';
+        if ($websiteView === 'editor' || $websiteView === 'dashboard' || $websiteView === 'preview') {
+            if (!empty($_GET['id'])) {
+                $matches['id'] = (int) $_GET['id'];
+            }
+            if (!empty($_GET['slug'])) {
+                $matches['slug'] = validate_input($_GET['slug']);
+            }
+
+            if ($websiteView === 'editor') {
+                require __DIR__ . '/website-editor.php';
+                return;
+            }
+
+            if ($websiteView === 'dashboard') {
+                require __DIR__ . '/website-dashboard.php';
+                return;
+            }
+
+            require __DIR__ . '/website-view.php';
+            return;
+        }
+
         $social_profile = social_media_get_profile($_SESSION['user']['id']);
         $company_intelligence = social_media_get_company_intelligence($_SESSION['user']['id']);
         $existing_site = website_builder_get_primary_site($_SESSION['user']['id']);
         if (website_builder_site_is_launched($existing_site)) {
-            headerRedirect($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $existing_site['id']);
+            headerRedirect(website_builder_get_dashboard_url($existing_site['id']));
             exit;
         }
 

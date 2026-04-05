@@ -1,8 +1,9 @@
 <?php
 overall_header(__("Website Dashboard"));
-$websiteEditorUrl = $config['site_url'] . 'website-editor/' . $site['id'];
-$websitePublicUrl = $config['site_url'] . 'website-preview/' . $site['id'];
-$websiteDashboardBaseUrl = $config['site_url'] . 'website-dashboard/' . $site['id'];
+$websiteEditorUrl = website_builder_get_editor_url($site['id']);
+$websitePreviewUrl = website_builder_get_preview_url($site['id']);
+$websitePublicUrl = website_builder_get_site_public_url($site);
+$websiteDashboardBaseUrl = website_builder_get_dashboard_url($site['id']);
 ?>
 <div class="dashboard-container">
     <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
@@ -25,6 +26,7 @@ $websiteDashboardBaseUrl = $config['site_url'] . 'website-dashboard/' . $site['i
                 <p><?php _e("Track website-originated orders, bookings, and earnings as Atlas starts powering the transactional layer for this site."); ?></p>
                 <div class="atlas-workflow-actions margin-top-20">
                     <a href="<?php echo $websiteEditorUrl; ?>" class="button"><?php _e("Open editor") ?></a>
+                    <a href="<?php echo $websitePreviewUrl; ?>" class="button gray"><?php _e("Open preview") ?></a>
                     <a href="<?php echo $websitePublicUrl; ?>" target="_blank" class="button"><?php _e("Open public site") ?></a>
                 </div>
             </div>

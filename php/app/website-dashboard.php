@@ -25,13 +25,13 @@ $payout_error = '';
 
 if (isset($_POST['update_website_order_status']) && !empty($_POST['order_id'])) {
     website_builder_update_order_status($site['id'], (int) $_POST['order_id'], validate_input($_POST['status']));
-    transfer($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'], __('Order status updated successfully.'), __('Order updated'));
+    transfer(website_builder_get_dashboard_url($site['id']), __('Order status updated successfully.'), __('Order updated'));
     exit;
 }
 
 if (isset($_POST['update_website_booking_status']) && !empty($_POST['booking_id'])) {
     website_builder_update_booking_status($site['id'], (int) $_POST['booking_id'], validate_input($_POST['status']));
-    transfer($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'], __('Booking status updated successfully.'), __('Booking updated'));
+    transfer(website_builder_get_dashboard_url($site['id']), __('Booking status updated successfully.'), __('Booking updated'));
     exit;
 }
 
@@ -43,7 +43,7 @@ if (isset($_POST['reschedule_website_booking']) && !empty($_POST['booking_id']) 
     list($updatedBooking, $rescheduleError) = website_builder_reschedule_booking($site, (int) $_POST['booking_id'], $ownerBookingStart, 'owner');
     if (!empty($updatedBooking)) {
         website_builder_send_booking_rescheduled_notifications($site, $updatedBooking, 'owner');
-        transfer($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'], __('Booking rescheduled successfully.'), __('Booking updated'));
+        transfer(website_builder_get_dashboard_url($site['id']), __('Booking rescheduled successfully.'), __('Booking updated'));
         exit;
     }
     $payout_error = $rescheduleError;
@@ -57,7 +57,7 @@ if (isset($_POST['add_website_blackout'])) {
         validate_input($_POST['blackout_label'])
     );
     if ($blackoutOk) {
-        transfer($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'], __('Blackout period added successfully.'), __('Calendar updated'));
+        transfer(website_builder_get_dashboard_url($site['id']), __('Blackout period added successfully.'), __('Calendar updated'));
         exit;
     }
     $payout_error = $blackoutError;
@@ -65,7 +65,7 @@ if (isset($_POST['add_website_blackout'])) {
 
 if (isset($_POST['remove_website_blackout']) && !empty($_POST['blackout_id'])) {
     website_builder_remove_blackout_period($site['id'], validate_input($_POST['blackout_id']));
-    transfer($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'], __('Blackout period removed successfully.'), __('Calendar updated'));
+    transfer(website_builder_get_dashboard_url($site['id']), __('Blackout period removed successfully.'), __('Calendar updated'));
     exit;
 }
 
@@ -78,7 +78,7 @@ if (isset($_POST['request_website_payout'])) {
     ]);
 
     if ($payoutId) {
-        transfer($link['YOUR_WEBSITE_DASHBOARD'] . '/' . $site['id'], __('Payout request submitted successfully.'), __('Payout requested'));
+        transfer(website_builder_get_dashboard_url($site['id']), __('Payout request submitted successfully.'), __('Payout requested'));
         exit;
     }
     $payout_error = $payoutError;

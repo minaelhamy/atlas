@@ -20,7 +20,7 @@ if (isset($current_user['id'])) {
             'currency' => validate_input($_POST['product_currency']),
             'status' => 'active',
         ], !empty($_POST['product_id']) ? (int) $_POST['product_id'] : 0);
-        transfer($link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'] . '?page=' . (!empty($_GET['page']) ? validate_input($_GET['page']) : 'home'), __('Product saved successfully.'), __('Catalog updated'));
+        transfer(website_builder_get_editor_url($site['id'], ['page' => !empty($_GET['page']) ? validate_input($_GET['page']) : 'home']), __('Product saved successfully.'), __('Catalog updated'));
         exit;
     }
 
@@ -48,19 +48,19 @@ if (isset($current_user['id'])) {
             'blocked_dates' => validate_input($_POST['service_blocked_dates']),
             'status' => 'active',
         ], !empty($_POST['service_id']) ? (int) $_POST['service_id'] : 0);
-        transfer($link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'] . '?page=' . (!empty($_GET['page']) ? validate_input($_GET['page']) : 'home'), __('Service saved successfully.'), __('Services updated'));
+        transfer(website_builder_get_editor_url($site['id'], ['page' => !empty($_GET['page']) ? validate_input($_GET['page']) : 'home']), __('Service saved successfully.'), __('Services updated'));
         exit;
     }
 
     if (isset($_POST['delete_website_product']) && !empty($_POST['product_id'])) {
         website_builder_delete_product($site['id'], (int) $_POST['product_id']);
-        transfer($link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'], __('Product removed successfully.'), __('Catalog updated'));
+        transfer(website_builder_get_editor_url($site['id']), __('Product removed successfully.'), __('Catalog updated'));
         exit;
     }
 
     if (isset($_POST['delete_website_service']) && !empty($_POST['service_id'])) {
         website_builder_delete_service($site['id'], (int) $_POST['service_id']);
-        transfer($link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'], __('Service removed successfully.'), __('Services updated'));
+        transfer(website_builder_get_editor_url($site['id']), __('Service removed successfully.'), __('Services updated'));
         exit;
     }
 
@@ -97,7 +97,7 @@ if (isset($current_user['id'])) {
             }
 
             website_builder_update_page($site['id'], $pageKey, $content, $page['title']);
-            transfer($link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'] . '?page=' . $pageKey, __('Website section saved successfully.'), __('Draft updated'));
+            transfer(website_builder_get_editor_url($site['id'], ['page' => $pageKey]), __('Website section saved successfully.'), __('Draft updated'));
             exit;
         }
     }

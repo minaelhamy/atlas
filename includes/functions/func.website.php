@@ -835,6 +835,40 @@ function website_builder_get_site($siteId, $userId = null)
     return $site ? website_builder_format_site($site) : null;
 }
 
+function website_builder_get_owner_url($view, $siteId = 0, array $params = [])
+{
+    global $config;
+
+    $query = ['view' => $view];
+    if ((int) $siteId > 0) {
+        $query['id'] = (int) $siteId;
+    }
+
+    foreach ($params as $key => $value) {
+        if ($value === null || $value === '') {
+            continue;
+        }
+        $query[$key] = $value;
+    }
+
+    return $config['site_url'] . 'your-website?' . http_build_query($query);
+}
+
+function website_builder_get_editor_url($siteId, array $params = [])
+{
+    return website_builder_get_owner_url('editor', $siteId, $params);
+}
+
+function website_builder_get_dashboard_url($siteId, array $params = [])
+{
+    return website_builder_get_owner_url('dashboard', $siteId, $params);
+}
+
+function website_builder_get_preview_url($siteId, array $params = [])
+{
+    return website_builder_get_owner_url('preview', $siteId, $params);
+}
+
 function website_builder_get_site_pages($siteId)
 {
     website_builder_ensure_tables();
@@ -2041,9 +2075,9 @@ function website_builder_get_owner($userId)
 
 function website_builder_get_site_public_url($site)
 {
-    global $link;
     global $config;
-    return $config['site_url'] . 'site/' . (!empty($site['slug']) ? $site['slug'] : $site['subdomain']);
+    $publicSlug = !empty($site['slug']) ? $site['slug'] : $site['subdomain'];
+    return $config['site_url'] . 'site/' . ltrim((string) $publicSlug, '/');
 }
 
 function website_builder_send_email_message($toEmail, $toName, $subject, $body)
@@ -2138,7 +2172,7 @@ function website_builder_send_owner_request_notification($site, $requestType, $r
     if ($requestType === 'website_booking' && !empty($request['booking_start'])) {
         $lines[] = sprintf(__('Requested time: %s'), date('d M Y h:i A', strtotime($request['booking_start'])));
     }
-    $lines[] = sprintf(__('Website dashboard: %s'), $config['site_url'] . 'your-website/dashboard/' . $site['id']);
+    $lines[] = sprintf(__('Website dashboard: %s'), website_builder_get_dashboard_url($site['id']));
 
     $body = nl2br(escape(implode("\n", $lines)));
     return website_builder_send_email_message($owner['email'], $owner['name'], $subject, $body);
@@ -2178,7 +2212,7 @@ function website_builder_send_booking_rescheduled_notifications($site, $booking,
             $customerName,
             $scheduledTime,
             ucfirst($actor),
-            $GLOBALS['config']['site_url'] . 'your-website/dashboard/' . $site['id']
+            website_builder_get_dashboard_url($site['id'])
         )));
         website_builder_send_email_message($owner['email'], $owner['name'], $ownerSubject, $ownerBody);
     }
@@ -2205,7 +2239,7 @@ function website_builder_send_payout_status_email($payout, $site, $status, $reas
 
     $amount = price_format($payout['amount']);
     $method = !empty($payout['payment_method']) ? $payout['payment_method'] : __('Selected method');
-    $dashboardUrl = $config['site_url'] . 'your-website/dashboard/' . $site['id'];
+    $dashboardUrl = website_builder_get_dashboard_url($site['id']);
 
     if ($status === 'paid') {
         $subject = sprintf(__('Your website payout from %s was approved'), $site['site_name']);
