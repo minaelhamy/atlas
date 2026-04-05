@@ -62,14 +62,25 @@ if (isset($current_user['id'])) {
 
     $reference_brand_snapshots = social_media_get_reference_brand_snapshots($social_profile);
 
-    HtmlTemplate::display('global/company-intelligence', [
-        'social_profile' => $social_profile,
-        'company_intelligence' => $company_intelligence,
-        'reference_brand_snapshots' => $reference_brand_snapshots,
-        'social_error' => $social_error,
-        'current_avatar' => !empty($current_user['image']) ? $current_user['image'] : 'default_user.png',
-    ]);
-    exit;
+    try {
+        HtmlTemplate::display('global/company-intelligence', [
+            'social_profile' => $social_profile,
+            'company_intelligence' => $company_intelligence,
+            'reference_brand_snapshots' => $reference_brand_snapshots,
+            'social_error' => $social_error,
+            'current_avatar' => !empty($current_user['image']) ? $current_user['image'] : 'default_user.png',
+        ]);
+        exit;
+    } catch (Throwable $e) {
+        echo '<div style="max-width:900px;margin:40px auto;padding:24px;font-family:Arial,sans-serif;background:#fff;border:1px solid #eee;border-radius:16px">';
+        echo '<h1 style="margin:0 0 10px;font-size:32px;">Company Intelligence Debug</h1>';
+        echo '<p style="margin:0 0 16px;color:#666;">The page crashed while rendering. This debug view is temporary so we can identify the exact issue on the live server.</p>';
+        echo '<p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+        echo '<p><strong>File:</strong> ' . htmlspecialchars($e->getFile()) . '</p>';
+        echo '<p><strong>Line:</strong> ' . (int) $e->getLine() . '</p>';
+        echo '</div>';
+        exit;
+    }
 }
 
 error(__("Page Not Found"), __LINE__, __FILE__, 1);
