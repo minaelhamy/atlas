@@ -528,7 +528,6 @@ $allVisualMoodOptions = ['Dark & editorial', 'Warm & minimal', 'Documentary grid
         </div>
     </div>
 </div>
-<?php ob_start(); ?>
 <script>
 $(function () {
     var currentStep = 1;
@@ -988,6 +987,4 @@ $(function () {
 });
 </script>
 <?php
-$script = ob_get_clean();
-add_footer_js($script);
 overall_footer();
