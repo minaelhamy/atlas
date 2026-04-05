@@ -3,9 +3,13 @@ $router->map('GET|POST','/', 'app/home.php');
 $router->map('GET|POST','/home/[a:lang]?/?', 'app/home.php');
 $router->map('GET|POST','/dashboard/?', 'app/dashboard.php');
 $router->map('GET|POST','/your-website/?', 'app/website-builder.php');
+$router->map('GET|POST','/your-website/editor/[i:id]/?', 'app/website-editor.php');
 $router->map('GET|POST','/your-website/editor/[i:id]?/?', 'app/website-editor.php');
+$router->map('GET','/your-website/dashboard/[i:id]/?', 'app/website-dashboard.php');
 $router->map('GET','/your-website/dashboard/[i:id]?/?', 'app/website-dashboard.php');
+$router->map('GET','/your-website/checkout/[*:token]/?', 'app/website-checkout.php');
 $router->map('GET','/your-website/checkout/[*:token]?/?', 'app/website-checkout.php');
+$router->map('GET|POST','/site/[*:slug]/?', 'app/website-view.php');
 $router->map('GET|POST','/site/[*:slug]?/?', 'app/website-view.php');
 
 $router->map('GET|POST','/signup/?', 'global/signup.php');

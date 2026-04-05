@@ -462,7 +462,7 @@ function generate_website_setup_field()
 
 function build_website_draft()
 {
-    global $link;
+    global $config;
 
     $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
 
@@ -516,7 +516,7 @@ function build_website_draft()
     }
 
     $result['success'] = true;
-    $result['redirect'] = $link['YOUR_WEBSITE_EDITOR'] . '/' . $site['id'];
+    $result['redirect'] = $config['site_url'] . 'your-website/editor/' . $site['id'];
     die(json_encode($result));
 }
 

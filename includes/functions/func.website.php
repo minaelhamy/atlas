@@ -1743,8 +1743,8 @@ function website_builder_prepare_payment_session($site, $requestType, $requestId
         'product_id' => (int) $requestId,
         'user_id' => (int) $site['user_id'],
         'website_site_id' => (int) $site['id'],
-        'return_url' => $link['YOUR_WEBSITE_PUBLIC'] . '/' . $site['slug'] . '?checkout=success',
-        'cancel_url' => $link['YOUR_WEBSITE_PUBLIC'] . '/' . $site['slug'] . '?checkout=cancel',
+        'return_url' => $config['site_url'] . 'site/' . (!empty($site['slug']) ? $site['slug'] : $site['subdomain']) . '?checkout=success',
+        'cancel_url' => $config['site_url'] . 'site/' . (!empty($site['slug']) ? $site['slug'] : $site['subdomain']) . '?checkout=cancel',
         'trans_desc' => $requestType === 'website_order'
             ? sprintf(__('Website order for %s'), $title)
             : sprintf(__('Website booking for %s'), $title),
@@ -2042,7 +2042,8 @@ function website_builder_get_owner($userId)
 function website_builder_get_site_public_url($site)
 {
     global $link;
-    return $link['YOUR_WEBSITE_PUBLIC'] . '/' . $site['slug'];
+    global $config;
+    return $config['site_url'] . 'site/' . (!empty($site['slug']) ? $site['slug'] : $site['subdomain']);
 }
 
 function website_builder_send_email_message($toEmail, $toName, $subject, $body)
