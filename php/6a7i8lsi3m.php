@@ -587,9 +587,24 @@ function website_platform_prepare_launch()
 
     $prepared = website_platform_provision_workspace($user, $socialProfile, $companyIntelligence);
     if (empty($prepared['success'])) {
-        $result['message'] = !empty($prepared['error']) ? $prepared['error'] : $result['message'];
+        $message = !empty($prepared['error']) ? $prepared['error'] : $result['message'];
+        if (!empty($prepared['status_code'])) {
+            $message .= ' ' . __('Upstream status:') . ' ' . (int) $prepared['status_code'] . '.';
+        }
+        if (!empty($prepared['raw'])) {
+            $snippet = trim(strip_tags((string) $prepared['raw']));
+            if ($snippet !== '') {
+                $snippet = preg_replace('/\s+/', ' ', $snippet);
+                $snippet = mb_substr($snippet, 0, 220);
+                $message .= ' ' . __('Upstream response:') . ' ' . $snippet;
+            }
+        }
+        $result['message'] = $message;
         if (!empty($prepared['raw'])) {
             $result['debug'] = $prepared['raw'];
+        }
+        if (!empty($prepared['status_code'])) {
+            $result['status_code'] = (int) $prepared['status_code'];
         }
         die(json_encode($result));
     }
