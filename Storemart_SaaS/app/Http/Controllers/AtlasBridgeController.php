@@ -24,34 +24,52 @@ use Illuminate\Support\Str;
 
 class AtlasBridgeController extends Controller
 {
+    protected $atlasLinkTable = 'atlas_workspace_links';
+
+    public function provision(Request $request)
+    {
+        [$payload, $errorResponse] = $this->validatedPayload($request);
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
+        $this->ensureAtlasLinkTable();
+        $vendor = $this->findLinkedVendor($payload);
+        if (!$vendor) {
+            $vendor = $this->createVendorWorkspace($payload);
+        }
+
+        if (!$vendor) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Storemart workspace not found.',
+            ], 500);
+        }
+
+        $this->syncVendor($vendor, $payload);
+        $this->saveAtlasLink($payload, $vendor);
+
+        return response()->json([
+            'success' => true,
+            'platform_user_id' => (int) $vendor->id,
+            'platform_vendor_id' => (int) $vendor->id,
+            'platform_slug' => (string) $vendor->slug,
+            'platform_email' => (string) $vendor->email,
+            'platform_status' => 'active',
+            'dashboard_url' => url('/admin/dashboard'),
+            'public_url' => url('/' . ltrim((string) $vendor->slug, '/')),
+        ]);
+    }
+
     public function launch(Request $request)
     {
-        $payloadEncoded = (string) $request->query('payload', '');
-        $signature = (string) $request->query('sig', '');
-        $sharedSecret = (string) env('WEBSITE_PLATFORM_SHARED_SECRET', env('APP_KEY', 'atlas-website-secret'));
-
-        if ($payloadEncoded === '' || $signature === '') {
-            abort(403, 'Missing launch signature.');
+        [$payload, $errorResponse] = $this->validatedPayload($request);
+        if ($errorResponse) {
+            abort($errorResponse->getStatusCode(), $errorResponse->getData(true)['error']);
         }
 
-        $expectedSignature = hash_hmac('sha256', $payloadEncoded, $sharedSecret);
-        if (!hash_equals($expectedSignature, $signature)) {
-            abort(403, 'Invalid launch signature.');
-        }
-
-        $payloadJson = base64_decode(strtr($payloadEncoded, '-_', '+/'));
-        $payload = json_decode((string) $payloadJson, true);
-
-        if (!is_array($payload) || empty($payload['email'])) {
-            abort(403, 'Invalid launch payload.');
-        }
-
-        if (!empty($payload['exp']) && (int) $payload['exp'] < time()) {
-            abort(403, 'Launch link expired.');
-        }
-
-        $vendor = User::where('email', $payload['email'])->where('type', 2)->first();
-
+        $this->ensureAtlasLinkTable();
+        $vendor = $this->findLinkedVendor($payload);
         if (!$vendor) {
             $vendor = $this->createVendorWorkspace($payload);
         }
@@ -61,12 +79,90 @@ class AtlasBridgeController extends Controller
         }
 
         $this->syncVendor($vendor, $payload);
+        $this->saveAtlasLink($payload, $vendor);
 
         Auth::login($vendor, true);
         $request->session()->put('admin_login', 1);
         $request->session()->put('user_login', 1);
 
         return redirect('/admin/dashboard');
+    }
+
+    protected function validatedPayload(Request $request): array
+    {
+        $payloadEncoded = (string) ($request->input('payload', $request->query('payload', '')));
+        $signature = (string) ($request->input('sig', $request->query('sig', '')));
+        $sharedSecret = (string) env('WEBSITE_PLATFORM_SHARED_SECRET', env('APP_KEY', 'atlas-website-secret'));
+
+        if ($payloadEncoded === '' || $signature === '') {
+            return [null, response()->json(['success' => false, 'error' => 'Missing launch signature.'], 403)];
+        }
+
+        $expectedSignature = hash_hmac('sha256', $payloadEncoded, $sharedSecret);
+        if (!hash_equals($expectedSignature, $signature)) {
+            return [null, response()->json(['success' => false, 'error' => 'Invalid launch signature.'], 403)];
+        }
+
+        $payloadJson = base64_decode(strtr($payloadEncoded, '-_', '+/'));
+        $payload = json_decode((string) $payloadJson, true);
+        if (!is_array($payload) || empty($payload['email']) || empty($payload['atlas_user_id'])) {
+            return [null, response()->json(['success' => false, 'error' => 'Invalid launch payload.'], 403)];
+        }
+
+        if (!empty($payload['exp']) && (int) $payload['exp'] < time()) {
+            return [null, response()->json(['success' => false, 'error' => 'Launch link expired.'], 403)];
+        }
+
+        return [$payload, null];
+    }
+
+    protected function ensureAtlasLinkTable(): void
+    {
+        DB::statement(
+            "CREATE TABLE IF NOT EXISTS `{$this->atlasLinkTable}` (
+                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `atlas_user_id` INT UNSIGNED NOT NULL,
+                `vendor_user_id` INT UNSIGNED NOT NULL,
+                `email` VARCHAR(255) NULL,
+                `slug` VARCHAR(191) NULL,
+                `created_at` TIMESTAMP NULL DEFAULT NULL,
+                `updated_at` TIMESTAMP NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `atlas_workspace_links_user_unique` (`atlas_user_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        );
+    }
+
+    protected function findLinkedVendor(array $payload): ?User
+    {
+        $linkedVendorId = DB::table($this->atlasLinkTable)
+            ->where('atlas_user_id', (int) $payload['atlas_user_id'])
+            ->value('vendor_user_id');
+
+        if ($linkedVendorId) {
+            return User::where('id', (int) $linkedVendorId)->where('type', 2)->first();
+        }
+
+        $vendor = User::where('email', $payload['email'])->where('type', 2)->first();
+        if ($vendor) {
+            $this->saveAtlasLink($payload, $vendor);
+        }
+
+        return $vendor;
+    }
+
+    protected function saveAtlasLink(array $payload, User $vendor): void
+    {
+        DB::table($this->atlasLinkTable)->updateOrInsert(
+            ['atlas_user_id' => (int) $payload['atlas_user_id']],
+            [
+                'vendor_user_id' => (int) $vendor->id,
+                'email' => (string) $vendor->email,
+                'slug' => (string) $vendor->slug,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
     }
 
     protected function createVendorWorkspace(array $payload): User

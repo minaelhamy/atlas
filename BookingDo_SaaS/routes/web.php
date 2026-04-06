@@ -50,6 +50,7 @@ use App\Models\ProductQuestionAnswer;
 */
 
 Route::get('/', [AdminController::class, 'login']);
+Route::post('/atlas/provision', [AtlasBridgeController::class, 'provision']);
 Route::get('/atlas/launch', [AtlasBridgeController::class, 'launch']);
 Route::post('add-on/session/save', [AdminController::class, 'sessionsave']);
 Route::group(['namespace' => 'admin', 'prefix' => 'admin'], function () {

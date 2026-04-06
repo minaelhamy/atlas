@@ -59,7 +59,7 @@ $platformBaseUrl = !empty($platform_target['base_url']) ? rtrim($platform_target
                                 <h4 class="margin-bottom-10"><?php echo sprintf(__("%s is ready"), _esc($platformName, 0)); ?></h4>
                                 <p class="margin-bottom-18"><?php _e("Use the primary button below to create or reopen this business inside the correct website platform. The first launch will create the workspace. The next launches will log the same Atlas user back into that workspace."); ?></p>
                                 <div class="margin-bottom-15">
-                                    <a href="<?php _esc($website_launch_url) ?>" class="button ripple-effect big">
+                                    <a href="#" class="button ripple-effect big" id="atlas-website-launch">
                                         <?php echo sprintf(__('Open %s'), _esc($platformName, 0)); ?>
                                     </a>
                                 </div>
@@ -106,11 +106,61 @@ $platformBaseUrl = !empty($platform_target['base_url']) ? rtrim($platform_target
         </div>
     </div>
 </div>
-<?php if (!empty($website_auto_launch) && !empty($website_launch_url)) { ?>
+<?php if ($profile_ready) { ?>
     <script>
-        setTimeout(function () {
-            window.location.href = <?php echo json_encode($website_launch_url); ?>;
-        }, 300);
+        (function () {
+            var launchButton = document.getElementById('atlas-website-launch');
+            if (!launchButton) {
+                return;
+            }
+
+            var inFlight = false;
+            function prepareAndLaunch() {
+                if (inFlight) {
+                    return;
+                }
+                inFlight = true;
+                launchButton.classList.add('disabled');
+                launchButton.textContent = <?php echo json_encode(__('Preparing workspace...')); ?>;
+
+                var request = new XMLHttpRequest();
+                request.open('GET', ajaxurl + '?action=website_platform_prepare_launch', true);
+                request.onreadystatechange = function () {
+                    if (request.readyState !== 4) {
+                        return;
+                    }
+
+                    var response = {};
+                    try {
+                        response = JSON.parse(request.responseText || '{}');
+                    } catch (error) {}
+
+                    if (request.status >= 200 && request.status < 300 && response.success && response.launch_url) {
+                        window.location.href = response.launch_url;
+                        return;
+                    }
+
+                    inFlight = false;
+                    launchButton.classList.remove('disabled');
+                    launchButton.textContent = <?php echo json_encode(sprintf(__('Open %s'), $platformName)); ?>;
+                    if (typeof quick_alert === 'function') {
+                        quick_alert(response.message || <?php echo json_encode(__('Unable to prepare your workspace right now.')); ?>, 'error');
+                    } else {
+                        alert(response.message || <?php echo json_encode(__('Unable to prepare your workspace right now.')); ?>);
+                    }
+                };
+                request.send(null);
+            }
+
+            launchButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                prepareAndLaunch();
+            });
+
+            <?php if (!empty($website_auto_launch)) { ?>
+            setTimeout(prepareAndLaunch, 300);
+            <?php } ?>
+        })();
     </script>
 <?php } ?>
 <?php overall_footer(); ?>

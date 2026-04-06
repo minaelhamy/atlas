@@ -38,6 +38,7 @@ function website_platform_get_target($socialProfile, $companyIntelligence)
         'name' => $siteType === 'ecommerce' ? __('Storemart') : __('BookingDo'),
         'label' => $siteType === 'ecommerce' ? __('Ecommerce Platform') : __('Service Platform'),
         'base_url' => website_platform_base_url($siteType),
+        'provision_path' => 'atlas/provision',
         'launch_path' => 'atlas/launch',
         'dashboard_path' => 'admin/dashboard',
         'public_path' => '',
@@ -64,6 +65,7 @@ function website_platform_user_phone($user)
 
 function website_platform_payload($user, $socialProfile, $companyIntelligence, $target)
 {
+    $mapping = website_platform_get_mapping(!empty($user['id']) ? (int) $user['id'] : 0, !empty($target['type']) ? $target['type'] : 'service');
     $companyName = !empty($socialProfile['company_name']) ? $socialProfile['company_name'] : (!empty($user['fullname']) ? $user['fullname'] : (!empty($user['username']) ? $user['username'] : 'Atlas Business'));
     $siteName = !empty($companyIntelligence['website_name']) ? $companyIntelligence['website_name'] : $companyName;
     $slugSource = !empty($socialProfile['company_name']) ? $socialProfile['company_name'] : $siteName;
@@ -75,8 +77,11 @@ function website_platform_payload($user, $socialProfile, $companyIntelligence, $
         'phone' => website_platform_user_phone($user),
         'company_name' => $companyName,
         'site_name' => $siteName,
-        'slug' => website_builder_unique_slug(website_builder_slugify($slugSource)),
+        'slug' => !empty($mapping['platform_slug'])
+            ? $mapping['platform_slug']
+            : website_builder_unique_slug(website_builder_slugify($slugSource)),
         'site_type' => !empty($target['type']) ? $target['type'] : 'service',
+        'platform_user_id' => !empty($mapping['platform_user_id']) ? (int) $mapping['platform_user_id'] : 0,
         'company_description' => !empty($companyIntelligence['company_description']) ? $companyIntelligence['company_description'] : '',
         'ideal_customer_profile' => !empty($companyIntelligence['ideal_customer_profile']) ? $companyIntelligence['ideal_customer_profile'] : '',
         'top_problems_solved' => website_builder_split_values(!empty($companyIntelligence['top_problems_solved']) ? $companyIntelligence['top_problems_solved'] : '', 8),
@@ -101,6 +106,174 @@ function website_platform_generate_launch_url($user, $socialProfile, $companyInt
     $signature = hash_hmac('sha256', $encodedPayload, website_platform_shared_secret());
 
     return rtrim($target['base_url'], '/') . '/' . ltrim($target['launch_path'], '/') . '?payload=' . urlencode($encodedPayload) . '&sig=' . urlencode($signature);
+}
+
+function website_platform_mapping_table()
+{
+    return website_builder_table('website_platform_accounts');
+}
+
+function website_platform_get_mapping($userId, $platformType)
+{
+    if ((int) $userId <= 0) {
+        return null;
+    }
+
+    website_builder_ensure_tables();
+
+    $row = ORM::for_table(website_platform_mapping_table())
+        ->where('user_id', (int) $userId)
+        ->where('platform_type', $platformType === 'ecommerce' ? 'ecommerce' : 'service')
+        ->find_one();
+
+    return $row ? $row->as_array() : null;
+}
+
+function website_platform_save_mapping($userId, $platformType, array $data)
+{
+    website_builder_ensure_tables();
+
+    $platformType = $platformType === 'ecommerce' ? 'ecommerce' : 'service';
+    $row = ORM::for_table(website_platform_mapping_table())
+        ->where('user_id', (int) $userId)
+        ->where('platform_type', $platformType)
+        ->find_one();
+
+    if (!$row) {
+        $row = ORM::for_table(website_platform_mapping_table())->create();
+        $row->user_id = (int) $userId;
+        $row->platform_type = $platformType;
+        $row->created_at = date('Y-m-d H:i:s');
+    }
+
+    if (isset($data['platform_user_id'])) {
+        $row->platform_user_id = (int) $data['platform_user_id'];
+    }
+    if (isset($data['platform_vendor_id'])) {
+        $row->platform_vendor_id = (int) $data['platform_vendor_id'];
+    }
+    if (isset($data['platform_slug'])) {
+        $row->platform_slug = $data['platform_slug'];
+    }
+    if (isset($data['platform_email'])) {
+        $row->platform_email = $data['platform_email'];
+    }
+    if (isset($data['platform_status'])) {
+        $row->platform_status = $data['platform_status'];
+    }
+    if (isset($data['public_url'])) {
+        $row->public_url = $data['public_url'];
+    }
+    if (isset($data['dashboard_url'])) {
+        $row->dashboard_url = $data['dashboard_url'];
+    }
+    if (isset($data['payload'])) {
+        $row->last_payload_json = json_encode($data['payload']);
+    }
+
+    $row->last_synced_at = date('Y-m-d H:i:s');
+    $row->updated_at = date('Y-m-d H:i:s');
+    $row->save();
+
+    return $row->as_array();
+}
+
+function website_platform_request($url, array $postData)
+{
+    $body = http_build_query($postData);
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        $responseBody = curl_exec($ch);
+        $curlError = curl_error($ch);
+        $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($responseBody === false) {
+            return [
+                'success' => false,
+                'error' => $curlError !== '' ? $curlError : __('Provision request failed.'),
+            ];
+        }
+    } else {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/x-www-form-urlencoded\r\n",
+                'content' => $body,
+                'timeout' => 20,
+                'ignore_errors' => true,
+            ],
+        ]);
+        $responseBody = @file_get_contents($url, false, $context);
+        $statusCode = 0;
+        if (!empty($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $matches)) {
+            $statusCode = (int) $matches[1];
+        }
+        if ($responseBody === false) {
+            return [
+                'success' => false,
+                'error' => __('Provision request failed.'),
+            ];
+        }
+    }
+
+    $decoded = json_decode((string) $responseBody, true);
+    if (!is_array($decoded)) {
+        return [
+            'success' => false,
+            'status_code' => $statusCode,
+            'error' => __('Invalid provision response.'),
+            'raw' => (string) $responseBody,
+        ];
+    }
+
+    $decoded['status_code'] = $statusCode;
+    return $decoded;
+}
+
+function website_platform_provision_workspace($user, $socialProfile, $companyIntelligence)
+{
+    $target = website_platform_get_target($socialProfile, $companyIntelligence);
+    $payload = website_platform_payload($user, $socialProfile, $companyIntelligence, $target);
+    $encodedPayload = website_platform_base64url_encode(json_encode($payload));
+    $signature = hash_hmac('sha256', $encodedPayload, website_platform_shared_secret());
+    $url = rtrim($target['base_url'], '/') . '/' . ltrim($target['provision_path'], '/');
+
+    $response = website_platform_request($url, [
+        'payload' => $encodedPayload,
+        'sig' => $signature,
+    ]);
+
+    if (empty($response['success'])) {
+        return $response;
+    }
+
+    $mapping = website_platform_save_mapping(!empty($user['id']) ? (int) $user['id'] : 0, $target['type'], [
+        'platform_user_id' => !empty($response['platform_user_id']) ? (int) $response['platform_user_id'] : 0,
+        'platform_vendor_id' => !empty($response['platform_vendor_id']) ? (int) $response['platform_vendor_id'] : 0,
+        'platform_slug' => !empty($response['platform_slug']) ? $response['platform_slug'] : $payload['slug'],
+        'platform_email' => !empty($response['platform_email']) ? $response['platform_email'] : $payload['email'],
+        'platform_status' => !empty($response['platform_status']) ? $response['platform_status'] : 'active',
+        'public_url' => !empty($response['public_url']) ? $response['public_url'] : website_platform_generate_public_url($user, $socialProfile, $companyIntelligence),
+        'dashboard_url' => !empty($response['dashboard_url']) ? $response['dashboard_url'] : (rtrim($target['base_url'], '/') . '/' . ltrim($target['dashboard_path'], '/')),
+        'payload' => $payload,
+    ]);
+
+    return [
+        'success' => true,
+        'target' => $target,
+        'payload' => $payload,
+        'mapping' => $mapping,
+        'launch_url' => website_platform_generate_launch_url($user, $socialProfile, $companyIntelligence),
+        'public_url' => !empty($mapping['public_url']) ? $mapping['public_url'] : website_platform_generate_public_url($user, $socialProfile, $companyIntelligence),
+        'dashboard_url' => !empty($mapping['dashboard_url']) ? $mapping['dashboard_url'] : (rtrim($target['base_url'], '/') . '/' . ltrim($target['dashboard_path'], '/')),
+    ];
 }
 
 function website_platform_generate_public_url($user, $socialProfile, $companyIntelligence)
@@ -252,6 +425,25 @@ function website_builder_ensure_tables()
             `created_at` datetime DEFAULT NULL,
             `updated_at` datetime DEFAULT NULL,
             PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB {$charset}",
+
+        "CREATE TABLE IF NOT EXISTS `" . website_platform_mapping_table() . "` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `user_id` int(11) NOT NULL,
+            `platform_type` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'service',
+            `platform_user_id` int(11) DEFAULT NULL,
+            `platform_vendor_id` int(11) DEFAULT NULL,
+            `platform_slug` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `platform_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `platform_status` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+            `public_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `dashboard_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `last_payload_json` longtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+            `last_synced_at` datetime DEFAULT NULL,
+            `created_at` datetime DEFAULT NULL,
+            `updated_at` datetime DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `website_platform_user_type` (`user_id`,`platform_type`)
         ) ENGINE=InnoDB {$charset}",
     ];
 

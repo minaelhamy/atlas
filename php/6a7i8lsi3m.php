@@ -95,6 +95,9 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "website_service_slots") {
         website_service_slots();
     }
+    if ($_GET['action'] == "website_platform_prepare_launch") {
+        website_platform_prepare_launch();
+    }
     die(0);
 }
 
@@ -553,6 +556,51 @@ function website_service_slots()
     $result['success'] = !empty($slotData['success']);
     $result['message'] = !empty($slotData['message']) ? $slotData['message'] : '';
     $result['slots'] = !empty($slotData['slots']) ? $slotData['slots'] : [];
+    die(json_encode($result));
+}
+
+function website_platform_prepare_launch()
+{
+    header('Content-Type: application/json');
+
+    $result = [
+        'success' => false,
+        'message' => __('Unable to prepare your website workspace right now.'),
+    ];
+
+    if (empty($_SESSION['user']['id'])) {
+        $result['message'] = __('Please log in again.');
+        die(json_encode($result));
+    }
+
+    $userId = (int) $_SESSION['user']['id'];
+    $user = get_user_data(null, $userId);
+    $socialProfile = social_media_get_profile($userId);
+    $companyIntelligence = social_media_get_company_intelligence($userId);
+    $profileStatus = website_builder_company_profile_status($socialProfile, $companyIntelligence);
+
+    if (empty($profileStatus['ready'])) {
+        $result['message'] = __('Please complete Company Intelligence first.');
+        $result['missing'] = !empty($profileStatus['missing']) ? $profileStatus['missing'] : [];
+        die(json_encode($result));
+    }
+
+    $prepared = website_platform_provision_workspace($user, $socialProfile, $companyIntelligence);
+    if (empty($prepared['success'])) {
+        $result['message'] = !empty($prepared['error']) ? $prepared['error'] : $result['message'];
+        if (!empty($prepared['raw'])) {
+            $result['debug'] = $prepared['raw'];
+        }
+        die(json_encode($result));
+    }
+
+    $result['success'] = true;
+    $result['message'] = __('Workspace ready.');
+    $result['launch_url'] = $prepared['launch_url'];
+    $result['public_url'] = $prepared['public_url'];
+    $result['dashboard_url'] = $prepared['dashboard_url'];
+    $result['platform_type'] = $prepared['target']['type'];
+    $result['platform_name'] = $prepared['target']['name'];
     die(json_encode($result));
 }
 
