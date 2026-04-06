@@ -6,6 +6,119 @@ function website_builder_table($name)
     return $config['db']['pre'] . $name;
 }
 
+function website_platform_use_external()
+{
+    return strtolower((string) atlas_env('WEBSITE_PLATFORM_MODE', 'external')) === 'external';
+}
+
+function website_platform_base_url($type)
+{
+    global $config;
+
+    $type = $type === 'ecommerce' ? 'ecommerce' : 'service';
+    if ($type === 'ecommerce') {
+        return rtrim((string) atlas_env('ECOM_APP_URL', $config['site_url'] . 'ecom'), '/') . '/';
+    }
+
+    return rtrim((string) atlas_env('SERVICE_APP_URL', $config['site_url'] . 'service'), '/') . '/';
+}
+
+function website_platform_shared_secret()
+{
+    return (string) atlas_env('WEBSITE_PLATFORM_SHARED_SECRET', atlas_env('APP_KEY', 'atlas-website-secret'));
+}
+
+function website_platform_get_target($socialProfile, $companyIntelligence)
+{
+    $siteType = website_builder_infer_site_type($socialProfile, $companyIntelligence);
+    $siteType = $siteType === 'ecommerce' ? 'ecommerce' : 'service';
+
+    return [
+        'type' => $siteType,
+        'name' => $siteType === 'ecommerce' ? __('Storemart') : __('BookingDo'),
+        'label' => $siteType === 'ecommerce' ? __('Ecommerce Platform') : __('Service Platform'),
+        'base_url' => website_platform_base_url($siteType),
+        'launch_path' => 'atlas/launch',
+        'dashboard_path' => 'admin/dashboard',
+        'public_path' => '',
+    ];
+}
+
+function website_platform_user_phone($user)
+{
+    $phone = '';
+    if (!empty($user['phone'])) {
+        $phone = $user['phone'];
+    } elseif (!empty($user['mobile'])) {
+        $phone = $user['mobile'];
+    }
+
+    $phone = preg_replace('/\D+/', '', (string) $phone);
+    if ($phone !== '') {
+        return $phone;
+    }
+
+    $userId = !empty($user['id']) ? (int) $user['id'] : random_int(1000, 9999);
+    return '100000' . str_pad((string) $userId, 4, '0', STR_PAD_LEFT);
+}
+
+function website_platform_payload($user, $socialProfile, $companyIntelligence, $target)
+{
+    $companyName = !empty($socialProfile['company_name']) ? $socialProfile['company_name'] : (!empty($user['fullname']) ? $user['fullname'] : (!empty($user['username']) ? $user['username'] : 'Atlas Business'));
+    $siteName = !empty($companyIntelligence['website_name']) ? $companyIntelligence['website_name'] : $companyName;
+    $slugSource = !empty($socialProfile['company_name']) ? $socialProfile['company_name'] : $siteName;
+
+    return [
+        'atlas_user_id' => !empty($user['id']) ? (int) $user['id'] : 0,
+        'email' => !empty($user['email']) ? $user['email'] : '',
+        'name' => !empty($user['fullname']) ? $user['fullname'] : (!empty($user['username']) ? $user['username'] : $companyName),
+        'phone' => website_platform_user_phone($user),
+        'company_name' => $companyName,
+        'site_name' => $siteName,
+        'slug' => website_builder_unique_slug(website_builder_slugify($slugSource)),
+        'site_type' => !empty($target['type']) ? $target['type'] : 'service',
+        'company_description' => !empty($companyIntelligence['company_description']) ? $companyIntelligence['company_description'] : '',
+        'ideal_customer_profile' => !empty($companyIntelligence['ideal_customer_profile']) ? $companyIntelligence['ideal_customer_profile'] : '',
+        'top_problems_solved' => website_builder_split_values(!empty($companyIntelligence['top_problems_solved']) ? $companyIntelligence['top_problems_solved'] : '', 8),
+        'unique_selling_points' => website_builder_split_values(!empty($companyIntelligence['unique_selling_points']) ? $companyIntelligence['unique_selling_points'] : '', 8),
+        'brand_colors' => website_builder_split_values(!empty($companyIntelligence['brand_colors']) ? $companyIntelligence['brand_colors'] : '', 6),
+        'tone_attributes' => website_builder_split_values(!empty($companyIntelligence['tone_attributes']) ? $companyIntelligence['tone_attributes'] : '', 6),
+        'reference_brands' => website_builder_split_values(!empty($companyIntelligence['reference_brands']) ? $companyIntelligence['reference_brands'] : '', 6),
+        'exp' => time() + 900,
+    ];
+}
+
+function website_platform_base64url_encode($value)
+{
+    return rtrim(strtr(base64_encode((string) $value), '+/', '-_'), '=');
+}
+
+function website_platform_generate_launch_url($user, $socialProfile, $companyIntelligence)
+{
+    $target = website_platform_get_target($socialProfile, $companyIntelligence);
+    $payload = website_platform_payload($user, $socialProfile, $companyIntelligence, $target);
+    $encodedPayload = website_platform_base64url_encode(json_encode($payload));
+    $signature = hash_hmac('sha256', $encodedPayload, website_platform_shared_secret());
+
+    return rtrim($target['base_url'], '/') . '/' . ltrim($target['launch_path'], '/') . '?payload=' . urlencode($encodedPayload) . '&sig=' . urlencode($signature);
+}
+
+function website_platform_generate_public_url($user, $socialProfile, $companyIntelligence)
+{
+    $target = website_platform_get_target($socialProfile, $companyIntelligence);
+    $payload = website_platform_payload($user, $socialProfile, $companyIntelligence, $target);
+
+    return rtrim($target['base_url'], '/') . '/' . ltrim($payload['slug'], '/');
+}
+
+function website_platform_atlas_admin_url($type)
+{
+    global $config;
+
+    $type = $type === 'ecommerce' ? 'ecommerce' : 'service';
+    return $config['site_url'] . ($type === 'ecommerce' ? 'ecom/admin/dashboard' : 'service/admin/dashboard');
+}
+
 function website_builder_ensure_tables()
 {
     static $done = false;

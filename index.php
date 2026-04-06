@@ -3,6 +3,90 @@
  * Atlas application bootstrap.
  */
 
+function atlas_relative_request_path()
+{
+    $requestPath = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
+    $requestPath = $requestPath ?: '/';
+    $requestPath = ltrim($requestPath, '/');
+
+    $scriptDir = trim(str_replace("\\", "/", dirname(isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '')), '/');
+    if ($scriptDir !== '' && strpos($requestPath, $scriptDir . '/') === 0) {
+        $requestPath = substr($requestPath, strlen($scriptDir) + 1);
+    } elseif ($requestPath === $scriptDir) {
+        $requestPath = '';
+    }
+
+    return $requestPath;
+}
+
+function atlas_platform_static_candidates($basePath, $subPath)
+{
+    $subPath = ltrim($subPath, '/');
+    $candidates = [
+        $basePath . '/public/' . $subPath,
+        $basePath . '/' . $subPath,
+        $basePath . '/storage/app/public/' . $subPath,
+    ];
+
+    if (strpos($subPath, 'storage/') === 0) {
+        $candidates[] = $basePath . '/storage/app/public/' . substr($subPath, 8);
+    }
+
+    return $candidates;
+}
+
+function atlas_serve_platform_asset($basePath, $subPath)
+{
+    foreach (atlas_platform_static_candidates($basePath, $subPath) as $candidate) {
+        if (is_file($candidate)) {
+            $mime = function_exists('mime_content_type') ? mime_content_type($candidate) : null;
+            if ($mime) {
+                header('Content-Type: ' . $mime);
+            }
+            header('Content-Length: ' . filesize($candidate));
+            readfile($candidate);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function atlas_delegate_platform_front_controller($scriptName, $scriptFile)
+{
+    $_SERVER['SCRIPT_NAME'] = $scriptName;
+    $_SERVER['PHP_SELF'] = $scriptName;
+    $_SERVER['SCRIPT_FILENAME'] = $scriptFile;
+    require $scriptFile;
+    exit;
+}
+
+$atlasPlatformRequest = atlas_relative_request_path();
+if (preg_match('#^(ecom|service)(?:/(.*))?$#', $atlasPlatformRequest, $matches)) {
+    $mount = $matches[1];
+    $subPath = isset($matches[2]) ? $matches[2] : '';
+
+    $platformConfig = [
+        'ecom' => [
+            'base' => __DIR__ . '/Storemart_SaaS',
+            'entry' => __DIR__ . '/Storemart_SaaS/public/index.php',
+            'script' => '/ecom/index.php',
+        ],
+        'service' => [
+            'base' => __DIR__ . '/BookingDo_SaaS',
+            'entry' => __DIR__ . '/BookingDo_SaaS/index.php',
+            'script' => '/service/index.php',
+        ],
+    ];
+
+    $platform = $platformConfig[$mount];
+    if ($subPath !== '' && atlas_serve_platform_asset($platform['base'], $subPath)) {
+        exit;
+    }
+
+    atlas_delegate_platform_front_controller($platform['script'], $platform['entry']);
+}
+
 // Path to root directory of app.
 define("ROOTPATH", dirname(__FILE__));
 // Path to app folder.
