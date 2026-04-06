@@ -52,11 +52,23 @@ function atlas_serve_platform_asset($basePath, $subPath)
     return false;
 }
 
-function atlas_delegate_platform_front_controller($scriptName, $scriptFile)
+function atlas_delegate_platform_front_controller($scriptName, $scriptFile, $subPath = '')
 {
+    $subPath = '/' . ltrim((string) $subPath, '/');
+    if ($subPath === '//') {
+        $subPath = '/';
+    }
+
+    $queryString = isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== ''
+        ? '?' . $_SERVER['QUERY_STRING']
+        : '';
+
     $_SERVER['SCRIPT_NAME'] = $scriptName;
     $_SERVER['PHP_SELF'] = $scriptName;
     $_SERVER['SCRIPT_FILENAME'] = $scriptFile;
+    $_SERVER['REQUEST_URI'] = $subPath . $queryString;
+    $_SERVER['PATH_INFO'] = $subPath;
+    $_SERVER['ORIG_PATH_INFO'] = $subPath;
     require $scriptFile;
     exit;
 }
@@ -84,7 +96,7 @@ if (preg_match('#^(ecom|service)(?:/(.*))?$#', $atlasPlatformRequest, $matches))
         exit;
     }
 
-    atlas_delegate_platform_front_controller($platform['script'], $platform['entry']);
+    atlas_delegate_platform_front_controller($platform['script'], $platform['entry'], $subPath);
 }
 
 // Path to root directory of app.
