@@ -28,37 +28,47 @@ class AtlasBridgeController extends Controller
 
     public function provision(Request $request)
     {
-        [$payload, $errorResponse] = $this->validatedPayload($request);
-        if ($errorResponse) {
-            return $errorResponse;
-        }
+        try {
+            [$payload, $errorResponse] = $this->validatedPayload($request);
+            if ($errorResponse) {
+                return $errorResponse;
+            }
 
-        $this->ensureAtlasLinkTable();
-        $vendor = $this->findLinkedVendor($payload);
-        if (!$vendor) {
-            $vendor = $this->createVendorWorkspace($payload);
-        }
+            $this->ensureAtlasLinkTable();
+            $vendor = $this->findLinkedVendor($payload);
+            if (!$vendor) {
+                $vendor = $this->createVendorWorkspace($payload);
+            }
 
-        if (!$vendor) {
+            if (!$vendor) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Storemart workspace not found.',
+                ], 500);
+            }
+
+            $this->syncVendor($vendor, $payload);
+            $this->saveAtlasLink($payload, $vendor);
+
+            return response()->json([
+                'success' => true,
+                'platform_user_id' => (int) $vendor->id,
+                'platform_vendor_id' => (int) $vendor->id,
+                'platform_slug' => (string) $vendor->slug,
+                'platform_email' => (string) $vendor->email,
+                'platform_status' => 'active',
+                'dashboard_url' => url('/admin/dashboard'),
+                'public_url' => url('/' . ltrim((string) $vendor->slug, '/')),
+            ]);
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'error' => 'Storemart workspace not found.',
+                'error' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ], 500);
         }
-
-        $this->syncVendor($vendor, $payload);
-        $this->saveAtlasLink($payload, $vendor);
-
-        return response()->json([
-            'success' => true,
-            'platform_user_id' => (int) $vendor->id,
-            'platform_vendor_id' => (int) $vendor->id,
-            'platform_slug' => (string) $vendor->slug,
-            'platform_email' => (string) $vendor->email,
-            'platform_status' => 'active',
-            'dashboard_url' => url('/admin/dashboard'),
-            'public_url' => url('/' . ltrim((string) $vendor->slug, '/')),
-        ]);
     }
 
     public function launch(Request $request)
