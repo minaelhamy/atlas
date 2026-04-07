@@ -523,6 +523,382 @@ function social_media_choose_instagram_grid_template($profile, $campaignType = '
     return [$key, $catalog[$key]];
 }
 
+function social_media_grid_value($value, $fallback = '')
+{
+    if (is_array($value)) {
+        $value = implode(', ', array_filter(array_map('trim', $value)));
+    }
+
+    $value = trim((string) $value);
+    return $value !== '' ? $value : $fallback;
+}
+
+function social_media_grid_sentence($value, $fallback = '')
+{
+    $value = social_media_grid_value($value, $fallback);
+    $value = preg_replace('/\s+/', ' ', $value);
+    return trim((string) $value);
+}
+
+function social_media_grid_first_item($value, $fallback = '')
+{
+    $items = social_media_normalize_list($value);
+    if (!empty($items[0])) {
+        return $items[0];
+    }
+
+    return $fallback;
+}
+
+function social_media_grid_visual_profile($profile, $brief = '')
+{
+    $companyDescription = social_media_grid_sentence($profile['company_description'] ?? '', 'Brand offering');
+    $icp = social_media_grid_sentence($profile['ideal_customer_profile'] ?? ($profile['target_audience'] ?? ''), 'modern customers');
+    $problem = social_media_grid_first_item($profile['top_problems_solved'] ?? [], 'overwhelm');
+    $usp = social_media_grid_first_item($profile['unique_selling_points'] ?? ($profile['differentiators'] ?? ''), 'better results');
+    $tone = social_media_grid_first_item($profile['tone_attributes'] ?? ($profile['brand_voice'] ?? ''), 'warm');
+    $industry = social_media_grid_sentence($profile['company_industry'] ?? '', 'business');
+    $product = social_media_grid_first_item($profile['key_products'] ?? '', '');
+    $brief = social_media_grid_sentence($brief, '');
+
+    $profileText = strtolower(trim(implode(' ', array_filter([
+        $companyDescription,
+        $icp,
+        $problem,
+        $usp,
+        $tone,
+        $industry,
+        $product,
+        $brief,
+    ]))));
+
+    $map = [
+        'subject' => 'product',
+        'daily_object' => 'workspace',
+        'environment' => 'desk',
+        'obsession' => 'details',
+        'aspiration' => 'confidence',
+        'style_signal' => 'editorial',
+        'sensory_object' => 'coffee',
+        'journey_setting' => 'path',
+    ];
+
+    if (preg_match('/\bdog|dogs|puppy|puppies|leash|collar|pet\b/i', $profileText)) {
+        $map = [
+            'subject' => 'dog leash',
+            'daily_object' => 'dog walk',
+            'environment' => 'park table',
+            'obsession' => 'collars',
+            'aspiration' => 'freedom',
+            'style_signal' => 'stylish',
+            'sensory_object' => 'leather leash',
+            'journey_setting' => 'park path',
+        ];
+    } elseif (preg_match('/\bcat|kitten|feline\b/i', $profileText)) {
+        $map = [
+            'subject' => 'cat accessory',
+            'daily_object' => 'cat home',
+            'environment' => 'cozy home',
+            'obsession' => 'pet toys',
+            'aspiration' => 'comfort',
+            'style_signal' => 'playful',
+            'sensory_object' => 'soft blanket',
+            'journey_setting' => 'window light',
+        ];
+    } elseif (preg_match('/\bmusician|music|band|artist|guitar|spotify|bandcamp\b/i', $profileText)) {
+        $map = [
+            'subject' => 'guitar',
+            'daily_object' => 'notebook',
+            'environment' => 'studio desk',
+            'obsession' => 'vinyl records',
+            'aspiration' => 'momentum',
+            'style_signal' => 'moody',
+            'sensory_object' => 'vinyl coffee',
+            'journey_setting' => 'studio hallway',
+        ];
+    } elseif (preg_match('/\bfounder|startup|saas|software|ai|entrepreneur|business\b/i', $profileText)) {
+        $map = [
+            'subject' => 'laptop',
+            'daily_object' => 'notebook',
+            'environment' => 'desk coffee',
+            'obsession' => 'tools',
+            'aspiration' => 'clarity',
+            'style_signal' => 'modern',
+            'sensory_object' => 'coffee desk',
+            'journey_setting' => 'city workspace',
+        ];
+    } elseif (preg_match('/\bskincare|beauty|cosmetic|serum|wellness|spa\b/i', $profileText)) {
+        $map = [
+            'subject' => 'serum bottle',
+            'daily_object' => 'linen towel',
+            'environment' => 'bathroom tray',
+            'obsession' => 'glass bottles',
+            'aspiration' => 'glow',
+            'style_signal' => 'soft',
+            'sensory_object' => 'candle flower',
+            'journey_setting' => 'garden path',
+        ];
+    } elseif (preg_match('/\bcoffee|cafe|espresso|latte|tea|bakery|food|restaurant\b/i', $profileText)) {
+        $map = [
+            'subject' => 'coffee cup',
+            'daily_object' => 'ceramic mug',
+            'environment' => 'cafe table',
+            'obsession' => 'pastries',
+            'aspiration' => 'comfort',
+            'style_signal' => 'editorial',
+            'sensory_object' => 'latte pastry',
+            'journey_setting' => 'street cafe',
+        ];
+    } elseif (preg_match('/\bfashion|style|jewelry|bag|beauty|boutique\b/i', $profileText)) {
+        $map = [
+            'subject' => 'handbag',
+            'daily_object' => 'journal',
+            'environment' => 'linen table',
+            'obsession' => 'accessories',
+            'aspiration' => 'elegance',
+            'style_signal' => 'luxury',
+            'sensory_object' => 'leather candle',
+            'journey_setting' => 'autumn path',
+        ];
+    }
+
+    return [
+        'company_description' => $companyDescription,
+        'icp' => $icp,
+        'problem' => $problem,
+        'usp' => $usp,
+        'tone' => $tone,
+        'industry' => $industry,
+        'brief' => $brief,
+        'subject' => $product !== '' ? $product : $map['subject'],
+        'daily_object' => $map['daily_object'],
+        'environment' => $map['environment'],
+        'obsession' => $map['obsession'],
+        'aspiration' => $map['aspiration'],
+        'style_signal' => $map['style_signal'],
+        'sensory_object' => $map['sensory_object'],
+        'journey_setting' => $map['journey_setting'],
+    ];
+}
+
+function social_media_grid_pick_word($text, $fallback, $type = 'brand')
+{
+    $text = strtolower((string) $text);
+    $wordMap = [
+        'brand' => [
+            'clarity' => ['clear', 'clarity', 'simple', 'organized'],
+            'bold' => ['bold', 'direct', 'confident', 'strong'],
+            'warm' => ['warm', 'kind', 'human', 'gentle'],
+            'smart' => ['smart', 'strategic', 'expert', 'proven'],
+            'stylish' => ['style', 'stylish', 'design', 'beautiful'],
+            'cozy' => ['cozy', 'soft', 'calm', 'slow'],
+        ],
+        'problem' => [
+            'stuck' => ['stuck', 'overwhelm', 'confused', 'messy', 'chaos'],
+            'fear' => ['fear', 'doubt', 'unsure', 'hesitant'],
+            'lost' => ['lost', 'unclear', 'directionless'],
+            'busy' => ['busy', 'time', 'juggling', 'rushed'],
+        ],
+        'outcome' => [
+            'free' => ['freedom', 'free', 'ease', 'easier'],
+            'growth' => ['growth', 'grow', 'sales', 'income', 'buyers'],
+            'clear' => ['clarity', 'clear', 'focus'],
+            'ready' => ['ready', 'launch', 'start'],
+            'glow' => ['glow', 'radiant'],
+            'calm' => ['calm', 'peace', 'comfort'],
+        ],
+    ];
+
+    if (!empty($wordMap[$type])) {
+        foreach ($wordMap[$type] as $canonical => $tokens) {
+            foreach ($tokens as $token) {
+                if (strpos($text, $token) !== false) {
+                    return ucfirst($canonical);
+                }
+            }
+        }
+    }
+
+    return ucfirst($fallback);
+}
+
+function social_media_grid_overlay_fallback($templateKey, $position, $context)
+{
+    $problem = $context['problem'];
+    $usp = $context['usp'];
+    $icp = $context['icp'];
+    $subject = $context['subject'];
+
+    if ($templateKey === 'bold_monochrome_ad_copy') {
+        $map = [
+            1 => 'Tired of ' . social_media_grid_pick_word($problem, 'overwhelm', 'problem') . '?',
+            3 => 'What if ' . social_media_grid_pick_word($usp, 'growth', 'outcome') . ' felt easier?',
+            5 => 'This is why people stay stuck',
+            7 => 'Built for people like you',
+            9 => social_media_grid_pick_word($usp, 'ready', 'outcome') . ' starts here',
+        ];
+        return !empty($map[$position]) ? $map[$position] : '';
+    }
+
+    if ($templateKey === 'checkerboard_affirmation') {
+        $map = [
+            2 => 'You do not need to rush.',
+            4 => 'Soft does not mean small.',
+            6 => 'Your pace can still win.',
+            8 => 'Build it your way.',
+        ];
+        return !empty($map[$position]) ? $map[$position] : '';
+    }
+
+    if ($templateKey === 'central_spine_moodboard') {
+        $map = [
+            2 => strtolower(social_media_grid_pick_word($context['tone'], 'calm', 'brand')),
+            5 => strtolower(social_media_grid_pick_word($problem, 'stuck', 'problem')),
+            8 => strtolower(social_media_grid_pick_word($usp, 'clear', 'outcome')),
+        ];
+        return !empty($map[$position]) ? $map[$position] : '';
+    }
+
+    if ($templateKey === 'authority_hook_grid') {
+        $map = [
+            1 => 'Most brands say this wrong',
+            2 => 'Your audience feels the gap',
+            4 => 'The proof is in the positioning',
+            6 => 'This is what converts faster',
+            7 => 'Strong brands sound specific',
+            8 => 'Make the message do more',
+        ];
+        return !empty($map[$position]) ? $map[$position] : '';
+    }
+
+    if ($templateKey === 'nature_wellness_editorial') {
+        $map = [
+            2 => 'Gentle habits change everything',
+            4 => 'Calm is a real strategy',
+            6 => 'Small rituals build trust',
+            8 => 'Wellness can feel grounded',
+        ];
+        return !empty($map[$position]) ? $map[$position] : '';
+    }
+
+    if ($templateKey === 'vertical_phrase_narrative') {
+        $map = [
+            2 => social_media_grid_pick_word($context['company_description'] . ' ' . $usp, 'clear', 'brand'),
+            5 => social_media_grid_pick_word($problem, 'stuck', 'problem'),
+            8 => social_media_grid_pick_word($usp, 'free', 'outcome'),
+        ];
+        return !empty($map[$position]) ? $map[$position] : '';
+    }
+
+    return '';
+}
+
+function social_media_grid_slot_strategy($templateKey, $position, $mode, $profile, $brief = '')
+{
+    $context = social_media_grid_visual_profile($profile, $brief);
+    $warmBase = ['warm', 'editorial'];
+    $slot = [
+        'search_queries' => [],
+        'provider_search_queries' => [],
+        'asset_tags' => [],
+        'visual_brief' => '',
+        'overlay_fallback' => social_media_grid_overlay_fallback($templateKey, $position, $context),
+    ];
+
+    if ($mode === 'text') {
+        $slot['asset_tags'] = ['texture', 'minimal', 'background'];
+        $slot['search_queries'] = ['warm minimal textured background'];
+        $slot['provider_search_queries'] = [
+            'unsplash' => ['warm minimal textured background'],
+            'pexels' => ['warm minimal textured background'],
+        ];
+        $slot['visual_brief'] = 'Create a text-led tile with the typography carrying the message. Keep the background minimal, warm, and consistent with the selected grid system.';
+        return $slot;
+    }
+
+    switch ($templateKey) {
+        case 'bold_monochrome_ad_copy':
+            $photoQueries = [
+                2 => $context['subject'] . ' ' . $context['daily_object'] . ' overhead editorial warm surface',
+                4 => $context['subject'] . ' ' . $context['environment'] . ' flat lay warm lifestyle',
+                6 => $context['subject'] . ' arranged detail orange surface editorial',
+                8 => $context['subject'] . ' ' . $context['aspiration'] . ' cinematic editorial warm vintage',
+            ];
+            $slot['search_queries'] = !empty($photoQueries[$position]) ? [$photoQueries[$position]] : [$context['subject'] . ' warm editorial'];
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            $slot['asset_tags'] = array_merge($warmBase, ['commercial', $context['subject'], $context['style_signal']]);
+            break;
+
+        case 'checkerboard_affirmation':
+            $slot['search_queries'] = [$context['style_signal'] . ' lifestyle soft warm editorial', $context['environment'] . ' feminine minimal warm'];
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            $slot['asset_tags'] = ['soft', 'feminine', 'lifestyle', 'minimal', $context['style_signal']];
+            break;
+
+        case 'central_spine_moodboard':
+            $slot['search_queries'] = [$context['sensory_object'] . ' aesthetic warm minimal', $context['environment'] . ' editorial cozy'];
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            $slot['asset_tags'] = ['moodboard', 'aesthetic', 'editorial', 'minimal', 'warm'];
+            break;
+
+        case 'authority_hook_grid':
+            $slot['search_queries'] = [$context['subject'] . ' founder proof editorial', $context['environment'] . ' modern lifestyle proof'];
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            $slot['asset_tags'] = ['proof', 'editorial', 'lifestyle', $context['subject'], $context['daily_object']];
+            break;
+
+        case 'nature_wellness_editorial':
+            $slot['search_queries'] = [$context['subject'] . ' natural warm editorial', $context['sensory_object'] . ' calm wellness editorial'];
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            $slot['asset_tags'] = ['nature', 'wellness', 'slow living', 'editorial', $context['subject']];
+            break;
+
+        case 'vertical_phrase_narrative':
+            if (in_array($position, [1, 3], true)) {
+                $slot['search_queries'] = ['woman hands holding ' . $context['daily_object'] . ' warm close-up film', 'woman detail ' . $context['style_signal'] . ' warm moody'];
+                $slot['asset_tags'] = ['warm', 'moody', 'editorial', 'close-up', $context['daily_object']];
+            } elseif (in_array($position, [4, 7], true)) {
+                $slot['search_queries'] = ['woman back camera ' . $context['journey_setting'] . ' warm autumn', 'woman outdoor moody warm editorial'];
+                $slot['asset_tags'] = ['warm', 'moody', 'outdoor', 'editorial', 'autumn'];
+            } else {
+                $slot['search_queries'] = [$context['sensory_object'] . ' warm dark moody close-up', $context['subject'] . ' warm soft focus editorial'];
+                $slot['asset_tags'] = ['warm', 'moody', 'texture', 'editorial', $context['sensory_object']];
+            }
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            break;
+
+        default:
+            $slot['search_queries'] = [$context['subject'] . ' ' . $context['style_signal'] . ' editorial', $context['environment'] . ' warm lifestyle'];
+            $slot['provider_search_queries'] = [
+                'unsplash' => $slot['search_queries'],
+                'pexels' => $slot['search_queries'],
+            ];
+            $slot['asset_tags'] = [$context['subject'], $context['style_signal'], 'editorial'];
+            break;
+    }
+
+    $slot['visual_brief'] = 'Use an image that matches this slot in the ' . $templateKey . ' grid. Query focus: ' . implode(' | ', $slot['search_queries']) . '. Avoid generic stock imagery and keep it aligned to ' . $context['company_description'] . '.';
+    return $slot;
+}
+
 function social_media_get_selection_options($catalog, $field)
 {
     $options = [];
@@ -1404,6 +1780,10 @@ function social_media_remote_assets_enabled()
 
 function social_media_build_asset_search_queries($keywords = [], $design = [])
 {
+    if (!empty($design['search_queries']) && is_array($design['search_queries'])) {
+        return array_values(array_unique(array_filter(array_map('trim', $design['search_queries']))));
+    }
+
     $keywords = social_media_normalize_list($keywords);
     $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
     $pool = array_values(array_unique(array_filter(array_merge($keywords, $designTags))));
@@ -1425,6 +1805,10 @@ function social_media_build_asset_search_queries($keywords = [], $design = [])
 
 function social_media_build_provider_search_queries($provider, $keywords = [], $design = [])
 {
+    if (!empty($design['provider_search_queries'][$provider]) && is_array($design['provider_search_queries'][$provider])) {
+        return array_values(array_unique(array_filter(array_map('trim', $design['provider_search_queries'][$provider]))));
+    }
+
     $queries = social_media_build_asset_search_queries($keywords, $design);
     if ($provider !== 'pixabay' && $provider !== 'unsplash') {
         return $queries;
@@ -2207,6 +2591,16 @@ function social_media_generate_instagram_grid($user_id, $brief = '', $input = []
     $competitorSnapshots = social_media_get_competitor_snapshots($profile);
     $fontCatalog = social_media_get_font_prompt_catalog();
     $paletteCatalog = social_media_get_palette_prompt_catalog();
+    $profileContext = social_media_grid_visual_profile($profile, $brief);
+    $slotInstructions = [];
+    foreach ($template['layout'] as $index => $mode) {
+        $slotPlan = social_media_grid_slot_strategy($templateKey, $index + 1, $mode, $profile, $brief);
+        $slotInstructions[] = 'Slot ' . ($index + 1)
+            . ' (' . $mode . '): '
+            . ($mode === 'text'
+                ? 'Use this as the primary overlay direction: ' . ($slotPlan['overlay_fallback'] !== '' ? $slotPlan['overlay_fallback'] : 'short brand-aware statement') . '.'
+                : 'Visual query direction: ' . implode(' | ', $slotPlan['search_queries']) . '.');
+    }
 
     $system = "You are Atlas Grid Director. Generate cohesive Instagram grid content packages that feel intentional, brand-aware, and sequence-ready. Return valid JSON only.";
     $userPrompt = "Create exactly 9 Instagram grid posts in order for this company.\n"
@@ -2215,12 +2609,20 @@ function social_media_generate_instagram_grid($user_id, $brief = '', $input = []
         . "Each item must include: title, overlay_text, caption, cta, hashtags, visual_brief, keywords, design.\n"
         . "The sequence must respect this tile layout: " . implode(', ', $template['layout']) . ".\n"
         . "Rules:\n"
-        . "1. Text tiles must produce a short, bold overlay that can sit alone on a tile.\n"
-        . "2. Image tiles should keep overlay_text minimal or empty and depend on relevant imagery.\n"
+        . "1. Text tiles must produce a short, tile-ready overlay that directly uses the mapped company-intelligence field for that slot. Do not write generic motivational filler.\n"
+        . "2. Image tiles should keep overlay_text empty unless the slot specifically needs one word. Let the image carry the post.\n"
         . "3. Captions must be publish-ready and tied to the selected campaign goal and the company context.\n"
         . "4. The full 9-tile sequence should feel like one Instagram grid, not 9 unrelated posts.\n"
-        . "5. Use only approved fonts:\n{$fontCatalog}\n\n"
-        . "6. Use these palette directions when choosing color behavior:\n{$paletteCatalog}\n\n"
+        . "5. For bold_monochrome_ad_copy, use problems solved for pain hooks, USPs for outcome hooks, and ICP context for specificity.\n"
+        . "6. For checkerboard_affirmation, keep text soft, reflective, feminine, identity-led, and shareable.\n"
+        . "7. For central_spine_moodboard, center-column text should be short moodboard language, usually one or two words.\n"
+        . "8. For authority_hook_grid, text should sound expert, specific, sharp, and proof-oriented.\n"
+        . "9. For nature_wellness_editorial, text should be educational, grounded, calm, and ritual-oriented.\n"
+        . "10. For vertical_phrase_narrative, slots 2, 5, and 8 should read vertically as a coherent 3-word phrase from identity -> struggle -> outcome.\n"
+        . "11. Use only approved fonts:\n{$fontCatalog}\n\n"
+        . "12. Use these palette directions when choosing color behavior:\n{$paletteCatalog}\n\n"
+        . "Slot guidance:\n" . implode("\n", $slotInstructions) . "\n\n"
+        . "Grid context hints:\n" . json_encode($profileContext) . "\n\n"
         . "Company context:\n{$companyContext}\n\n"
         . "Recent company history from agents:\n{$historyContext}\n\n"
         . "Competitor research:\n" . json_encode($competitorSnapshots) . "\n\n"
@@ -2325,6 +2727,7 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
     for ($i = 0; $i < 9; $i++) {
         $mode = !empty($template['layout'][$i]) ? $template['layout'][$i] : 'image';
         $source = !empty($items[$i]) && is_array($items[$i]) ? $items[$i] : [];
+        $slotPlan = social_media_grid_slot_strategy($templateKey, $i + 1, $mode, $profile, $brief);
         $design = $defaults['post'];
         $design['headline_font_key'] = !empty($template['headline_font_key']) ? $template['headline_font_key'] : ($fontKeys[0] ?? 'inter');
         $design['body_font_key'] = !empty($template['body_font_key']) ? $template['body_font_key'] : ($fontKeys[1] ?? $design['headline_font_key']);
@@ -2339,14 +2742,20 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
         $design['accent_color'] = !empty($template['palette'][2]) ? $template['palette'][2] : $design['text_color'];
         $design['overlay_color'] = !empty($template['palette'][1]) ? $template['palette'][1] : $design['accent_color'];
         $design['asset_tags'] = $mode === 'image'
-            ? array_values(array_unique(array_merge([$industry, $product], $template['image_keywords'])))
-            : [$industry, $company];
+            ? array_values(array_unique(array_merge([$industry, $product], $template['image_keywords'], $slotPlan['asset_tags'])))
+            : array_values(array_unique(array_merge([$industry, $company], $slotPlan['asset_tags'])));
+        if (!empty($slotPlan['search_queries'])) {
+            $design['search_queries'] = $slotPlan['search_queries'];
+        }
+        if (!empty($slotPlan['provider_search_queries'])) {
+            $design['provider_search_queries'] = $slotPlan['provider_search_queries'];
+        }
         $design = social_media_normalize_design($design, 'post', $fontKeys, $defaults);
         $design = social_media_apply_profile_branding_to_design($design, $profile);
 
         $overlay = trim((string) ($source['overlay_text'] ?? ''));
         if ($mode === 'text' && $overlay === '') {
-            $overlay = 'Make your brand easier to trust';
+            $overlay = $slotPlan['overlay_fallback'] !== '' ? $slotPlan['overlay_fallback'] : 'Make your brand easier to trust';
         }
 
         $caption = trim((string) ($source['caption'] ?? ''));
@@ -2364,7 +2773,7 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
         if ($mode === 'image') {
             $visualBrief = $visualBrief !== ''
                 ? $visualBrief
-                : 'Use a relevant, on-brand image for ' . $company . ' that clearly relates to ' . $product . ' and the needs of ' . $audience . '. Avoid unrelated subjects and abstract imagery.';
+                : $slotPlan['visual_brief'];
             if ($differentiator !== '') {
                 $visualBrief .= ' Reflect the brand edge: ' . $differentiator . '.';
             }
@@ -2374,7 +2783,7 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
         } else {
             $visualBrief = $visualBrief !== ''
                 ? $visualBrief
-                : 'Create a text-led tile that fits the selected grid template.';
+                : 'Create a text-led tile that fits the selected grid template. Primary text direction: ' . ($slotPlan['overlay_fallback'] !== '' ? $slotPlan['overlay_fallback'] : 'brand-aware statement') . '.';
         }
 
         $normalized[] = [
@@ -2391,6 +2800,7 @@ function social_media_normalize_instagram_grid_items($items, $profile, $template
                 [$company, $industry, $product, $audience],
                 $differentiator !== '' ? [$differentiator] : [],
                 $subjectHints,
+                !empty($slotPlan['asset_tags']) ? $slotPlan['asset_tags'] : [],
                 $mode === 'image' ? $template['image_keywords'] : [$company]
             ))),
             'design' => $design,
