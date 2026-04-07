@@ -5,6 +5,34 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+$atlasBridgeRequest = false;
+if (!empty($_SERVER['REQUEST_URI'])) {
+    $atlasBridgeRequest = strpos((string) $_SERVER['REQUEST_URI'], '/atlas/provision') !== false
+        || strpos((string) $_SERVER['REQUEST_URI'], '/atlas/launch') !== false;
+}
+
+if ($atlasBridgeRequest) {
+    register_shutdown_function(function () {
+        $error = error_get_last();
+        if (!$error || !in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+            return;
+        }
+
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+        }
+
+        echo json_encode([
+            'success' => false,
+            'fatal' => true,
+            'error' => $error['message'],
+            'file' => $error['file'],
+            'line' => $error['line'],
+        ]);
+    });
+}
+
 /*
 |--------------------------------------------------------------------------
 | Check If The Application Is Under Maintenance
