@@ -225,8 +225,8 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                 <div class="atlas-instagram-grid" id="instagram-grid-preview">
                                     <?php if (!empty($recent_grid_posts)) { ?>
                                         <?php foreach ($recent_grid_posts as $gridPost) {
-                                            $previewUrl = $config['site_url'] . 'storage/social_posts/' . $gridPost['preview_image']; ?>
-                                            <button type="button" class="atlas-instagram-tile atlas-instagram-tile-button" data-image="<?php echo $previewUrl; ?>" data-title="<?php _esc($gridPost['title']) ?>" data-download-label="<?php echo sprintf(__('Download tile %d'), !empty($gridPost['metadata']['grid']['position']) ? (int)$gridPost['metadata']['grid']['position'] : 0); ?>">
+                                            $previewUrl = !empty($gridPost['preview_image']) ? $gridPost['preview_image'] : ($config['site_url'] . 'storage/social_posts/' . $gridPost['preview_image_file']); ?>
+                                            <button type="button" class="atlas-instagram-tile atlas-instagram-tile-button" data-post-id="<?php _esc($gridPost['id']) ?>" data-image="<?php echo $previewUrl; ?>" data-title="<?php _esc($gridPost['title']) ?>" data-download-label="<?php echo sprintf(__('Download tile %d'), !empty($gridPost['metadata']['grid']['position']) ? (int)$gridPost['metadata']['grid']['position'] : 0); ?>">
                                                 <img src="<?php echo $previewUrl; ?>" alt="<?php _esc($gridPost['title']) ?>">
                                             </button>
                                         <?php } ?>
@@ -238,6 +238,79 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-box margin-top-30">
+                <div class="headline">
+                    <h3><i class="icon-feather-layout"></i> <?php _e("Grid Tiles") ?></h3>
+                </div>
+                <div class="content with-padding">
+                    <div class="row" id="generated_grid_tiles">
+                        <?php foreach ($recent_grid_posts as $post) {
+                            $meta = !empty($post['metadata']) && is_array($post['metadata']) ? $post['metadata'] : [];
+                            $hashtags = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
+                            $design = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
+                            $previewUrl = !empty($post['preview_image']) ? $post['preview_image'] : ($config['site_url'] . 'storage/social_posts/' . $post['preview_image_file']);
+                            ?>
+                            <div class="col-xl-4 col-md-6 margin-bottom-30 social-post-card-slot" data-post-id="<?php _esc($post['id']) ?>" data-social-context="grid">
+                                <div class="dashboard-box social-post-card margin-top-0">
+                                    <div class="content">
+                                        <div class="social-post-preview">
+                                            <img src="<?php echo $previewUrl; ?>" alt="<?php _esc($post['title']) ?>">
+                                        </div>
+                                        <div class="social-post-body with-padding">
+                                            <span class="dashboard-status-button yellow"><?php _esc(ucfirst($post['post_type'])) ?></span>
+                                            <h4 class="margin-top-15"><?php _esc($post['title']) ?></h4>
+                                            <?php if (!empty($post['grid']['position'])) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e('Tile') ?>:</strong> <?php _esc($post['grid']['position']) ?></p>
+                                            <?php } ?>
+                                            <div class="social-overlay-editor margin-bottom-15">
+                                                <label class="social-overlay-label" for="grid-overlay-<?php _esc($post['id']) ?>"><strong><?php _e('Overlay') ?>:</strong></label>
+                                                <textarea id="grid-overlay-<?php _esc($post['id']) ?>" class="with-border social-overlay-input" rows="2" data-id="<?php _esc($post['id']) ?>"><?php _esc($post['overlay_text']) ?></textarea>
+                                                <div class="social-overlay-actions">
+                                                    <button type="button" class="button small ripple-effect social-overlay-save-btn" data-id="<?php _esc($post['id']) ?>"><?php _e('Save overlay') ?></button>
+                                                </div>
+                                            </div>
+                                            <p class="margin-bottom-10"><strong><?php _e('Caption') ?>:</strong> <?php _esc($post['caption']) ?></p>
+                                            <?php if (!empty($post['cta'])) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e('CTA') ?>:</strong> <?php _esc($post['cta']) ?></p>
+                                            <?php } ?>
+                                            <?php if (!empty($hashtags)) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e('Hashtags') ?>:</strong> <?php _esc($hashtags) ?></p>
+                                            <?php } ?>
+                                            <?php if (!empty($post['asset_title'])) { ?>
+                                                <p class="margin-bottom-0"><strong><?php _e('Asset') ?>:</strong> <?php _esc($post['asset_title']) ?></p>
+                                            <?php } ?>
+                                            <?php if (!empty($design['headline_font_key']) || !empty($design['background_tone'])) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e('Design') ?>:</strong>
+                                                    <?php _esc(!empty($design['headline_font_key']) ? $design['headline_font_key'] : ''); ?>
+                                                    <?php if (!empty($design['body_font_key'])) { ?> / <?php _esc($design['body_font_key']) ?><?php } ?>
+                                                    <?php if (!empty($design['headline_size'])) { ?>, <?php _esc($design['headline_size']) ?>px<?php } ?>
+                                                    <?php if (!empty($design['background_tone'])) { ?>, <?php _esc($design['background_tone']) ?><?php } ?>
+                                                </p>
+                                            <?php } ?>
+                                            <?php
+                                            $captionExport = $post['caption'];
+                                            if (!empty($hashtags)) {
+                                                $captionExport .= "\n\n" . $hashtags;
+                                            }
+                                            ?>
+                                            <div class="social-post-actions margin-top-15">
+                                                <button type="button" class="social-action-btn social-vote-btn<?php echo (int) $post['vote_value'] === 1 ? ' is-active' : ''; ?>" data-id="<?php _esc($post['id']) ?>" data-vote="1" title="<?php _e('Thumbs up') ?>" aria-label="<?php _e('Thumbs up') ?>"><i class="fa fa-thumbs-up"></i></button>
+                                                <button type="button" class="social-action-btn social-vote-btn<?php echo (int) $post['vote_value'] === -1 ? ' is-active' : ''; ?>" data-id="<?php _esc($post['id']) ?>" data-vote="-1" title="<?php _e('Thumbs down and regenerate') ?>" aria-label="<?php _e('Thumbs down and regenerate') ?>"><i class="fa fa-thumbs-down"></i></button>
+                                                <button type="button" class="social-action-btn social-regenerate-btn" data-id="<?php _esc($post['id']) ?>" title="<?php _e('Regenerate image') ?>" aria-label="<?php _e('Regenerate image') ?>"><i class="fa fa-refresh"></i></button>
+                                                <a href="<?php echo $previewUrl; ?>" class="social-action-btn" download title="<?php _e('Download Post') ?>" aria-label="<?php _e('Download Post') ?>"><i class="fa fa-download"></i></a>
+                                                <a href="#" class="social-action-btn download-caption" data-title="<?php _esc($post['title']) ?>" data-caption="<?php _esc($captionExport) ?>" title="<?php _e('Download Caption') ?>" aria-label="<?php _e('Download Caption') ?>"><i class="fa fa-file-text-o"></i></a>
+                                                <a href="#" class="social-action-btn social-share-btn" title="<?php _e('Share') ?>" aria-label="<?php _e('Share') ?>"><i class="fa fa-share-alt"></i></a>
+                                                <a href="#" class="social-action-btn social-action-danger quick-delete" data-id="<?php _esc($post['id']) ?>" data-action="delete_image" title="<?php _e('Delete') ?>" aria-label="<?php _e('Delete') ?>"><i class="fa fa-trash-o"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
@@ -289,6 +362,39 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
     </div>
 </div>
 <?php ob_start() ?>
+<style>
+    .social-post-card .social-post-preview img {
+        width: 100%;
+        border-radius: 12px 12px 0 0;
+        display: block;
+    }
+    .social-post-card .social-post-body {
+        background: #fff;
+    }
+    .social-post-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+    .social-action-btn {
+        flex: 0 0 auto;
+    }
+    .social-action-btn.is-active {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+    }
+    .social-overlay-input {
+        min-height: 78px;
+        resize: vertical;
+    }
+    .social-overlay-actions {
+        margin-top: 10px;
+    }
+</style>
 <script>
     (function ($) {
         var campaignCatalog = <?php echo json_encode($campaign_catalog); ?>;
@@ -392,12 +498,36 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
             var gridHtml = '';
 
             $.each(posts, function (index, post) {
-                gridHtml += '<button type="button" class="atlas-instagram-tile atlas-instagram-tile-button" data-image="' + escapeHtml(post.preview_image) + '" data-title="' + escapeHtml(post.title) + '" data-download-label="Download tile ' + (index + 1) + '">' +
+                var tilePosition = post.grid && post.grid.position ? post.grid.position : (index + 1);
+                gridHtml += '<button type="button" class="atlas-instagram-tile atlas-instagram-tile-button" data-post-id="' + escapeHtml(String(post.id)) + '" data-image="' + escapeHtml(post.preview_image) + '" data-title="' + escapeHtml(post.title) + '" data-download-label="Download tile ' + tilePosition + '">' +
                     '<img src="' + escapeHtml(post.preview_image) + '" alt="' + escapeHtml(post.title) + '">' +
                 '</button>';
             });
 
             $('#instagram-grid-preview').html(gridHtml);
+        }
+
+        function renderGridCards(posts) {
+            var html = '';
+            $.each(posts, function (index, post) {
+                if (window.render_social_post_card) {
+                    html += window.render_social_post_card(post, {
+                        context: 'grid',
+                        wrapperClass: 'col-xl-4 col-md-6 margin-bottom-30'
+                    });
+                }
+            });
+            $('#generated_grid_tiles').html(html);
+        }
+
+        function syncGridTile(post) {
+            var $tile = $('#instagram-grid-preview').find('[data-post-id="' + String(post.id) + '"]');
+            if (!$tile.length) {
+                return;
+            }
+            $tile.attr('data-image', post.preview_image);
+            $tile.attr('data-title', post.title);
+            $tile.find('img').attr('src', post.preview_image).attr('alt', post.title);
         }
 
         function openGridModal(imageUrl, title, downloadLabel) {
@@ -473,6 +603,7 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                     if (response.success) {
                         renderProfile(response.company_profile || {}, response.posts || []);
                         renderGrid(response.posts || []);
+                        renderGridCards(response.posts || []);
                         animateValue('quick-images-left', response.old_used_images, response.current_used_images, 1000);
                         Snackbar.show({
                             text: 'Instagram grid generated successfully.',
@@ -498,6 +629,12 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                     $error.html('Unable to generate the Instagram grid right now. Please try again.').slideDown().focus();
                 }
             });
+        });
+
+        $(document).on('socialPostUpdated', function (event, post, context) {
+            if (context === 'grid') {
+                syncGridTile(post);
+            }
         });
     })(jQuery);
 </script>

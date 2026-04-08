@@ -63,7 +63,27 @@ function social_media_bootstrap()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
+    ORM::raw_execute("
+        CREATE TABLE IF NOT EXISTS `{$config['db']['pre']}social_media_post_feedback` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `user_id` int(11) DEFAULT NULL,
+            `post_id` int(11) DEFAULT NULL,
+            `asset_id` int(11) DEFAULT NULL,
+            `asset_key` varchar(255) DEFAULT NULL,
+            `vote_value` tinyint(1) DEFAULT NULL,
+            `context_hash` varchar(64) DEFAULT NULL,
+            `metadata` longtext DEFAULT NULL,
+            `created_at` datetime DEFAULT NULL,
+            `updated_at` datetime DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            KEY `social_feedback_post` (`post_id`),
+            KEY `social_feedback_asset_key` (`asset_key`),
+            KEY `social_feedback_user_post` (`user_id`,`post_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+
     social_media_ensure_asset_schema();
+    social_media_ensure_post_schema();
 
     $bootstrapped = true;
 }
@@ -77,6 +97,25 @@ function social_media_ensure_asset_schema()
         'analysis_json' => "ALTER TABLE `{$table}` ADD `analysis_json` LONGTEXT NULL DEFAULT NULL",
         'manifest_json' => "ALTER TABLE `{$table}` ADD `manifest_json` LONGTEXT NULL DEFAULT NULL",
         'render_preset' => "ALTER TABLE `{$table}` ADD `render_preset` VARCHAR(50) NULL DEFAULT 'auto'",
+    ];
+
+    $pdo = ORM::get_db();
+    foreach ($columns as $column => $sql) {
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
+        $stmt->execute([$column]);
+        if (!$stmt->fetch()) {
+            ORM::raw_execute($sql);
+        }
+    }
+}
+
+function social_media_ensure_post_schema()
+{
+    global $config;
+
+    $table = $config['db']['pre'] . 'social_media_posts';
+    $columns = [
+        'updated_at' => "ALTER TABLE `{$table}` ADD `updated_at` DATETIME NULL DEFAULT NULL",
     ];
 
     $pdo = ORM::get_db();
@@ -523,6 +562,56 @@ function social_media_choose_instagram_grid_template($profile, $campaignType = '
     return [$key, $catalog[$key]];
 }
 
+function social_media_detect_builder_target($profile = [], $intelligence = [])
+{
+    $bazaarUrl = rtrim((string) get_env_setting('BAZAAR_URL', 'https://bazaar.hatchers.ai'), '/');
+    $servioUrl = rtrim((string) get_env_setting('SERVIO_URL', 'https://servio.hatchers.ai'), '/');
+
+    $signals = strtolower(implode("\n", array_filter([
+        !empty($profile['company_industry']) ? $profile['company_industry'] : '',
+        !empty($profile['company_description']) ? $profile['company_description'] : '',
+        !empty($profile['key_products']) ? $profile['key_products'] : '',
+        !empty($profile['differentiators']) ? $profile['differentiators'] : '',
+        !empty($profile['ideal_customer_profile']) ? $profile['ideal_customer_profile'] : '',
+        !empty($intelligence['company_summary']) ? $intelligence['company_summary'] : '',
+        !empty($intelligence['competitive_edges']) ? $intelligence['competitive_edges'] : '',
+        !empty($intelligence['summary_text']) ? $intelligence['summary_text'] : '',
+    ])));
+
+    $ecommerceScore = 0;
+    $serviceScore = 0;
+
+    if (preg_match_all('/\b(ecommerce|e-commerce|shop|store|retail|product|products|catalog|collection|inventory|sku|shipping|cart|checkout|physical product|digital product|merch)\b/i', $signals, $matches)) {
+        $ecommerceScore += count($matches[0]);
+    }
+
+    if (preg_match_all('/\b(service|services|booking|appointment|consult|consulting|agency|coach|coaching|studio|salon|clinic|therapy|freelance|done-for-you|training|class|session)\b/i', $signals, $matches)) {
+        $serviceScore += count($matches[0]);
+    }
+
+    $industry = strtolower(trim((string) (!empty($profile['company_industry']) ? $profile['company_industry'] : '')));
+    if (preg_match('/\b(ecommerce|retail|store|shop)\b/i', $industry)) {
+        $ecommerceScore += 3;
+    }
+    if (preg_match('/\b(service|agency|consult|coach|wellness|clinic|salon|studio)\b/i', $industry)) {
+        $serviceScore += 3;
+    }
+
+    if ($ecommerceScore > $serviceScore) {
+        return [
+            'type' => 'ecommerce',
+            'name' => 'Bazaar',
+            'url' => $bazaarUrl,
+        ];
+    }
+
+    return [
+        'type' => 'service',
+        'name' => 'Servio',
+        'url' => $servioUrl,
+    ];
+}
+
 function social_media_grid_value($value, $fallback = '')
 {
     if (is_array($value)) {
@@ -916,40 +1005,159 @@ function social_media_get_selection_options($catalog, $field)
 
 function social_media_build_campaign_brief($input)
 {
-    $catalog = social_media_get_campaign_catalog();
-    $funnelStages = social_media_get_funnel_stage_catalog();
-    $campaignType = !empty($input['campaign_type']) && isset($catalog[$input['campaign_type']]) ? $catalog[$input['campaign_type']] : null;
-    $focusArea = trim((string) ($input['focus_area'] ?? ''));
-    $contentAngle = trim((string) ($input['content_angle'] ?? ''));
-    $useCase = trim((string) ($input['use_case'] ?? ''));
-    $funnelStage = trim((string) ($input['funnel_stage'] ?? ''));
     $notes = trim((string) ($input['description'] ?? ''));
 
     $parts = [];
-    if ($campaignType) {
-        $parts[] = 'Campaign type: ' . $campaignType['label'];
-        $parts[] = 'Primary goal: ' . $campaignType['goal'];
-        $parts[] = 'Campaign focus: ' . implode('; ', $campaignType['focus']);
-        $parts[] = 'Content examples to emulate: ' . implode('; ', $campaignType['content_examples']);
-        $parts[] = 'Best use cases: ' . implode('; ', $campaignType['when_to_use']);
-    }
-    if ($funnelStage !== '' && isset($funnelStages[$funnelStage])) {
-        $parts[] = 'Funnel stage: ' . $funnelStages[$funnelStage];
-    }
-    if ($focusArea !== '') {
-        $parts[] = 'Selected focus area: ' . $focusArea;
-    }
-    if ($contentAngle !== '') {
-        $parts[] = 'Preferred content angle: ' . $contentAngle;
-    }
-    if ($useCase !== '') {
-        $parts[] = 'Current use case: ' . $useCase;
-    }
     if ($notes !== '') {
-        $parts[] = 'Extra campaign notes: ' . $notes;
+        $parts[] = 'Founder notes: ' . $notes;
     }
 
     return implode("\n", $parts);
+}
+
+function social_media_get_marketing_messaging_prompt($companyContext, $historyContext, $competitorSnapshots, $brief = '', $options = [])
+{
+    $mode = !empty($options['mode']) ? $options['mode'] : 'campaign';
+    $template = !empty($options['template']) && is_array($options['template']) ? $options['template'] : [];
+    $slotInstructions = !empty($options['slot_instructions']) && is_array($options['slot_instructions']) ? $options['slot_instructions'] : [];
+    $profileContext = !empty($options['profile_context']) && is_array($options['profile_context']) ? $options['profile_context'] : [];
+
+    $prompt = "Objective\n"
+        . "Take messy, incomplete, or vague inputs and produce:\n"
+        . "Sharp ICPs\n"
+        . "Real, painful Problems\n"
+        . "Clear, differentiated USPs\n"
+        . "Strong positioning outputs\n"
+        . "If inputs are weak -> infer from website + context\n"
+        . "If inputs are decent -> refine and sharpen\n"
+        . "Output must be specific, concrete, and usable in GTM + copy immediately\n\n"
+        . "INPUTS\n"
+        . "May include:\n"
+        . "Website URL\n"
+        . "Company description\n"
+        . "ICP (optional / messy)\n"
+        . "Problems (optional / weak)\n"
+        . "USPs (optional / vague)\n\n"
+        . "CORE PRINCIPLE (MANDATORY)\n"
+        . "Everything must align:\n"
+        . "ICP -> Problem -> USP -> Outcome\n"
+        . "If something does not connect -> fix or remove it.\n\n"
+        . "STEP 1 - EXTRACT / INFER\n"
+        . "If inputs are incomplete:\n"
+        . "Analyze website + description\n"
+        . "Infer:\n"
+        . "Who it is really for\n"
+        . "What painful problems exist\n"
+        . "What the company actually does differently\n"
+        . "Do NOT invent fantasy positioning.\n"
+        . "Stay grounded in reality.\n\n"
+        . "STEP 2 - ICP DEFINITION (Top 3-4)\n"
+        . "Rules\n"
+        . "Each ICP must be:\n"
+        . "Specific (NOT 'founders', 'artists', 'business owners')\n"
+        . "Defined by:\n"
+        . "Stage (early, scaling, stuck, etc.)\n"
+        . "Behavior (what they are doing now)\n"
+        . "Situation (context they recognize instantly)\n"
+        . "Format\n"
+        . "Short title\n"
+        . "1-2 line description\n\n"
+        . "STEP 3 - PROBLEMS (Top 3-5)\n"
+        . "Rules\n"
+        . "Each problem must be:\n"
+        . "Painful (emotional, financial, time, effort, confusion, risk)\n"
+        . "Observable (real-world, not abstract)\n"
+        . "Written in plain language\n"
+        . "One sentence per problem\n"
+        . "No buzzwords\n\n"
+        . "STEP 4 - USPs / UVPs (Top 3-5)\n"
+        . "Rules\n"
+        . "Each USP must:\n"
+        . "Directly solve a specific problem\n"
+        . "Be concrete and believable\n"
+        . "Show how it works (mechanism if possible)\n"
+        . "Highlight differentiation\n"
+        . "Include when possible: numbers, process, proof, unique model\n\n"
+        . "STEP 5 - CATEGORY / NICHE\n"
+        . "Define in simple, clear language using 2-6 words max.\n"
+        . "Avoid jargon.\n\n"
+        . "STEP 6 - STATEMENT PILLARS (CRITICAL)\n"
+        . "Generate 3-5 statements.\n"
+        . "Each MUST combine:\n"
+        . "1 ICP\n"
+        . "1 Problem\n"
+        . "1 USP\n"
+        . "1 Outcome\n"
+        . "Format:\n"
+        . "Short, punchy, marketing-ready\n"
+        . "These should be directly usable in landing pages.\n\n"
+        . "STEP 7 - KEY CLAIMS / BENEFITS\n"
+        . "List 5-8 outcomes.\n"
+        . "Rules:\n"
+        . "Must be concrete\n"
+        . "Must be believable\n"
+        . "Prefer measurable or visual outcomes\n"
+        . "Avoid hype.\n\n"
+        . "QUALITY ENFORCEMENTS (MANDATORY)\n"
+        . "1. NO GENERIC LANGUAGE\n"
+        . "Forbidden: innovative, cutting-edge, next level, optimize, leverage\n"
+        . "If generic -> rewrite.\n"
+        . "2. SPECIFICITY RULE\n"
+        . "Each section must include numbers OR concrete situations OR mechanisms.\n"
+        . "3. REALITY TEST\n"
+        . "If it sounds like marketing fluff -> rewrite.\n"
+        . "Must feel like something a founder would say and something a user recognizes instantly.\n"
+        . "4. CONTRAST RULE\n"
+        . "Where possible include before vs after, wrong vs right, current vs desired state.\n"
+        . "5. NO ABSTRACT CLAIMS\n"
+        . "Everything must be observable or measurable or clearly imaginable.\n\n"
+        . "OUTPUT FORMAT FOR GENERATING VISUAL ASSETS\n"
+        . "You are a direct-response copywriter specializing in small business marketing. When given a business type, target audience, and key benefit, generate:\n"
+        . "5 hooks\n"
+        . "5 image, poster and social media overlay statements\n"
+        . "5 call-to-action lines\n"
+        . "5 one-line marketing messages\n"
+        . "5 slide and carousel captions\n"
+        . "5 video script hooks (first 3 seconds, scroll-stopping)\n"
+        . "5 bio lines (for Instagram and LinkedIn profiles)\n"
+        . "5 objection crushers (short responses to hesitations like price, timing, trust)\n"
+        . "5 testimonial prompts (questions that generate naturally quotable client responses)\n"
+        . "Be punchy, specific, and avoid corporate jargon. No intros, no explanations - just the copy, organised by category.\n\n"
+        . "FINAL VALIDATION (MANDATORY)\n"
+        . "Check:\n"
+        . "Each ICP connects to at least 1 problem\n"
+        . "Each problem is solved by at least 1 USP\n"
+        . "Each statement pillar includes ICP + Problem + USP + Outcome\n"
+        . "No generic language\n"
+        . "Clear, concrete, specific\n"
+        . "If any fail -> regenerate only that section.\n\n"
+        . "Use the framework above internally, but return only the JSON fields requested for this task.\n"
+        . "Overlay text must be the strongest usable marketing statement from the framework, not filler.\n"
+        . "Prefer statement pillars, painful problem hooks, differentiated USP hooks, and believable outcomes.\n"
+        . "Ignore campaign selectors like Campaign Type, Funnel Stage, Primary Focus, Content Angle, and Use Case. Use company reality first.\n\n"
+        . "Company context:\n{$companyContext}\n\n"
+        . "Recent company history from agents:\n{$historyContext}\n\n"
+        . "Competitor research:\n" . json_encode($competitorSnapshots) . "\n\n";
+
+    if (!empty($profileContext)) {
+        $prompt .= "Company intelligence hints:\n" . json_encode($profileContext) . "\n\n";
+    }
+
+    if ($brief !== '') {
+        $prompt .= "Founder notes:\n{$brief}\n\n";
+    }
+
+    if ($mode === 'grid') {
+        $prompt .= "Instagram grid constraints:\n"
+            . "Use this selected grid system as a hard visual and sequencing constraint:\n"
+            . json_encode($template) . "\n\n"
+            . "The sequence must respect this tile layout: " . implode(', ', $template['layout']) . ".\n"
+            . "Text tiles should carry the strongest overlay statements. Image tiles should usually leave overlay_text empty unless one word is required.\n"
+            . "For vertical_phrase_narrative, slots 2, 5, and 8 must read vertically as a coherent 3-part phrase.\n"
+            . "Slot guidance:\n" . implode("\n", $slotInstructions) . "\n\n";
+    }
+
+    return $prompt;
 }
 
 function social_media_handle_profile_upload($field_name, $existing = '')
@@ -1778,6 +1986,118 @@ function social_media_remote_assets_enabled()
     return false;
 }
 
+function social_media_color_to_provider_family($color)
+{
+    $rgb = social_media_hex_rgb_triplet($color);
+    if (!$rgb) {
+        return '';
+    }
+
+    list($r, $g, $b) = $rgb;
+    $max = max($r, $g, $b);
+    $min = min($r, $g, $b);
+    $delta = $max - $min;
+
+    if ($delta < 18) {
+        if ($max < 55) {
+            return 'black';
+        }
+        if ($max > 225) {
+            return 'white';
+        }
+        return '';
+    }
+
+    if ($max === $r) {
+        $hue = 60 * fmod((($g - $b) / max($delta, 1)), 6);
+    } elseif ($max === $g) {
+        $hue = 60 * ((($b - $r) / max($delta, 1)) + 2);
+    } else {
+        $hue = 60 * ((($r - $g) / max($delta, 1)) + 4);
+    }
+    if ($hue < 0) {
+        $hue += 360;
+    }
+
+    if ($hue < 20 || $hue >= 345) {
+        return 'red';
+    }
+    if ($hue < 45) {
+        return 'orange';
+    }
+    if ($hue < 70) {
+        return 'yellow';
+    }
+    if ($hue < 160) {
+        return 'green';
+    }
+    if ($hue < 200) {
+        return 'teal';
+    }
+    if ($hue < 255) {
+        return 'blue';
+    }
+    if ($hue < 320) {
+        return 'purple';
+    }
+
+    return 'magenta';
+}
+
+function social_media_design_color_families($design = [])
+{
+    $colors = [];
+    if (!empty($design['background_colors']) && is_array($design['background_colors'])) {
+        $colors = array_merge($colors, $design['background_colors']);
+    }
+    if (!empty($design['accent_color'])) {
+        $colors[] = $design['accent_color'];
+    }
+    if (!empty($design['overlay_color'])) {
+        $colors[] = $design['overlay_color'];
+    }
+
+    $families = [];
+    foreach ($colors as $color) {
+        $family = social_media_color_to_provider_family($color);
+        if ($family !== '') {
+            $families[] = $family;
+        }
+    }
+
+    return array_values(array_unique($families));
+}
+
+function social_media_visual_style_terms($design = [])
+{
+    $tags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
+    $text = strtolower(implode(' ', $tags) . ' ' . (!empty($design['background_tone']) ? $design['background_tone'] : ''));
+    $styleTerms = [];
+
+    $styleMap = [
+        'editorial' => ['editorial', 'cinematic', 'fashion'],
+        'minimal' => ['minimal', 'clean', 'simple'],
+        'warm' => ['warm', 'cozy', 'golden'],
+        'moody' => ['moody', 'dark', 'dramatic'],
+        'soft' => ['soft', 'gentle', 'airy'],
+        'lifestyle' => ['lifestyle', 'real life', 'candid'],
+        'close-up' => ['close-up', 'detail', 'macro'],
+        'outdoor' => ['outdoor', 'nature', 'exterior'],
+        'product' => ['product', 'still life', 'flat lay'],
+    ];
+
+    foreach ($styleMap as $canonical => $variants) {
+        foreach ($variants as $variant) {
+            if (strpos($text, $variant) !== false) {
+                $styleTerms[] = $canonical;
+                break;
+            }
+        }
+    }
+
+    return array_values(array_unique($styleTerms));
+}
+
 function social_media_build_asset_search_queries($keywords = [], $design = [])
 {
     if (!empty($design['search_queries']) && is_array($design['search_queries'])) {
@@ -1787,19 +2107,35 @@ function social_media_build_asset_search_queries($keywords = [], $design = [])
     $keywords = social_media_normalize_list($keywords);
     $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
     $pool = array_values(array_unique(array_filter(array_merge($keywords, $designTags))));
+    $styleTerms = social_media_visual_style_terms($design);
+    $colorFamilies = social_media_design_color_families($design);
     $queries = [];
 
     if (!empty($pool)) {
-        $queries[] = implode(' ', array_slice($pool, 0, 3));
+        $queries[] = trim(implode(' ', array_filter(array_merge(
+            array_slice($pool, 0, 2),
+            array_slice($styleTerms, 0, 2),
+            array_slice($colorFamilies, 0, 1)
+        ))));
         if (count($pool) > 3) {
-            $queries[] = implode(' ', array_slice($pool, 3, 3));
+            $queries[] = trim(implode(' ', array_filter(array_merge(
+                array_slice($pool, 2, 2),
+                array_slice($styleTerms, 0, 1),
+                array_slice($colorFamilies, 0, 1)
+            ))));
         }
         if (count($pool) > 1) {
-            $queries[] = $pool[0] . ' ' . end($pool);
+            $queries[] = trim($pool[0] . ' ' . end($pool) . ' ' . implode(' ', array_slice($styleTerms, 0, 1)));
         }
     }
 
-    $queries[] = 'creative brand background';
+    if (!empty($styleTerms)) {
+        $queries[] = trim(implode(' ', array_filter(array_merge(
+            array_slice($pool, 0, 2),
+            array_slice($styleTerms, 0, 2)
+        ))));
+    }
+
     return array_values(array_unique(array_filter(array_map('trim', $queries))));
 }
 
@@ -1810,7 +2146,12 @@ function social_media_build_provider_search_queries($provider, $keywords = [], $
     }
 
     $queries = social_media_build_asset_search_queries($keywords, $design);
+    $styleTerms = social_media_visual_style_terms($design);
+    $colorFamilies = social_media_design_color_families($design);
     if ($provider !== 'pixabay' && $provider !== 'unsplash') {
+        if ($provider === 'pexels' && !empty($queries)) {
+            $queries = array_values(array_unique(array_map('trim', $queries)));
+        }
         return $queries;
     }
 
@@ -1832,9 +2173,16 @@ function social_media_build_provider_search_queries($provider, $keywords = [], $
     }
 
     if (!empty($tokens)) {
-        $providerQueries[] = implode(' ', array_slice($tokens, 0, 4));
+        $providerQueries[] = trim(implode(' ', array_filter(array_merge(
+            array_slice($tokens, 0, 3),
+            array_slice($styleTerms, 0, 1),
+            array_slice($colorFamilies, 0, 1)
+        ))));
         if (count($tokens) > 4) {
-            $providerQueries[] = implode(' ', array_slice($tokens, 4, 4));
+            $providerQueries[] = trim(implode(' ', array_filter(array_merge(
+                array_slice($tokens, 3, 3),
+                array_slice($styleTerms, 0, 1)
+            ))));
         }
     }
 
@@ -1846,7 +2194,7 @@ function social_media_build_provider_search_queries($provider, $keywords = [], $
     }
 
     if ($provider === 'unsplash') {
-        $providerQueries[] = implode(' ', array_slice(array_filter(array_unique(array_merge($tokens, $families))), 0, 4));
+        $providerQueries[] = trim(implode(' ', array_slice(array_filter(array_unique(array_merge($tokens, $families, $styleTerms, $colorFamilies))), 0, 5)));
     }
 
     return array_values(array_unique(array_filter(array_map('trim', $providerQueries))));
@@ -1937,6 +2285,65 @@ function social_media_relevance_signal($candidate, $keywords = [], $designTags =
     ];
 }
 
+function social_media_hex_rgb_triplet($color)
+{
+    $normalized = social_media_normalize_hex_color($color, '');
+    if ($normalized === '') {
+        return null;
+    }
+
+    return social_media_hex_to_rgb($normalized);
+}
+
+function social_media_color_distance($colorA, $colorB)
+{
+    $rgbA = social_media_hex_rgb_triplet($colorA);
+    $rgbB = social_media_hex_rgb_triplet($colorB);
+    if (!$rgbA || !$rgbB) {
+        return 9999;
+    }
+
+    return sqrt(
+        pow($rgbA[0] - $rgbB[0], 2) +
+        pow($rgbA[1] - $rgbB[1], 2) +
+        pow($rgbA[2] - $rgbB[2], 2)
+    );
+}
+
+function social_media_brand_color_match_score($candidateColors, $desiredColors)
+{
+    $candidateColors = array_values(array_filter(array_map(function ($color) {
+        return social_media_normalize_hex_color($color, '');
+    }, (array) $candidateColors)));
+    $desiredColors = array_values(array_filter(array_map(function ($color) {
+        return social_media_normalize_hex_color($color, '');
+    }, (array) $desiredColors)));
+
+    if (empty($candidateColors) || empty($desiredColors)) {
+        return 0;
+    }
+
+    $score = 0;
+    foreach (array_slice($desiredColors, 0, 3) as $desired) {
+        $bestDistance = 9999;
+        foreach (array_slice($candidateColors, 0, 4) as $candidate) {
+            $bestDistance = min($bestDistance, social_media_color_distance($candidate, $desired));
+        }
+
+        if ($bestDistance <= 50) {
+            $score += 4;
+        } elseif ($bestDistance <= 90) {
+            $score += 2.5;
+        } elseif ($bestDistance <= 130) {
+            $score += 1.2;
+        } elseif ($bestDistance >= 220) {
+            $score -= 1.5;
+        }
+    }
+
+    return $score;
+}
+
 function social_media_guess_background_tone($color)
 {
     $color = social_media_normalize_hex_color($color, '#223046');
@@ -1992,7 +2399,7 @@ function social_media_remote_asset_record($provider, $id, $title, $imageUrl, $pr
     ];
 }
 
-function social_media_search_unsplash($query, $limit = 8)
+function social_media_search_unsplash($query, $limit = 8, $color = '')
 {
     $key = trim((string) get_env_setting('UNSPLASH_ACCESS_KEY', ''));
     if ($key === '') {
@@ -2000,6 +2407,9 @@ function social_media_search_unsplash($query, $limit = 8)
     }
 
     $url = 'https://api.unsplash.com/search/photos?query=' . rawurlencode($query) . '&per_page=' . max(1, min(30, (int) $limit)) . '&orientation=squarish&content_filter=high&order_by=relevant';
+    if ($color !== '') {
+        $url .= '&color=' . rawurlencode($color);
+    }
     $data = social_media_http_get_json($url, [
         'Authorization: Client-ID ' . $key,
         'Accept-Version: v1',
@@ -2033,7 +2443,7 @@ function social_media_search_unsplash($query, $limit = 8)
     return $assets;
 }
 
-function social_media_search_pexels($query, $limit = 8)
+function social_media_search_pexels($query, $limit = 8, $color = '')
 {
     $key = trim((string) get_env_setting('PEXELS_API_KEY', ''));
     if ($key === '') {
@@ -2041,6 +2451,9 @@ function social_media_search_pexels($query, $limit = 8)
     }
 
     $url = 'https://api.pexels.com/v1/search?query=' . rawurlencode($query) . '&per_page=' . max(1, min(30, (int) $limit)) . '&orientation=square';
+    if ($color !== '') {
+        $url .= '&color=' . rawurlencode($color);
+    }
     $data = social_media_http_get_json($url, [
         'Authorization: ' . $key,
     ]);
@@ -2122,9 +2535,26 @@ function social_media_filter_remote_assets($assets, $provider, $keywords = [], $
 
     $filtered = [];
     $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
+    $styleTerms = social_media_visual_style_terms($design);
+    $desiredColors = !empty($design['background_colors']) && is_array($design['background_colors'])
+        ? $design['background_colors']
+        : [
+            !empty($design['accent_color']) ? $design['accent_color'] : '',
+            !empty($design['overlay_color']) ? $design['overlay_color'] : '',
+        ];
 
     foreach ($assets as $asset) {
         $relevance = social_media_relevance_signal($asset, $keywords, $designTags);
+        $colorScore = !empty($asset['analysis']['dominant_colors']) && is_array($asset['analysis']['dominant_colors'])
+            ? social_media_brand_color_match_score($asset['analysis']['dominant_colors'], $desiredColors)
+            : 0;
+        $styleText = social_media_candidate_text_blob($asset);
+        $styleMatches = 0;
+        foreach ($styleTerms as $term) {
+            if ($term !== '' && strpos($styleText, strtolower($term)) !== false) {
+                $styleMatches++;
+            }
+        }
 
         if (!empty($relevance['families_wanted']) && empty($relevance['families_found'])) {
             continue;
@@ -2137,6 +2567,23 @@ function social_media_filter_remote_assets($assets, $provider, $keywords = [], $
                 continue;
             }
             if ($relevance['match_count'] < 2) {
+                continue;
+            }
+            if (!empty($desiredColors) && $colorScore < 1.2) {
+                continue;
+            }
+            if (!empty($styleTerms) && $styleMatches < 1 && $relevance['match_count'] < 3) {
+                continue;
+            }
+        }
+        if ($provider === 'pexels') {
+            if ($relevance['match_count'] < 2) {
+                continue;
+            }
+            if (!empty($desiredColors) && $colorScore < 1.2) {
+                continue;
+            }
+            if (!empty($styleTerms) && $styleMatches < 1 && $relevance['match_count'] < 3) {
                 continue;
             }
         }
@@ -2163,6 +2610,8 @@ function social_media_search_remote_assets($post_type, $keywords = [], $design =
 
     $queries = social_media_build_asset_search_queries($keywords, $design);
     $providers = social_media_remote_asset_sources();
+    $colorFamilies = social_media_design_color_families($design);
+    $preferredColor = !empty($colorFamilies[0]) ? $colorFamilies[0] : '';
     $assets = [];
 
     foreach ($providers as $provider) {
@@ -2170,9 +2619,9 @@ function social_media_search_remote_assets($post_type, $keywords = [], $design =
         foreach ($providerQueries as $query) {
             $providerAssets = [];
             if ($provider === 'unsplash') {
-                $providerAssets = social_media_search_unsplash($query, 6);
+                $providerAssets = social_media_search_unsplash($query, 6, $preferredColor);
             } elseif ($provider === 'pexels') {
-                $providerAssets = social_media_search_pexels($query, 6);
+                $providerAssets = social_media_search_pexels($query, 6, $preferredColor);
             } elseif ($provider === 'pixabay') {
                 $providerAssets = social_media_search_pixabay($query, 6);
             }
@@ -2328,7 +2777,7 @@ function social_media_get_recent_posts($user_id, $limit = 18)
         ->find_array();
 
     foreach ($posts as &$post) {
-        $post['metadata'] = !empty($post['metadata']) ? json_decode($post['metadata'], true) : [];
+        $post = social_media_format_post_record($post, $user_id);
     }
 
     return $posts;
@@ -2369,17 +2818,136 @@ function social_media_get_recent_grid_batch($user_id)
 function social_media_get_post($user_id, $id)
 {
     social_media_bootstrap();
+    $record = social_media_get_post_record($user_id, $id);
+    return $record ? social_media_format_post_record($record->as_array(), $user_id) : null;
+}
+
+function social_media_get_post_record($user_id, $id)
+{
+    social_media_bootstrap();
     global $config;
 
-    $post = ORM::for_table($config['db']['pre'] . 'social_media_posts')
+    return ORM::for_table($config['db']['pre'] . 'social_media_posts')
         ->where('user_id', $user_id)
         ->find_one($id);
+}
 
-    if ($post && !empty($post['metadata'])) {
-        $post->metadata = json_decode($post['metadata'], true);
+function social_media_post_context_hash($postType, $keywords = [], $brief = '')
+{
+    $keywords = social_media_normalize_list($keywords);
+    sort($keywords);
+    return sha1(json_encode([
+        'post_type' => (string) $postType,
+        'keywords' => $keywords,
+        'brief' => trim((string) $brief),
+    ]));
+}
+
+function social_media_get_latest_post_feedback($user_id, $post_id, $assetKey = '')
+{
+    social_media_bootstrap();
+    global $config;
+
+    $query = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')
+        ->where('user_id', $user_id)
+        ->where('post_id', $post_id);
+
+    if ($assetKey !== '') {
+        $query->where('asset_key', $assetKey);
     }
 
-    return $post;
+    $row = $query->order_by_desc('id')->find_one();
+    return $row ? $row->as_array() : null;
+}
+
+function social_media_get_asset_feedback_summary($assetKey, $userId = 0)
+{
+    social_media_bootstrap();
+    global $config;
+
+    if ($assetKey === '') {
+        return ['likes' => 0, 'dislikes' => 0, 'user_vote' => 0];
+    }
+
+    $likes = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')
+        ->where('asset_key', $assetKey)
+        ->where('vote_value', 1)
+        ->count();
+    $dislikes = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')
+        ->where('asset_key', $assetKey)
+        ->where('vote_value', -1)
+        ->count();
+    $userVote = 0;
+
+    if ($userId > 0) {
+        $userRow = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')
+            ->where('asset_key', $assetKey)
+            ->where('user_id', $userId)
+            ->order_by_desc('id')
+            ->find_one();
+        if ($userRow) {
+            $userVote = (int) $userRow['vote_value'];
+        }
+    }
+
+    return [
+        'likes' => (int) $likes,
+        'dislikes' => (int) $dislikes,
+        'user_vote' => $userVote,
+    ];
+}
+
+function social_media_format_post_record($post, $userId = 0)
+{
+    global $config;
+
+    $metadata = !empty($post['metadata']) && is_array($post['metadata'])
+        ? $post['metadata']
+        : (!empty($post['metadata']) ? json_decode($post['metadata'], true) : []);
+    $metadata = is_array($metadata) ? $metadata : [];
+    $asset = !empty($metadata['asset']) && is_array($metadata['asset']) ? $metadata['asset'] : [];
+    $design = !empty($metadata['design']) && is_array($metadata['design']) ? $metadata['design'] : [];
+    $debug = !empty($metadata['debug']) && is_array($metadata['debug']) ? $metadata['debug'] : [];
+    $assetKey = !empty($metadata['asset_key']) ? (string) $metadata['asset_key'] : social_media_asset_unique_key($asset);
+    $feedback = $userId > 0 && !empty($post['id'])
+        ? social_media_get_latest_post_feedback($userId, (int) $post['id'], $assetKey)
+        : null;
+
+    return [
+        'id' => (int) $post['id'],
+        'user_id' => !empty($post['user_id']) ? (int) $post['user_id'] : 0,
+        'batch_key' => !empty($post['batch_key']) ? $post['batch_key'] : '',
+        'post_type' => !empty($post['post_type']) ? $post['post_type'] : 'post',
+        'title' => !empty($post['title']) ? $post['title'] : '',
+        'caption' => !empty($post['caption']) ? $post['caption'] : '',
+        'overlay_text' => !empty($post['overlay_text']) ? $post['overlay_text'] : '',
+        'preview_image' => !empty($post['preview_image']) ? $config['site_url'] . 'storage/social_posts/' . $post['preview_image'] : '',
+        'preview_image_file' => !empty($post['preview_image']) ? $post['preview_image'] : '',
+        'asset_id' => !empty($post['asset_id']) ? (int) $post['asset_id'] : 0,
+        'asset_file' => !empty($post['asset_file']) ? $post['asset_file'] : '',
+        'asset_key' => $assetKey,
+        'asset_title' => !empty($asset['title']) ? $asset['title'] : '',
+        'asset' => $asset,
+        'metadata' => $metadata,
+        'cta' => !empty($metadata['cta']) ? $metadata['cta'] : '',
+        'hashtags' => !empty($metadata['hashtags']) && is_array($metadata['hashtags']) ? $metadata['hashtags'] : [],
+        'visual_brief' => !empty($metadata['visual_brief']) ? $metadata['visual_brief'] : '',
+        'slides' => !empty($metadata['slides']) && is_array($metadata['slides']) ? $metadata['slides'] : [],
+        'reel_script' => !empty($metadata['reel_script']) && is_array($metadata['reel_script']) ? $metadata['reel_script'] : [],
+        'design' => $design,
+        'grid' => !empty($metadata['grid']) && is_array($metadata['grid']) ? $metadata['grid'] : [],
+        'render_options' => !empty($metadata['render_options']) && is_array($metadata['render_options']) ? $metadata['render_options'] : [],
+        'keywords' => !empty($metadata['keywords']) && is_array($metadata['keywords']) ? $metadata['keywords'] : [],
+        'brief' => !empty($metadata['brief']) ? $metadata['brief'] : '',
+        'rendered_video' => !empty($metadata['rendered_video']) ? $config['site_url'] . 'storage/social_posts/videos/' . $metadata['rendered_video'] : '',
+        'rendered_video_file' => !empty($metadata['rendered_video']) ? $metadata['rendered_video'] : '',
+        'source_video' => !empty($metadata['source_video']) ? $config['site_url'] . 'storage/social_assets/' . $metadata['source_video'] : '',
+        'source_video_file' => !empty($metadata['source_video']) ? $metadata['source_video'] : '',
+        'debug' => $debug,
+        'vote_value' => !empty($feedback['vote_value']) ? (int) $feedback['vote_value'] : 0,
+        'created_at' => !empty($post['created_at']) ? $post['created_at'] : '',
+        'updated_at' => !empty($post['updated_at']) ? $post['updated_at'] : '',
+    ];
 }
 
 function social_media_pick_asset($post_type, $keywords = [])
@@ -2431,7 +2999,7 @@ function social_media_pick_asset($post_type, $keywords = [])
     return $bestAsset ?: $assets[array_rand($assets)];
 }
 
-function social_media_pick_asset_with_design($post_type, $keywords = [], $design = [], $excludedAssetIds = [])
+function social_media_pick_asset_with_design($post_type, $keywords = [], $design = [], $excludedAssetIds = [], $userId = 0, $strictExclusion = false)
 {
     $asset = social_media_pick_asset($post_type, $keywords);
     $formats = social_media_get_format_map();
@@ -2466,10 +3034,18 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
     }
     if (!empty($preferredAssets)) {
         $assets = $preferredAssets;
+    } elseif ($strictExclusion && !empty($excludedAssetIds)) {
+        return null;
     }
 
     $designTags = social_media_normalize_list(isset($design['asset_tags']) ? $design['asset_tags'] : []);
     $desiredTone = !empty($design['background_tone']) ? strtolower(trim((string) $design['background_tone'])) : '';
+    $desiredColors = !empty($design['background_colors']) && is_array($design['background_colors'])
+        ? $design['background_colors']
+        : [
+            !empty($design['accent_color']) ? $design['accent_color'] : '',
+            !empty($design['overlay_color']) ? $design['overlay_color'] : '',
+        ];
     $bestAsset = null;
     $bestScore = -999;
 
@@ -2493,6 +3069,9 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
         if (!empty($candidate['analysis']['background_tone']) && $desiredTone !== '' && $candidate['analysis']['background_tone'] === $desiredTone) {
             $score += 2;
         }
+        if (!empty($candidate['analysis']['dominant_colors']) && is_array($candidate['analysis']['dominant_colors'])) {
+            $score += social_media_brand_color_match_score($candidate['analysis']['dominant_colors'], $desiredColors);
+        }
         if (!empty($candidate['analysis']['template_kind']) && $candidate['analysis']['template_kind'] === 'background') {
             $score += 4;
         } else {
@@ -2514,6 +3093,16 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
         if (!empty($candidate['remote_provider']) && strpos($relevance['text'], 'abstract') !== false) {
             $score -= 4;
         }
+        if ($candidateKey !== '') {
+            $feedback = social_media_get_asset_feedback_summary($candidateKey, $userId);
+            $score += ((int) $feedback['likes']) * 1.5;
+            $score -= ((int) $feedback['dislikes']) * 2.5;
+            if ((int) $feedback['user_vote'] < 0) {
+                $score -= 18;
+            } elseif ((int) $feedback['user_vote'] > 0) {
+                $score += 6;
+            }
+        }
 
         if ($score > $bestScore || ($score === $bestScore && (!empty($candidate['id']) && !empty($bestAsset['id']) ? (int) $candidate['id'] > (int) $bestAsset['id'] : !empty($candidate['id'])))) {
             $bestScore = $score;
@@ -2522,6 +3111,250 @@ function social_media_pick_asset_with_design($post_type, $keywords = [], $design
     }
 
     return $bestAsset ?: $asset;
+}
+
+function social_media_get_builder_launch_target($user_id)
+{
+    $profile = social_media_get_profile($user_id);
+    $intelligence = social_media_get_company_intelligence($user_id);
+    return social_media_detect_builder_target($profile, $intelligence);
+}
+
+function social_media_post_metadata_array($post)
+{
+    $metadata = !empty($post['metadata']) && is_array($post['metadata'])
+        ? $post['metadata']
+        : (!empty($post['metadata']) ? json_decode($post['metadata'], true) : []);
+    return is_array($metadata) ? $metadata : [];
+}
+
+function social_media_post_from_record_data($post)
+{
+    $metadata = social_media_post_metadata_array($post);
+
+    return [
+        'post_type' => !empty($post['post_type']) ? $post['post_type'] : 'post',
+        'title' => !empty($post['title']) ? $post['title'] : '',
+        'hook' => !empty($metadata['hook']) ? $metadata['hook'] : '',
+        'caption' => !empty($post['caption']) ? $post['caption'] : '',
+        'overlay_text' => !empty($post['overlay_text']) ? $post['overlay_text'] : '',
+        'cta' => !empty($metadata['cta']) ? $metadata['cta'] : '',
+        'hashtags' => !empty($metadata['hashtags']) && is_array($metadata['hashtags']) ? $metadata['hashtags'] : [],
+        'visual_brief' => !empty($metadata['visual_brief']) ? $metadata['visual_brief'] : '',
+        'slides' => !empty($metadata['slides']) && is_array($metadata['slides']) ? $metadata['slides'] : [],
+        'reel_script' => !empty($metadata['reel_script']) && is_array($metadata['reel_script']) ? $metadata['reel_script'] : [],
+        'design' => !empty($metadata['design']) && is_array($metadata['design']) ? $metadata['design'] : [],
+        'grid' => !empty($metadata['grid']) && is_array($metadata['grid']) ? $metadata['grid'] : [],
+        'render_options' => !empty($metadata['render_options']) && is_array($metadata['render_options']) ? $metadata['render_options'] : [],
+        'keywords' => !empty($metadata['keywords']) && is_array($metadata['keywords']) ? $metadata['keywords'] : [],
+        '_generation_source' => !empty($metadata['debug']['generation_source']) ? $metadata['debug']['generation_source'] : 'stored',
+        '_openai_debug' => !empty($metadata['debug']['openai']) ? $metadata['debug']['openai'] : [],
+    ];
+}
+
+function social_media_delete_post_files($post)
+{
+    $postDir = ROOTPATH . '/storage/social_posts/';
+    if (!empty($post['preview_image']) && file_exists($postDir . $post['preview_image'])) {
+        unlink($postDir . $post['preview_image']);
+    }
+
+    $meta = social_media_post_metadata_array($post);
+    if (!empty($meta['rendered_video'])) {
+        $videoPath = ROOTPATH . '/storage/social_posts/videos/' . $meta['rendered_video'];
+        if (file_exists($videoPath)) {
+            unlink($videoPath);
+        }
+    }
+}
+
+function social_media_persist_post_record($user_id, $item, $brief = '', $options = [])
+{
+    social_media_bootstrap();
+    global $config;
+
+    $profile = social_media_get_profile($user_id);
+    $record = !empty($options['record']) ? $options['record'] : ORM::for_table($config['db']['pre'] . 'social_media_posts')->create();
+    $batchKey = !empty($options['batch_key']) ? $options['batch_key'] : (!empty($record['batch_key']) ? $record['batch_key'] : uniqid('batch_'));
+    $excludedAssetKeys = array_values(array_filter((array) (!empty($options['excluded_asset_keys']) ? $options['excluded_asset_keys'] : [])));
+    $forceAsset = !empty($options['asset']) && is_array($options['asset']) ? $options['asset'] : null;
+    $strictExclusion = !empty($options['strict_asset_exclusion']);
+
+    $keywords = array_merge(
+        !empty($item['keywords']) && is_array($item['keywords']) ? $item['keywords'] : [],
+        social_media_normalize_list($profile['company_industry'])
+    );
+
+    $asset = $forceAsset ?: social_media_pick_asset_with_design(
+        $item['post_type'],
+        $keywords,
+        !empty($item['design']) && is_array($item['design']) ? $item['design'] : [],
+        $excludedAssetKeys,
+        $user_id,
+        $strictExclusion
+    );
+
+    if ($strictExclusion && empty($asset)) {
+        return ['success' => false, 'error' => __('No different image was found for this post yet. Try again to search more sources.')];
+    }
+
+    $previewResult = social_media_render_preview($item, $asset, $profile);
+    $preview = is_array($previewResult) ? $previewResult['file_name'] : $previewResult;
+    $renderDebug = is_array($previewResult) && !empty($previewResult['debug']) ? $previewResult['debug'] : [];
+    $renderedVideo = '';
+    $sourceVideo = '';
+
+    if ($item['post_type'] === 'reel' && !empty($asset['asset_type']) && $asset['asset_type'] === 'video') {
+        $renderedVideo = social_media_render_reel_video($asset, $preview);
+        if (empty($renderedVideo) && !empty($asset['file_name'])) {
+            $sourceVideo = $asset['file_name'];
+        }
+    }
+
+    if (!empty($record['id'])) {
+        social_media_delete_post_files($record->as_array());
+    }
+
+    $assetKey = social_media_asset_unique_key($asset);
+    $record->user_id = $user_id;
+    $record->batch_key = $batchKey;
+    $record->post_type = $item['post_type'];
+    $record->title = $item['title'];
+    $record->caption = $item['caption'];
+    $record->overlay_text = $item['overlay_text'];
+    $record->asset_id = !empty($asset['id']) ? $asset['id'] : null;
+    $record->asset_file = !empty($asset['file_name']) ? $asset['file_name'] : '';
+    $record->preview_image = $preview;
+    $record->metadata = json_encode([
+        'brief' => $brief,
+        'hook' => !empty($item['hook']) ? $item['hook'] : '',
+        'cta' => !empty($item['cta']) ? $item['cta'] : '',
+        'hashtags' => !empty($item['hashtags']) && is_array($item['hashtags']) ? $item['hashtags'] : [],
+        'visual_brief' => !empty($item['visual_brief']) ? $item['visual_brief'] : '',
+        'slides' => !empty($item['slides']) && is_array($item['slides']) ? $item['slides'] : [],
+        'reel_script' => !empty($item['reel_script']) && is_array($item['reel_script']) ? $item['reel_script'] : [],
+        'design' => !empty($item['design']) && is_array($item['design']) ? $item['design'] : [],
+        'grid' => !empty($item['grid']) && is_array($item['grid']) ? $item['grid'] : [],
+        'render_options' => !empty($item['render_options']) && is_array($item['render_options']) ? $item['render_options'] : [],
+        'keywords' => array_values(array_filter(array_map('trim', $keywords))),
+        'asset' => $asset ?: [],
+        'asset_key' => $assetKey,
+        'rendered_video' => $renderedVideo,
+        'source_video' => $sourceVideo,
+        'debug' => [
+            'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
+            'openai' => !empty($item['_openai_debug']) ? $item['_openai_debug'] : [],
+            'render' => $renderDebug,
+            'rendered_video_exists' => !empty($renderedVideo),
+            'source_video_used' => !empty($sourceVideo),
+        ],
+    ]);
+    if (empty($record['id'])) {
+        $record->created_at = date('Y-m-d H:i:s');
+    }
+    $record->updated_at = date('Y-m-d H:i:s');
+    $record->save();
+
+    return [
+        'success' => true,
+        'post' => social_media_format_post_record($record->as_array(), $user_id),
+    ];
+}
+
+function social_media_record_post_feedback($user_id, $post_id, $voteValue, $metadata = [])
+{
+    social_media_bootstrap();
+    global $config;
+
+    $post = social_media_get_post($user_id, $post_id);
+    if (!$post) {
+        return false;
+    }
+
+    $feedback = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')
+        ->where('user_id', $user_id)
+        ->where('post_id', $post_id)
+        ->where('asset_key', !empty($post['asset_key']) ? $post['asset_key'] : '')
+        ->find_one();
+    if (!$feedback) {
+        $feedback = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')->create();
+        $feedback->created_at = date('Y-m-d H:i:s');
+    }
+    $feedback->user_id = $user_id;
+    $feedback->post_id = $post_id;
+    $feedback->asset_id = !empty($post['asset_id']) ? (int) $post['asset_id'] : null;
+    $feedback->asset_key = !empty($post['asset_key']) ? $post['asset_key'] : '';
+    $feedback->vote_value = (int) $voteValue;
+    $feedback->context_hash = social_media_post_context_hash($post['post_type'], $post['keywords'], $post['brief']);
+    $feedback->metadata = json_encode([
+        'post_type' => $post['post_type'],
+        'title' => $post['title'],
+        'keywords' => $post['keywords'],
+        'grid' => $post['grid'],
+        'extra' => $metadata,
+    ]);
+    $feedback->updated_at = date('Y-m-d H:i:s');
+    $feedback->save();
+
+    return true;
+}
+
+function social_media_update_post_overlay($user_id, $id, $overlayText)
+{
+    $record = social_media_get_post_record($user_id, $id);
+    if (!$record) {
+        return ['success' => false, 'error' => __('Post not found.')];
+    }
+
+    $item = social_media_post_from_record_data($record->as_array());
+    $item['overlay_text'] = trim((string) $overlayText);
+    $metadata = social_media_post_metadata_array($record->as_array());
+    $asset = !empty($metadata['asset']) && is_array($metadata['asset']) ? $metadata['asset'] : [];
+    $brief = !empty($metadata['brief']) ? $metadata['brief'] : '';
+
+    return social_media_persist_post_record($user_id, $item, $brief, [
+        'record' => $record,
+        'batch_key' => !empty($record['batch_key']) ? $record['batch_key'] : '',
+        'asset' => $asset,
+    ]);
+}
+
+function social_media_regenerate_post($user_id, $id)
+{
+    $record = social_media_get_post_record($user_id, $id);
+    if (!$record) {
+        return ['success' => false, 'error' => __('Post not found.')];
+    }
+
+    $post = social_media_get_post($user_id, $id);
+    $metadata = social_media_post_metadata_array($record->as_array());
+    $item = social_media_post_from_record_data($record->as_array());
+    $excludedAssetKeys = [];
+
+    if (!empty($post['asset_key'])) {
+        $excludedAssetKeys[] = $post['asset_key'];
+    }
+
+    global $config;
+    $rows = ORM::for_table($config['db']['pre'] . 'social_media_post_feedback')
+        ->select('asset_key')
+        ->where('user_id', $user_id)
+        ->where('post_id', $id)
+        ->where('vote_value', -1)
+        ->find_array();
+    foreach ($rows as $row) {
+        if (!empty($row['asset_key'])) {
+            $excludedAssetKeys[] = $row['asset_key'];
+        }
+    }
+    $excludedAssetKeys = array_values(array_unique(array_filter($excludedAssetKeys)));
+
+    return social_media_persist_post_record($user_id, $item, !empty($metadata['brief']) ? $metadata['brief'] : '', [
+        'record' => $record,
+        'batch_key' => !empty($record['batch_key']) ? $record['batch_key'] : '',
+        'excluded_asset_keys' => $excludedAssetKeys,
+        'strict_asset_exclusion' => true,
+    ]);
 }
 
 function social_media_generate_batch($user_id, $brief = '')
@@ -2534,31 +3367,19 @@ function social_media_generate_batch($user_id, $brief = '')
     $fontCatalog = social_media_get_font_prompt_catalog();
     $paletteCatalog = social_media_get_palette_prompt_catalog();
 
-    $system = "You are Atlas Social Strategist. Generate practical, brand-aware social media packages for founders. Use the campaign strategy as a hard constraint for messaging, CTA style, and content angle. Return valid JSON only.";
-
-    $competitorText = json_encode($competitorSnapshots);
+    $system = "You are a direct-response copywriter specializing in small business marketing. Build sharp ICPs, problems, USPs, positioning, and overlay-ready statements from weak or messy inputs. Return valid JSON only.";
     $userPrompt = "Create exactly 9 social media ideas for this company.\n"
         . "Need exactly 9 post items.\n"
-        . "Each item must include: post_type, title, hook, caption, cta, hashtags, visual_brief, keywords, design.\n"
-        . "For every item, create copy using these exact rules:\n"
-        . "1. overlay_text is the final hook that appears on the artwork. It must be short, execution-ready, and fully usable as a post opener.\n"
-        . "2. overlay_text should follow hook patterns like problem question, pain hook, contrarian hook, or outcome hook. Use actual hooks, not labels.\n"
-        . "3. overlay_text must be 3 to 9 words, with a hard maximum of 55 characters where possible.\n"
-        . "4. Do not use placeholders or generic labels like 'founder insight', 'myth busting', 'case study', or 'trend reaction' as overlay_text.\n"
-        . "5. caption must be publish-ready, useful, specific, and persuasive. The opening statement must combine exactly one ICP, one problem, and one UVP in a punchy marketing-ready sentence.\n"
-        . "6. caption should feel like real social copy, not instructions to a marketer. No meta language, no explaining the framework.\n"
-        . "7. cta must be a direct, short, usable phrase aligned to the campaign goal. Prefer 2 to 6 words.\n"
-        . "8. write like a strong social strategist who understands the company, market, customer pain, and competitor gaps.\n"
-        . "Every post must feel final and publishable. Do not explain the strategy to the audience. Turn the strategy into sharp copy.\n"
-        . "Use the selected campaign type, funnel stage, focus area, content angle, and use case to decide what kind of hook, caption, and CTA should be written.\n"
+        . "Each item must include: post_type, title, hook, overlay_text, caption, cta, hashtags, visual_brief, keywords, design.\n"
+        . "overlay_text is the exact final artwork message and must be complete, specific, and ready to publish.\n"
+        . "overlay_text should usually be 3 to 10 words, concrete, punchy, and derived from the strongest ICP/problem/USP/outcome connection.\n"
+        . "Avoid generic motivational filler, abstract claims, and corporate jargon.\n"
+        . "caption must feel publish-ready and rooted in the same message logic as the overlay.\n"
+        . "cta must be short, direct, and believable.\n"
         . "The design object must include: headline_font_key, body_font_key, headline_size, body_size, text_case, text_align, overlay_color, overlay_opacity, text_color, accent_color, background_tone, asset_tags.\n"
         . "Only use font keys from this approved list:\n{$fontCatalog}\n\n"
         . "Use these palette directions and background tones when choosing colors:\n{$paletteCatalog}\n\n"
-        . "Pick typography that fits the idea: bold sans for direct hooks, editorial serif for thoughtful content, condensed display for strong statements, clean grotesk for educational posts.\n"
-        . "Company context:\n{$companyContext}\n\n"
-        . "Recent company history from agents:\n{$historyContext}\n\n"
-        . "Competitor research:\n{$competitorText}\n\n"
-        . "Campaign brief:\n{$brief}\n\n"
+        . social_media_get_marketing_messaging_prompt($companyContext, $historyContext, $competitorSnapshots, $brief) . "\n"
         . "JSON shape: {\"items\":[...]}";
 
     $items = social_media_generate_batch_via_openai($system, $userPrompt, $user_id);
@@ -2602,31 +3423,20 @@ function social_media_generate_instagram_grid($user_id, $brief = '', $input = []
                 : 'Visual query direction: ' . implode(' | ', $slotPlan['search_queries']) . '.');
     }
 
-    $system = "You are Atlas Grid Director. Generate cohesive Instagram grid content packages that feel intentional, brand-aware, and sequence-ready. Return valid JSON only.";
+    $system = "You are a direct-response copywriter and Instagram grid strategist. Build strong marketing statements from ICP, problem, USP, and outcome logic, then sequence them into a cohesive 9-tile grid. Return valid JSON only.";
     $userPrompt = "Create exactly 9 Instagram grid posts in order for this company.\n"
-        . "Use this selected grid system as a hard visual and sequencing constraint:\n"
-        . json_encode($template) . "\n\n"
         . "Each item must include: title, overlay_text, caption, cta, hashtags, visual_brief, keywords, design.\n"
-        . "The sequence must respect this tile layout: " . implode(', ', $template['layout']) . ".\n"
-        . "Rules:\n"
-        . "1. Text tiles must produce a short, tile-ready overlay that directly uses the mapped company-intelligence field for that slot. Do not write generic motivational filler.\n"
-        . "2. Image tiles should keep overlay_text empty unless the slot specifically needs one word. Let the image carry the post.\n"
-        . "3. Captions must be publish-ready and tied to the selected campaign goal and the company context.\n"
-        . "4. The full 9-tile sequence should feel like one Instagram grid, not 9 unrelated posts.\n"
-        . "5. For bold_monochrome_ad_copy, use problems solved for pain hooks, USPs for outcome hooks, and ICP context for specificity.\n"
-        . "6. For checkerboard_affirmation, keep text soft, reflective, feminine, identity-led, and shareable.\n"
-        . "7. For central_spine_moodboard, center-column text should be short moodboard language, usually one or two words.\n"
-        . "8. For authority_hook_grid, text should sound expert, specific, sharp, and proof-oriented.\n"
-        . "9. For nature_wellness_editorial, text should be educational, grounded, calm, and ritual-oriented.\n"
-        . "10. For vertical_phrase_narrative, slots 2, 5, and 8 should read vertically as a coherent 3-word phrase from identity -> struggle -> outcome.\n"
-        . "11. Use only approved fonts:\n{$fontCatalog}\n\n"
-        . "12. Use these palette directions when choosing color behavior:\n{$paletteCatalog}\n\n"
-        . "Slot guidance:\n" . implode("\n", $slotInstructions) . "\n\n"
-        . "Grid context hints:\n" . json_encode($profileContext) . "\n\n"
-        . "Company context:\n{$companyContext}\n\n"
-        . "Recent company history from agents:\n{$historyContext}\n\n"
-        . "Competitor research:\n" . json_encode($competitorSnapshots) . "\n\n"
-        . "Campaign brief:\n{$brief}\n\n"
+        . "Text tiles should use complete overlay messages, not fragments, unless the chosen grid pattern explicitly needs a very short phrase.\n"
+        . "Image tiles should keep overlay_text empty unless a minimal one-word treatment is required by the grid structure.\n"
+        . "Captions must stay aligned with the same ICP/problem/USP/outcome logic as the overlays.\n"
+        . "Use only approved fonts:\n{$fontCatalog}\n\n"
+        . "Use these palette directions when choosing color behavior:\n{$paletteCatalog}\n\n"
+        . social_media_get_marketing_messaging_prompt($companyContext, $historyContext, $competitorSnapshots, $brief, [
+            'mode' => 'grid',
+            'template' => $template,
+            'slot_instructions' => $slotInstructions,
+            'profile_context' => $profileContext,
+        ]) . "\n"
         . "JSON shape: {\"items\":[...]}";
 
     $items = social_media_generate_batch_via_openai($system, $userPrompt, $user_id);
@@ -4310,10 +5120,6 @@ function social_media_render_preview($post, $asset, $profile)
     $canvas = is_array($backgroundResult) && isset($backgroundResult['canvas']) ? $backgroundResult['canvas'] : $backgroundResult;
     $backgroundDebug = is_array($backgroundResult) && isset($backgroundResult['debug']) ? $backgroundResult['debug'] : [];
 
-    list($ovR, $ovG, $ovB) = social_media_hex_to_rgb($variant['overlay']['color']);
-    $overlay = imagecolorallocatealpha($canvas, $ovR, $ovG, $ovB, (int) floor(127 * min(max($variant['overlay']['opacity'], 0), 1)));
-    imagefilledrectangle($canvas, 0, 0, $width, $height, $overlay);
-
     $renderOptions = !empty($post['render_options']) && is_array($post['render_options']) ? $post['render_options'] : [];
     $showLogo = !isset($renderOptions['show_logo']) || $renderOptions['show_logo'];
     $showLabel = !isset($renderOptions['show_label']) || $renderOptions['show_label'];
@@ -4321,6 +5127,25 @@ function social_media_render_preview($post, $asset, $profile)
     $showSubheadline = !isset($renderOptions['show_subheadline']) || $renderOptions['show_subheadline'];
     $showBrand = !isset($renderOptions['show_brand']) || $renderOptions['show_brand'];
     $showCta = !isset($renderOptions['show_cta']) || $renderOptions['show_cta'];
+
+    $hasForegroundText = ($showHeadline && trim((string) $post['overlay_text']) !== '')
+        || ($showSubheadline && trim((string) $post['hook']) !== '')
+        || ($showBrand && !empty($profile['company_name']))
+        || ($showCta && trim((string) $post['cta']) !== '')
+        || ($showLabel && $post['post_type'] !== 'post');
+
+    $effectiveOverlayOpacity = !empty($variant['overlay']['opacity']) ? (float) $variant['overlay']['opacity'] : 0.0;
+    if (!$hasForegroundText) {
+        $effectiveOverlayOpacity = 0.0;
+    } elseif (!empty($asset['asset_type']) && $asset['asset_type'] === 'image') {
+        $effectiveOverlayOpacity = min($effectiveOverlayOpacity, 0.08);
+    }
+
+    if ($effectiveOverlayOpacity > 0.001) {
+        list($ovR, $ovG, $ovB) = social_media_hex_to_rgb($variant['overlay']['color']);
+        $overlay = imagecolorallocatealpha($canvas, $ovR, $ovG, $ovB, (int) floor(127 * min(max($effectiveOverlayOpacity, 0), 1)));
+        imagefilledrectangle($canvas, 0, 0, $width, $height, $overlay);
+    }
 
     if ($showLogo && !empty($profile['company_logo'])) {
         $logoPath = ROOTPATH . '/storage/company/' . $profile['company_logo'];
@@ -4400,96 +5225,22 @@ function social_media_get_manifest_variant($asset, $postType, $format)
 function social_media_store_generated_posts($user_id, $items, $brief = '', $options = [])
 {
     social_media_bootstrap();
-    global $config;
-
-    $profile = social_media_get_profile($user_id);
     $batchKey = !empty($options['batch_key']) ? $options['batch_key'] : uniqid('batch_');
     $stored = [];
     $usedAssetIds = [];
 
     foreach ($items as $item) {
-        $keywords = array_merge($item['keywords'], social_media_normalize_list($profile['company_industry']));
-        $asset = social_media_pick_asset_with_design($item['post_type'], $keywords, $item['design'], $usedAssetIds);
-        $assetKey = social_media_asset_unique_key($asset);
-        if ($assetKey !== '') {
-            $usedAssetIds[] = $assetKey;
-        }
-        $previewResult = social_media_render_preview($item, $asset, $profile);
-        $preview = is_array($previewResult) ? $previewResult['file_name'] : $previewResult;
-        $renderDebug = is_array($previewResult) && !empty($previewResult['debug']) ? $previewResult['debug'] : [];
-        $renderedVideo = '';
-        $sourceVideo = '';
-        if ($item['post_type'] === 'reel' && !empty($asset['asset_type']) && $asset['asset_type'] === 'video') {
-            $renderedVideo = social_media_render_reel_video($asset, $preview);
-            if (empty($renderedVideo) && !empty($asset['file_name'])) {
-                $sourceVideo = $asset['file_name'];
-            }
-        }
-
-        $record = ORM::for_table($config['db']['pre'] . 'social_media_posts')->create();
-        $record->user_id = $user_id;
-        $record->batch_key = $batchKey;
-        $record->post_type = $item['post_type'];
-        $record->title = $item['title'];
-        $record->caption = $item['caption'];
-        $record->overlay_text = $item['overlay_text'];
-        $record->asset_id = !empty($asset['id']) ? $asset['id'] : null;
-        $record->asset_file = !empty($asset['file_name']) ? $asset['file_name'] : '';
-        $record->preview_image = $preview;
-        $record->metadata = json_encode([
-            'brief' => $brief,
-            'hook' => $item['hook'],
-            'cta' => $item['cta'],
-            'hashtags' => $item['hashtags'],
-            'visual_brief' => $item['visual_brief'],
-            'slides' => $item['slides'],
-            'reel_script' => $item['reel_script'],
-            'design' => $item['design'],
-            'grid' => !empty($item['grid']) ? $item['grid'] : [],
-            'render_options' => !empty($item['render_options']) ? $item['render_options'] : [],
-            'asset' => $asset ?: [],
-            'rendered_video' => $renderedVideo,
-            'source_video' => $sourceVideo,
-            'debug' => [
-                'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
-                'openai' => !empty($item['_openai_debug']) ? $item['_openai_debug'] : [],
-                'render' => $renderDebug,
-                'rendered_video_exists' => !empty($renderedVideo),
-                'source_video_used' => !empty($sourceVideo),
-            ],
-        ]);
-        $record->created_at = date('Y-m-d H:i:s');
-        $record->save();
-
-        $stored[] = [
-            'id' => $record->id(),
-            'post_type' => $item['post_type'],
-            'title' => $item['title'],
-            'overlay_text' => $item['overlay_text'],
-            'caption' => $item['caption'],
-            'cta' => $item['cta'],
-            'hashtags' => $item['hashtags'],
-            'visual_brief' => $item['visual_brief'],
-            'slides' => $item['slides'],
-            'reel_script' => $item['reel_script'],
-            'design' => $item['design'],
-            'preview_image' => $config['site_url'] . 'storage/social_posts/' . $preview,
+        $result = social_media_persist_post_record($user_id, $item, $brief, [
             'batch_key' => $batchKey,
-            'rendered_video' => !empty($renderedVideo) ? $config['site_url'] . 'storage/social_posts/videos/' . $renderedVideo : '',
-            'source_video' => !empty($sourceVideo) ? $config['site_url'] . 'storage/social_assets/' . $sourceVideo : '',
-            'asset_preview' => !empty($asset['preview_name']) ? $config['site_url'] . 'storage/social_assets/' . $asset['preview_name'] : '',
-            'asset_type' => !empty($asset['asset_type']) ? $asset['asset_type'] : '',
-            'asset_title' => !empty($asset['title']) ? $asset['title'] : '',
-            'grid' => !empty($item['grid']) ? $item['grid'] : [],
-            'render_options' => !empty($item['render_options']) ? $item['render_options'] : [],
-            'debug' => [
-                'generation_source' => !empty($item['_generation_source']) ? $item['_generation_source'] : 'unknown',
-                'openai' => !empty($item['_openai_debug']) ? $item['_openai_debug'] : [],
-                'render' => $renderDebug,
-                'rendered_video_exists' => !empty($renderedVideo),
-                'source_video_used' => !empty($sourceVideo),
-            ],
-        ];
+            'excluded_asset_keys' => $usedAssetIds,
+        ]);
+        if (!$result['success']) {
+            continue;
+        }
+        $stored[] = $result['post'];
+        if (!empty($result['post']['asset_key'])) {
+            $usedAssetIds[] = $result['post']['asset_key'];
+        }
     }
 
     return $stored;
@@ -4612,18 +5363,7 @@ function social_media_delete_post($user_id, $id)
         return false;
     }
 
-    $postDir = ROOTPATH . '/storage/social_posts/';
-    if (!empty($post['preview_image']) && file_exists($postDir . $post['preview_image'])) {
-        unlink($postDir . $post['preview_image']);
-    }
-
-    $meta = !empty($post['metadata']) ? json_decode($post['metadata'], true) : [];
-    if (!empty($meta['rendered_video'])) {
-        $videoPath = ROOTPATH . '/storage/social_posts/videos/' . $meta['rendered_video'];
-        if (file_exists($videoPath)) {
-            unlink($videoPath);
-        }
-    }
+    social_media_delete_post_files($post->as_array());
 
     $post->delete();
     return true;

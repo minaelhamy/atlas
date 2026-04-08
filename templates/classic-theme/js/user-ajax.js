@@ -353,6 +353,143 @@ jQuery(function ($) {
         });
     });
 
+    function social_post_caption_export(post) {
+        var hashtags = Array.isArray(post.hashtags) ? post.hashtags.join(' ') : '';
+        return String(post.caption || '') + (hashtags ? "\n\n" + hashtags : '');
+    }
+
+    function social_vote_class(currentVote, buttonVote) {
+        return Number(currentVote || 0) === Number(buttonVote) ? ' is-active' : '';
+    }
+
+    function social_post_meta_html(post, context) {
+        var html = '';
+        var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
+        var design = post.design && typeof post.design === 'object' ? post.design : {};
+
+        if (context === 'grid' && post.grid && post.grid.position) {
+            html += '<p class="margin-bottom-10"><strong>Tile:</strong> ' + escape_html(String(post.grid.position)) + '</p>';
+        }
+        html += '<p class="margin-bottom-10"><strong>Caption:</strong> ' + escape_html(post.caption || '') + '</p>';
+        if (post.cta) {
+            html += '<p class="margin-bottom-10"><strong>CTA:</strong> ' + escape_html(post.cta) + '</p>';
+        }
+        if (hashtags) {
+            html += '<p class="margin-bottom-10"><strong>Hashtags:</strong> ' + hashtags + '</p>';
+        }
+        if (Array.isArray(post.reel_script) && post.reel_script.length) {
+            html += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
+        }
+        if (post.asset_title) {
+            html += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
+        }
+        if (post.asset && post.asset.remote_provider) {
+            html += '<p class="margin-bottom-0"><strong>Asset Source:</strong> ' + escape_html(String(post.asset.remote_provider)) + '</p>';
+        }
+        if (post.asset && post.asset.remote_provider === 'unsplash' && post.asset.remote_author) {
+            html += '<p class="margin-bottom-10"><small>Photo by ';
+            if (post.asset.remote_author_url) {
+                html += '<a href="' + escape_html(String(post.asset.remote_author_url)) + '" target="_blank" rel="nofollow noopener">' + escape_html(String(post.asset.remote_author)) + '</a>';
+            } else {
+                html += escape_html(String(post.asset.remote_author));
+            }
+            html += ' on ';
+            if (post.asset.remote_page_url) {
+                html += '<a href="' + escape_html(String(post.asset.remote_page_url)) + '" target="_blank" rel="nofollow noopener">Unsplash</a>';
+            } else {
+                html += 'Unsplash';
+            }
+            html += '</small></p>';
+        }
+        if (design.headline_font_key || design.background_tone) {
+            html += '<p class="margin-bottom-10"><strong>Design:</strong> ' +
+                escape_html(String(design.headline_font_key || '')) +
+                (design.body_font_key ? ' / ' + escape_html(String(design.body_font_key)) : '') +
+                (design.headline_size ? ', ' + escape_html(String(design.headline_size)) + 'px' : '') +
+                (design.background_tone ? ', ' + escape_html(String(design.background_tone)) : '') +
+                '</p>';
+        }
+        return html;
+    }
+
+    function render_social_post_card(post, options) {
+        options = options || {};
+        var context = options.context || 'campaign';
+        var wrapperClass = options.wrapperClass || 'col-xl-4 col-md-6 margin-bottom-30';
+        var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
+        var reelVideoUrl = post.rendered_video || post.source_video || '';
+        var isReel = String(post.post_type || '') === 'reel' && !!reelVideoUrl;
+        var primaryDownloadUrl = isReel ? reelVideoUrl : post.preview_image;
+        var primaryDownloadLabel = isReel ? 'Download Reel' : 'Download Post';
+        var previewMediaHtml = isReel
+            ? '<video src="' + escape_html(reelVideoUrl) + '" autoplay muted loop playsinline controls preload="metadata"></video>'
+            : '<img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '">';
+        var captionText = social_post_caption_export(post);
+        var actionsHtml = '<div class="social-post-actions margin-top-15">' +
+            '<button type="button" class="social-action-btn social-vote-btn' + social_vote_class(post.vote_value, 1) + '" data-id="' + escape_html(String(post.id)) + '" data-vote="1" title="Thumbs up" aria-label="Thumbs up"><i class="fa fa-thumbs-up"></i></button>' +
+            '<button type="button" class="social-action-btn social-vote-btn' + social_vote_class(post.vote_value, -1) + '" data-id="' + escape_html(String(post.id)) + '" data-vote="-1" title="Thumbs down and regenerate" aria-label="Thumbs down and regenerate"><i class="fa fa-thumbs-down"></i></button>' +
+            '<button type="button" class="social-action-btn social-regenerate-btn" data-id="' + escape_html(String(post.id)) + '" title="Regenerate image" aria-label="Regenerate image"><i class="fa fa-refresh"></i></button>' +
+            '<a href="' + escape_html(primaryDownloadUrl) + '" class="social-action-btn" download title="' + escape_html(primaryDownloadLabel) + '" aria-label="' + escape_html(primaryDownloadLabel) + '"><i class="fa fa-download"></i></a>' +
+            '<a href="#" class="social-action-btn download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '" title="Download Caption" aria-label="Download Caption"><i class="fa fa-file-text-o"></i></a>';
+
+        if (reelVideoUrl) {
+            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="social-action-btn" target="_blank" title="Open Reel Video" aria-label="Open Reel Video"><i class="fa fa-play"></i></a>';
+            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="social-action-btn" download title="Download Reel Video" aria-label="Download Reel Video"><i class="fa fa-film"></i></a>';
+            actionsHtml += '<a href="' + escape_html(post.preview_image) + '" class="social-action-btn" download title="Download Cover" aria-label="Download Cover"><i class="fa fa-image"></i></a>';
+        }
+
+        actionsHtml += '<a href="#" class="social-action-btn social-share-btn" title="Share" aria-label="Share"><i class="fa fa-share-alt"></i></a>';
+        actionsHtml += '<a href="#" class="social-action-btn social-action-danger quick-delete" data-id="' + escape_html(String(post.id)) + '" data-action="delete_image" title="Delete" aria-label="Delete"><i class="fa fa-trash-o"></i></a></div>';
+
+        return '<div class="' + wrapperClass + ' social-post-card-slot" data-post-id="' + escape_html(String(post.id)) + '" data-social-context="' + escape_html(context) + '">' +
+            '<div class="dashboard-box social-post-card margin-top-0">' +
+                '<div class="content">' +
+                    '<div class="social-post-preview">' + previewMediaHtml + '</div>' +
+                    '<div class="social-post-body with-padding">' +
+                        '<span class="dashboard-status-button yellow">' + escape_html(String(post.post_type || '').charAt(0).toUpperCase() + String(post.post_type || '').slice(1)) + '</span>' +
+                        '<h4 class="margin-top-15">' + escape_html(post.title) + '</h4>' +
+                        '<div class="social-overlay-editor margin-bottom-15">' +
+                            '<label class="social-overlay-label" for="social-overlay-' + escape_html(String(post.id)) + '"><strong>Overlay:</strong></label>' +
+                            '<textarea id="social-overlay-' + escape_html(String(post.id)) + '" class="with-border social-overlay-input" rows="2" data-id="' + escape_html(String(post.id)) + '">' + escape_html(post.overlay_text || '') + '</textarea>' +
+                            '<div class="social-overlay-actions"><button type="button" class="button small ripple-effect social-overlay-save-btn" data-id="' + escape_html(String(post.id)) + '">Save overlay</button></div>' +
+                        '</div>' +
+                        social_post_meta_html(post, context) +
+                        actionsHtml +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function replace_social_post_card(post, $origin) {
+        var $slot = $origin.closest('.social-post-card-slot');
+        if (!$slot.length) {
+            return;
+        }
+        var context = $slot.data('social-context') || 'campaign';
+        var wrapperClass = $.trim(($slot.attr('class') || '').replace(/\bsocial-post-card-slot\b/g, ''));
+        var newHtml = render_social_post_card(post, {
+            context: context,
+            wrapperClass: wrapperClass
+        });
+        $slot.replaceWith(newHtml);
+        $(document).trigger('socialPostUpdated', [post, context]);
+    }
+
+    function show_social_message(text) {
+        Snackbar.show({
+            text: text,
+            pos: 'bottom-center',
+            showAction: false,
+            actionText: "Dismiss",
+            duration: 3000,
+            textColor: '#fff',
+            backgroundColor: '#383838'
+        });
+    }
+
+    window.render_social_post_card = render_social_post_card;
+
     /* ai images */
     $('#ai_images').on('submit', function (e) {
         e.preventDefault();
@@ -393,105 +530,10 @@ jQuery(function ($) {
                 $btn.removeClass('button-progress').prop('disabled', false);
                 if (response.success) {
                     $.each(response.posts, function(index, post) {
-                        var hashtags = Array.isArray(post.hashtags) ? escape_html(post.hashtags.join(' ')) : '';
-                        var design = post.design && typeof post.design === 'object' ? post.design : {};
-                        var debug = post.debug && typeof post.debug === 'object' ? post.debug : {};
-                        var captionText = String(post.caption || '') + (hashtags ? "\n\n" + String(post.hashtags.join(' ')) : '');
-                        var infoHtml = '';
-                        var reelVideoUrl = post.rendered_video || post.source_video || '';
-                        var isReel = String(post.post_type || '') === 'reel' && !!reelVideoUrl;
-                        var primaryDownloadUrl = isReel ? reelVideoUrl : post.preview_image;
-                        var primaryDownloadLabel = isReel ? 'Download Reel' : 'Download Post';
-                        var previewMediaHtml = isReel
-                            ? '<video src="' + escape_html(reelVideoUrl) + '" autoplay muted loop playsinline controls preload="metadata"></video>'
-                            : '<img src="' + escape_html(post.preview_image) + '" alt="' + escape_html(post.title) + '">';
-                        var actionsHtml = '<div class="social-post-actions margin-top-15">' +
-                            '<a href="' + escape_html(primaryDownloadUrl) + '" class="social-action-btn" download title="' + escape_html(primaryDownloadLabel) + '" aria-label="' + escape_html(primaryDownloadLabel) + '"><i class="fa fa-download"></i></a>' +
-                            '<a href="#" class="social-action-btn download-caption" data-title="' + escape_html(post.title) + '" data-caption="' + escape_html(captionText) + '" title="Download Caption" aria-label="Download Caption"><i class="fa fa-file-text-o"></i></a>';
-
-                        if (Array.isArray(post.reel_script) && post.reel_script.length) {
-                            infoHtml += '<p class="margin-bottom-10"><strong>Reel Script:</strong> ' + escape_html(post.reel_script.join(' | ')) + '</p>';
-                        }
-
-                        if (post.asset_title) {
-                            infoHtml += '<p class="margin-bottom-0"><strong>Asset:</strong> ' + escape_html(post.asset_title) + '</p>';
-                        }
-                        if (post.asset && post.asset.remote_provider) {
-                            infoHtml += '<p class="margin-bottom-0"><strong>Asset Source:</strong> ' + escape_html(String(post.asset.remote_provider)) + '</p>';
-                        }
-                        if (post.asset && post.asset.remote_provider === 'unsplash' && post.asset.remote_author) {
-                            infoHtml += '<p class="margin-bottom-10"><small>Photo by ';
-                            if (post.asset.remote_author_url) {
-                                infoHtml += '<a href="' + escape_html(String(post.asset.remote_author_url)) + '" target="_blank" rel="nofollow noopener">' + escape_html(String(post.asset.remote_author)) + '</a>';
-                            } else {
-                                infoHtml += escape_html(String(post.asset.remote_author));
-                            }
-                            infoHtml += ' on ';
-                            if (post.asset.remote_page_url) {
-                                infoHtml += '<a href="' + escape_html(String(post.asset.remote_page_url)) + '" target="_blank" rel="nofollow noopener">Unsplash</a>';
-                            } else {
-                                infoHtml += 'Unsplash';
-                            }
-                            infoHtml += '</small></p>';
-                        }
-
-                        if (design.headline_font_key || design.background_tone) {
-                            infoHtml += '<p class="margin-bottom-10"><strong>Design:</strong> ' +
-                                escape_html(String(design.headline_font_key || '')) +
-                                (design.body_font_key ? ' / ' + escape_html(String(design.body_font_key)) : '') +
-                                (design.headline_size ? ', ' + escape_html(String(design.headline_size)) + 'px' : '') +
-                                (design.background_tone ? ', ' + escape_html(String(design.background_tone)) : '') +
-                                '</p>';
-                        }
-
-                        if (debug.generation_source || (debug.openai && debug.openai.error)) {
-                            infoHtml += '<details class="margin-bottom-10"><summary><strong>Debug</strong></summary><div class="margin-top-10">';
-                            if (debug.generation_source) {
-                                infoHtml += '<p class="margin-bottom-5"><strong>Copy Source:</strong> ' + escape_html(String(debug.generation_source)) + '</p>';
-                            }
-                            if (debug.openai && debug.openai.error) {
-                                infoHtml += '<p class="margin-bottom-5"><strong>OpenAI Debug:</strong> ' + escape_html(String(debug.openai.attempt || '')) + ' - ' + escape_html(String(debug.openai.error)) + '</p>';
-                            }
-                            if (debug.render && debug.render.background && debug.render.background.remote_provider) {
-                                infoHtml += '<p class="margin-bottom-5"><strong>Remote Provider:</strong> ' + escape_html(String(debug.render.background.remote_provider)) + '</p>';
-                            }
-                            if (debug.render && debug.render.background && typeof debug.render.background.remote_source_downloaded !== 'undefined') {
-                                infoHtml += '<p class="margin-bottom-5"><strong>Remote Source Downloaded:</strong> ' + escape_html(debug.render.background.remote_source_downloaded ? 'yes' : 'no') + '</p>';
-                            }
-                            if (debug.render && debug.render.background && debug.render.background.remote_source_path) {
-                                infoHtml += '<p class="margin-bottom-5"><strong>Remote Source Path:</strong> ' + escape_html(String(debug.render.background.remote_source_path)) + '</p>';
-                            }
-                            infoHtml += '</div></details>';
-                        }
-
-                        if (reelVideoUrl) {
-                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="social-action-btn" target="_blank" title="Open Reel Video" aria-label="Open Reel Video"><i class="fa fa-play"></i></a>';
-                            actionsHtml += '<a href="' + escape_html(reelVideoUrl) + '" class="social-action-btn" download title="Download Reel Video" aria-label="Download Reel Video"><i class="fa fa-film"></i></a>';
-                            actionsHtml += '<a href="' + escape_html(post.preview_image) + '" class="social-action-btn" download title="Download Cover" aria-label="Download Cover"><i class="fa fa-image"></i></a>';
-                        }
-
-                        actionsHtml += '<a href="#" class="social-action-btn social-share-btn" title="Share" aria-label="Share"><i class="fa fa-share-alt"></i></a>';
-                        actionsHtml += '<a href="#" class="social-action-btn social-action-danger quick-delete" data-id="' + escape_html(String(post.id)) + '" data-action="delete_image" title="Delete" aria-label="Delete"><i class="fa fa-trash-o"></i></a></div>';
-
-                        $("#generated_images_wrapper").prepend(
-                            '<div class="col-xl-4 col-md-6 margin-bottom-30">' +
-                                '<div class="dashboard-box social-post-card margin-top-0">' +
-                                    '<div class="content">' +
-                                        '<div class="social-post-preview">' + previewMediaHtml + '</div>' +
-                                        '<div class="social-post-body with-padding">' +
-                                            '<span class="dashboard-status-button yellow">' + escape_html(post.post_type.charAt(0).toUpperCase() + post.post_type.slice(1)) + '</span>' +
-                                            '<h4 class="margin-top-15">' + escape_html(post.title) + '</h4>' +
-                                            '<p class="margin-bottom-10"><strong>Overlay:</strong> ' + escape_html(post.overlay_text) + '</p>' +
-                                            '<p class="margin-bottom-10"><strong>Caption:</strong> ' + escape_html(post.caption) + '</p>' +
-                                            '<p class="margin-bottom-10"><strong>CTA:</strong> ' + escape_html(post.cta) + '</p>' +
-                                            '<p class="margin-bottom-10"><strong>Hashtags:</strong> ' + hashtags + '</p>' +
-                                            infoHtml +
-                                            actionsHtml +
-                                        '</div>' +
-                                    '</div>' +
-                                '</div>' +
-                            '</div>'
-                        );
+                        $("#generated_images_wrapper").prepend(render_social_post_card(post, {
+                            context: 'campaign',
+                            wrapperClass: 'col-xl-4 col-md-6 margin-bottom-30'
+                        }));
                     });
 
                     animate_value('quick-images-left', response.old_used_images, response.current_used_images, 1000)
@@ -604,14 +646,92 @@ jQuery(function ($) {
     $(document).on('click', '.social-share-btn', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        Snackbar.show({
-            text: 'Share directly to your account (for paid members only)',
-            pos: 'bottom-center',
-            showAction: false,
-            actionText: 'Dismiss',
-            duration: 3000,
-            textColor: '#fff',
-            backgroundColor: '#383838'
+        show_social_message('Share directly to your account (for paid members only)');
+    });
+
+    $(document).on('click', '.social-regenerate-btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        $btn.addClass('button-progress').prop('disabled', true);
+
+        $.ajax({
+            type: "POST",
+            url: ajaxurl + '?action=regenerate_social_post',
+            data: { id: $btn.data('id') },
+            dataType: 'json',
+            success: function (response) {
+                $btn.removeClass('button-progress').prop('disabled', false);
+                if (response.success && response.post) {
+                    replace_social_post_card(response.post, $btn);
+                    show_social_message(response.message || 'Image regenerated successfully.');
+                } else {
+                    show_social_message(response.error || 'Unable to regenerate this image right now.');
+                }
+            },
+            error: function () {
+                $btn.removeClass('button-progress').prop('disabled', false);
+                show_social_message('Unable to regenerate this image right now.');
+            }
+        });
+    });
+
+    $(document).on('click', '.social-vote-btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var vote = Number($btn.data('vote') || 0);
+        var action = vote < 0 ? 'regenerate_social_post' : 'vote_social_post_image';
+        var data = { id: $btn.data('id'), vote: vote };
+
+        $btn.addClass('button-progress').prop('disabled', true);
+        $.ajax({
+            type: "POST",
+            url: ajaxurl + '?action=' + action,
+            data: data,
+            dataType: 'json',
+            success: function (response) {
+                $btn.removeClass('button-progress').prop('disabled', false);
+                if (response.success && response.post) {
+                    replace_social_post_card(response.post, $btn);
+                    show_social_message(response.message || 'Feedback saved.');
+                } else {
+                    show_social_message(response.error || 'Unable to save feedback right now.');
+                }
+            },
+            error: function () {
+                $btn.removeClass('button-progress').prop('disabled', false);
+                show_social_message('Unable to save feedback right now.');
+            }
+        });
+    });
+
+    $(document).on('click', '.social-overlay-save-btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var id = $btn.data('id');
+        var $input = $('.social-overlay-input[data-id="' + id + '"]');
+        $btn.addClass('button-progress').prop('disabled', true);
+
+        $.ajax({
+            type: "POST",
+            url: ajaxurl + '?action=save_social_post_overlay',
+            data: {
+                id: id,
+                overlay_text: $input.val()
+            },
+            dataType: 'json',
+            success: function (response) {
+                $btn.removeClass('button-progress').prop('disabled', false);
+                if (response.success && response.post) {
+                    replace_social_post_card(response.post, $btn);
+                    show_social_message(response.message || 'Overlay updated.');
+                } else {
+                    show_social_message(response.error || 'Unable to update the overlay right now.');
+                }
+            },
+            error: function () {
+                $btn.removeClass('button-progress').prop('disabled', false);
+                show_social_message('Unable to update the overlay right now.');
+            }
         });
     });
 

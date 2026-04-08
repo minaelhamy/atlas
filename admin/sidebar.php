@@ -92,26 +92,6 @@
                     <i class="fa fa-money"></i><span><?php _e('Withdrawals') ?></span>
                 </a>
             </li>
-            <li data-page="website-payouts">
-                <a class="bar-icons" href="<?php echo ADMINURL; ?>global/website-payouts.php">
-                    <i class="icon-feather-credit-card"></i><span><?php _e('Website Payouts') ?></span>
-                </a>
-            </li>
-            <li data-page="websites">
-                <a class="bar-icons" href="<?php echo ADMINURL; ?>global/websites.php">
-                    <i class="icon-feather-monitor"></i><span><?php _e('Websites') ?></span>
-                </a>
-            </li>
-            <li data-page="website-platforms">
-                <a class="bar-icons" href="<?php echo $config['site_url']; ?>ecom/admin/dashboard" target="_blank">
-                    <i class="icon-feather-external-link"></i><span><?php _e('Website Platforms') ?></span>
-                </a>
-                <ul class="iconbar-mainmenu custom-scrollbar">
-                    <li class="iconbar-header"><?php _e('Website Platforms') ?></li>
-                    <li><a href="<?php echo $config['site_url']; ?>ecom/admin/dashboard" target="_blank"><?php _e('Open Ecommerce Admin') ?></a></li>
-                    <li><a href="<?php echo $config['site_url']; ?>service/admin/dashboard" target="_blank"><?php _e('Open Service Admin') ?></a></li>
-                </ul>
-            </li>
             <li data-page="email-template">
                 <a class="bar-icons" href="<?php echo ADMINURL; ?>global/email-template.php">
                     <i class="icon-feather-mail"></i><span><?php _e('Email Template') ?></span>

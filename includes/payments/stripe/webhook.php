@@ -106,13 +106,6 @@ switch ($event->type) {
             $item_featured = $metadata->item_featured;
             $item_urgent = $metadata->item_urgent;
             $item_highlight = $metadata->item_highlight;
-        } else if ($payment_type == "website_order" || $payment_type == "website_booking") {
-            $user_id = (int)$metadata->user_id;
-            $request_id = (int)$metadata->request_id;
-            $website_site_id = (int)$metadata->website_site_id;
-            $title = $metadata->title;
-            $amount = $metadata->amount;
-            $trans_desc = $metadata->trans_desc;
         } else {
             $order_id = (int)$metadata->order_id;
             $restaurant_id = (int)$metadata->restaurant_id;
@@ -138,107 +131,6 @@ if ($order_id && function_exists('get_restaurant_option')) {
     update_restaurant_option($restaurant_id, 'wallet_amount', $wallet_amount);
 
     // send success
-    echo 'successful';
-    exit();
-}
-
-if (($payment_type == "website_order" || $payment_type == "website_booking") && !empty($website_site_id) && !empty($request_id)) {
-    $siteTablePrefix = $config['db']['pre'];
-    $ledgerTable = $siteTablePrefix . 'website_wallet_ledger';
-    $ordersTable = $siteTablePrefix . 'website_orders';
-    $bookingsTable = $siteTablePrefix . 'website_bookings';
-    $site = website_builder_get_site($website_site_id);
-
-    if (ORM::for_table($config['db']['pre'] . 'transaction')
-        ->where('payment_id', $payment_id)
-        ->where('transaction_gatway', 'stripe')
-        ->count()) {
-        echo 'successful';
-        exit();
-    }
-
-    $requestMeta = [];
-    if ($payment_type == "website_order") {
-        $request = ORM::for_table($ordersTable)->where('site_id', $website_site_id)->find_one($request_id);
-        if (!$request) {
-            http_response_code(400);
-            die();
-        }
-        $request->status = 'paid';
-        $requestMeta = json_decode((string) $request['metadata_json'], true) ?: [];
-        $requestMeta['payment_id'] = $payment_id;
-        $requestMeta['paid_via'] = 'stripe';
-        $request->metadata_json = json_encode($requestMeta);
-        $request->updated_at = date('Y-m-d H:i:s');
-        $request->save();
-        $transactionMethod = 'website_order';
-        $requestPayload = [
-            'id' => (int) $request['id'],
-            'customer_name' => $request['customer_name'],
-            'customer_email' => $request['customer_email'],
-            'amount' => (float) $request['amount'],
-            'metadata' => $requestMeta,
-        ];
-    } else {
-        $request = ORM::for_table($bookingsTable)->where('site_id', $website_site_id)->find_one($request_id);
-        if (!$request) {
-            http_response_code(400);
-            die();
-        }
-        $request->status = 'paid';
-        $requestMeta = json_decode((string) $request['metadata_json'], true) ?: [];
-        $requestMeta['payment_id'] = $payment_id;
-        $requestMeta['paid_via'] = 'stripe';
-        $request->metadata_json = json_encode($requestMeta);
-        $request->updated_at = date('Y-m-d H:i:s');
-        $request->save();
-        $transactionMethod = 'website_booking';
-        $requestPayload = [
-            'id' => (int) $request['id'],
-            'customer_name' => $request['customer_name'],
-            'customer_email' => $request['customer_email'],
-            'amount' => (float) $payment_total,
-            'booking_start' => $request['booking_start'],
-            'metadata' => $requestMeta,
-        ];
-    }
-
-    $ledgerItem = ORM::for_table($ledgerTable)
-        ->where('site_id', $website_site_id)
-        ->where('reference_type', $payment_type == "website_order" ? 'order' : 'booking')
-        ->where('reference_id', $request_id)
-        ->find_one();
-    if ($ledgerItem) {
-        $ledgerItem->status = 'posted';
-        $ledgerItem->save();
-    }
-
-    $trans_insert = ORM::for_table($config['db']['pre'] . 'transaction')->create();
-    $trans_insert->product_name = $title;
-    $trans_insert->product_id = $request_id;
-    $trans_insert->seller_id = $user_id;
-    $trans_insert->status = 'success';
-    $trans_insert->base_amount = $payment_total;
-    $trans_insert->amount = $payment_total;
-    $trans_insert->currency_code = $payment_currency;
-    $trans_insert->transaction_gatway = 'stripe';
-    $trans_insert->transaction_ip = $ip;
-    $trans_insert->transaction_time = time();
-    $trans_insert->transaction_description = $trans_desc;
-    $trans_insert->payment_id = $payment_id;
-    $trans_insert->transaction_method = $transactionMethod;
-    $trans_insert->billing = json_encode([
-        'type' => 'website_public',
-        'name' => $payer_name,
-        'email' => $payer_email,
-    ], JSON_UNESCAPED_UNICODE);
-    $trans_insert->save();
-
-    if ($site) {
-        website_builder_send_customer_confirmation($site, $payment_type, $requestPayload);
-        website_builder_send_owner_request_notification($site, $payment_type, $requestPayload);
-    }
-
     echo 'successful';
     exit();
 }

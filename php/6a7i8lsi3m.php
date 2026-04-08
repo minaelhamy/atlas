@@ -24,6 +24,15 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == "generate_instagram_grid") {
         generate_instagram_grid();
     }
+    if ($_GET['action'] == "regenerate_social_post") {
+        regenerate_social_post();
+    }
+    if ($_GET['action'] == "vote_social_post_image") {
+        vote_social_post_image();
+    }
+    if ($_GET['action'] == "save_social_post_overlay") {
+        save_social_post_overlay();
+    }
     if ($_GET['action'] == "save_document") {
         save_document();
     }
@@ -85,18 +94,6 @@ if (isset($_GET['action'])) {
     }
     if ($_GET['action'] == "save_company_intelligence_draft") {
         save_company_intelligence_draft();
-    }
-    if ($_GET['action'] == "generate_website_setup_field") {
-        generate_website_setup_field();
-    }
-    if ($_GET['action'] == "build_website_draft") {
-        build_website_draft();
-    }
-    if ($_GET['action'] == "website_service_slots") {
-        website_service_slots();
-    }
-    if ($_GET['action'] == "website_platform_prepare_launch") {
-        website_platform_prepare_launch();
     }
     die(0);
 }
@@ -441,183 +438,6 @@ function company_intelligence_collect_profile_payload($existingProfile)
     return $profileData;
 }
 
-function generate_website_setup_field()
-{
-    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
-
-    if (!checkloggedin()) {
-        die(json_encode($result));
-    }
-
-    $field = !empty($_POST['field']) ? validate_input($_POST['field']) : '';
-    $siteType = !empty($_POST['site_type']) ? validate_input($_POST['site_type']) : 'service';
-    if ($field === '') {
-        $result['error'] = __('Please choose a field first.');
-        die(json_encode($result));
-    }
-
-    $values = website_builder_generate_structured_fields($_SESSION['user']['id'], $siteType, [$field]);
-    $result['success'] = true;
-    $result['field'] = $field;
-    $result['value'] = !empty($values[$field]) ? $values[$field] : '';
-    die(json_encode($result));
-}
-
-function build_website_draft()
-{
-    global $config;
-
-    $result = ['success' => false, 'error' => __('Unexpected error, please try again.')];
-
-    if (!checkloggedin()) {
-        die(json_encode($result));
-    }
-
-    website_builder_ensure_tables();
-
-    $templateKey = !empty($_POST['template_key']) ? validate_input($_POST['template_key']) : '';
-    $template = website_builder_get_template($templateKey);
-    if (empty($template)) {
-        $result['error'] = __('Please choose a valid website template.');
-        die(json_encode($result));
-    }
-
-    $websiteTitle = !empty($_POST['website_title']) ? validate_input($_POST['website_title']) : '';
-    $subdomain = !empty($_POST['subdomain']) ? validate_input($_POST['subdomain']) : '';
-    $firstItemTitle = !empty($_POST['first_item_title']) ? validate_input($_POST['first_item_title']) : '';
-    $firstItemDescription = !empty($_POST['first_item_description']) ? validate_input($_POST['first_item_description']) : '';
-    $firstItemPrice = isset($_POST['first_item_price']) ? validate_input($_POST['first_item_price']) : '';
-    $firstItemDuration = isset($_POST['first_item_duration']) ? validate_input($_POST['first_item_duration']) : '';
-
-    if ($websiteTitle === '' || $subdomain === '') {
-        $result['error'] = __('Website name and .hatchers.ai domain are required.');
-        die(json_encode($result));
-    }
-    if ($firstItemTitle === '' || $firstItemDescription === '' || $firstItemPrice === '') {
-        $result['error'] = $template['type'] === 'ecommerce'
-            ? __('Please add at least one product title, description, and price.')
-            : __('Please add at least one service title, description, and price.');
-        die(json_encode($result));
-    }
-    if ($template['type'] === 'service' && $firstItemDuration === '') {
-        $result['error'] = __('Please add a duration for your first service.');
-        die(json_encode($result));
-    }
-
-    $site = website_builder_create_or_refresh_primary_site($_SESSION['user']['id'], $templateKey, [
-        'website_title' => $websiteTitle,
-        'subdomain' => $subdomain,
-        'first_item_title' => $firstItemTitle,
-        'first_item_description' => $firstItemDescription,
-        'first_item_price' => $firstItemPrice,
-        'first_item_duration' => $firstItemDuration,
-    ]);
-
-    if (empty($site['id'])) {
-        $result['error'] = __('Unable to build your website right now.');
-        die(json_encode($result));
-    }
-
-    $result['success'] = true;
-    $result['redirect'] = website_builder_get_editor_url($site['id']);
-    die(json_encode($result));
-}
-
-function website_service_slots()
-{
-    $result = [
-        'success' => false,
-        'message' => __('Unable to load booking slots right now.'),
-        'slots' => [],
-    ];
-
-    $slug = !empty($_GET['slug']) ? validate_input($_GET['slug']) : '';
-    $serviceId = !empty($_GET['service_id']) ? (int) $_GET['service_id'] : 0;
-    $date = !empty($_GET['date']) ? validate_input($_GET['date']) : '';
-    $bookingId = !empty($_GET['booking_id']) ? (int) $_GET['booking_id'] : 0;
-
-    if ($slug === '' || !$serviceId || $date === '') {
-        die(json_encode($result));
-    }
-
-    $site = website_builder_get_site_by_slug($slug);
-    if (empty($site) || $site['site_type'] !== 'service') {
-        $result['message'] = __('Service website not found.');
-        die(json_encode($result));
-    }
-
-    $service = website_builder_get_service($site['id'], $serviceId);
-    if (empty($service)) {
-        $result['message'] = __('Service not found.');
-        die(json_encode($result));
-    }
-
-    $slotData = website_builder_get_service_slots($site, $service, $date, $bookingId);
-    $result['success'] = !empty($slotData['success']);
-    $result['message'] = !empty($slotData['message']) ? $slotData['message'] : '';
-    $result['slots'] = !empty($slotData['slots']) ? $slotData['slots'] : [];
-    die(json_encode($result));
-}
-
-function website_platform_prepare_launch()
-{
-    header('Content-Type: application/json');
-
-    $result = [
-        'success' => false,
-        'message' => __('Unable to prepare your website workspace right now.'),
-    ];
-
-    if (empty($_SESSION['user']['id'])) {
-        $result['message'] = __('Please log in again.');
-        die(json_encode($result));
-    }
-
-    $userId = (int) $_SESSION['user']['id'];
-    $user = get_user_data(null, $userId);
-    $socialProfile = social_media_get_profile($userId);
-    $companyIntelligence = social_media_get_company_intelligence($userId);
-    $profileStatus = website_builder_company_profile_status($socialProfile, $companyIntelligence);
-
-    if (empty($profileStatus['ready'])) {
-        $result['message'] = __('Please complete Company Intelligence first.');
-        $result['missing'] = !empty($profileStatus['missing']) ? $profileStatus['missing'] : [];
-        die(json_encode($result));
-    }
-
-    $prepared = website_platform_provision_workspace($user, $socialProfile, $companyIntelligence);
-    if (empty($prepared['success'])) {
-        $message = !empty($prepared['error']) ? $prepared['error'] : $result['message'];
-        if (!empty($prepared['status_code'])) {
-            $message .= ' ' . __('Upstream status:') . ' ' . (int) $prepared['status_code'] . '.';
-        }
-        if (!empty($prepared['raw'])) {
-            $snippet = trim(strip_tags((string) $prepared['raw']));
-            if ($snippet !== '') {
-                $snippet = preg_replace('/\s+/', ' ', $snippet);
-                $snippet = mb_substr($snippet, 0, 220);
-                $message .= ' ' . __('Upstream response:') . ' ' . $snippet;
-            }
-        }
-        $result['message'] = $message;
-        if (!empty($prepared['raw'])) {
-            $result['debug'] = $prepared['raw'];
-        }
-        if (!empty($prepared['status_code'])) {
-            $result['status_code'] = (int) $prepared['status_code'];
-        }
-        die(json_encode($result));
-    }
-
-    $result['success'] = true;
-    $result['message'] = __('Workspace ready.');
-    $result['launch_url'] = $prepared['launch_url'];
-    $result['public_url'] = $prepared['public_url'];
-    $result['dashboard_url'] = $prepared['dashboard_url'];
-    $result['platform_type'] = $prepared['target']['type'];
-    $result['platform_name'] = $prepared['target']['name'];
-    die(json_encode($result));
-}
 
 function submitBlogComment()
 {
@@ -1797,6 +1617,112 @@ function delete_document()
             die(json_encode($result));
         }
     }
+    $result['success'] = false;
+    $result['error'] = __('Unexpected error, please try again.');
+    die(json_encode($result));
+}
+
+function regenerate_social_post()
+{
+    $result = array();
+    if (checkloggedin()) {
+        $_POST = validate_input($_POST);
+        $postId = !empty($_POST['id']) ? (int) $_POST['id'] : 0;
+        $voteValue = isset($_POST['vote']) ? (int) $_POST['vote'] : 0;
+
+        if ($postId <= 0) {
+            $result['success'] = false;
+            $result['error'] = __('Post not found.');
+            die(json_encode($result));
+        }
+
+        if ($voteValue === -1 || $voteValue === 1) {
+            social_media_record_post_feedback($_SESSION['user']['id'], $postId, $voteValue, [
+                'source' => 'regenerate_flow',
+            ]);
+        }
+
+        $regenerated = social_media_regenerate_post($_SESSION['user']['id'], $postId);
+        if (!$regenerated['success']) {
+            $result['success'] = false;
+            $result['error'] = $regenerated['error'];
+            die(json_encode($result));
+        }
+
+        $result['success'] = true;
+        $result['message'] = __('Image regenerated successfully.');
+        $result['post'] = $regenerated['post'];
+        die(json_encode($result));
+    }
+
+    $result['success'] = false;
+    $result['error'] = __('Unexpected error, please try again.');
+    die(json_encode($result));
+}
+
+function vote_social_post_image()
+{
+    $result = array();
+    if (checkloggedin()) {
+        $_POST = validate_input($_POST);
+        $postId = !empty($_POST['id']) ? (int) $_POST['id'] : 0;
+        $voteValue = isset($_POST['vote']) ? (int) $_POST['vote'] : 0;
+
+        if ($postId <= 0 || !in_array($voteValue, [-1, 1], true)) {
+            $result['success'] = false;
+            $result['error'] = __('Invalid vote request.');
+            die(json_encode($result));
+        }
+
+        if (!social_media_record_post_feedback($_SESSION['user']['id'], $postId, $voteValue, [
+            'source' => 'manual_vote',
+        ])) {
+            $result['success'] = false;
+            $result['error'] = __('Unable to save your feedback right now.');
+            die(json_encode($result));
+        }
+
+        $post = social_media_get_post($_SESSION['user']['id'], $postId);
+        $result['success'] = true;
+        $result['message'] = $voteValue > 0
+            ? __('Thanks, we will learn from this image.')
+            : __('Thanks, we will use this feedback next time.');
+        $result['post'] = $post;
+        die(json_encode($result));
+    }
+
+    $result['success'] = false;
+    $result['error'] = __('Unexpected error, please try again.');
+    die(json_encode($result));
+}
+
+function save_social_post_overlay()
+{
+    $result = array();
+    if (checkloggedin()) {
+        $overlay = isset($_POST['overlay_text']) ? trim($_POST['overlay_text']) : '';
+        $_POST = validate_input($_POST);
+        $postId = !empty($_POST['id']) ? (int) $_POST['id'] : 0;
+
+        if ($postId <= 0) {
+            $result['success'] = false;
+            $result['error'] = __('Post not found.');
+            die(json_encode($result));
+        }
+
+        $saved = social_media_update_post_overlay($_SESSION['user']['id'], $postId, $overlay);
+        if (!$saved['success']) {
+            $result['success'] = false;
+            $result['error'] = $saved['error'];
+            die(json_encode($result));
+        }
+
+        $result['success'] = true;
+        $result['message'] = __('Overlay text updated.');
+        $result['post'] = $saved['post'];
+        die(json_encode($result));
+    }
+
     $result['success'] = false;
     $result['error'] = __('Unexpected error, please try again.');
     die(json_encode($result));

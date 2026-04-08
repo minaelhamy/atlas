@@ -155,13 +155,12 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                             $meta = !empty($post['metadata']) && is_array($post['metadata']) ? $post['metadata'] : [];
                             $hashtags = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
                             $design = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
-                            $debug = !empty($meta['debug']) && is_array($meta['debug']) ? $meta['debug'] : [];
                             $videoUrl = !empty($meta['rendered_video'])
                                 ? _esc($config['site_url'], 0) . 'storage/social_posts/videos/' . $meta['rendered_video']
                                 : (!empty($meta['source_video']) ? _esc($config['site_url'], 0) . 'storage/social_assets/' . $meta['source_video'] : '');
-                            $previewUrl = _esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image'];
+                            $previewUrl = !empty($post['preview_image']) ? $post['preview_image'] : (_esc($config['site_url'], 0) . 'storage/social_posts/' . $post['preview_image_file']);
                             ?>
-                            <div class="col-xl-4 col-md-6 margin-bottom-30">
+                            <div class="col-xl-4 col-md-6 margin-bottom-30 social-post-card-slot" data-post-id="<?php _esc($post['id']) ?>" data-social-context="campaign">
                                 <div class="dashboard-box social-post-card margin-top-0">
                                     <div class="content">
                                         <div class="social-post-preview">
@@ -174,7 +173,13 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                         <div class="social-post-body with-padding">
                                             <span class="dashboard-status-button yellow"><?php _esc(ucfirst($post['post_type'])) ?></span>
                                             <h4 class="margin-top-15"><?php _esc($post['title']) ?></h4>
-                                            <p class="margin-bottom-10"><strong><?php _e('Overlay') ?>:</strong> <?php _esc($post['overlay_text']) ?></p>
+                                            <div class="social-overlay-editor margin-bottom-15">
+                                                <label class="social-overlay-label" for="social-overlay-<?php _esc($post['id']) ?>"><strong><?php _e('Overlay') ?>:</strong></label>
+                                                <textarea id="social-overlay-<?php _esc($post['id']) ?>" class="with-border social-overlay-input" rows="2" data-id="<?php _esc($post['id']) ?>"><?php _esc($post['overlay_text']) ?></textarea>
+                                                <div class="social-overlay-actions">
+                                                    <button type="button" class="button small ripple-effect social-overlay-save-btn" data-id="<?php _esc($post['id']) ?>"><?php _e('Save overlay') ?></button>
+                                                </div>
+                                            </div>
                                             <p class="margin-bottom-10"><strong><?php _e('Caption') ?>:</strong> <?php _esc($post['caption']) ?></p>
                                             <?php if (!empty($meta['cta'])) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e('CTA') ?>:</strong> <?php _esc($meta['cta']) ?></p>
@@ -217,45 +222,6 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                                     <?php if (!empty($design['background_tone'])) { ?>, <?php _esc($design['background_tone']) ?><?php } ?>
                                                 </p>
                                             <?php } ?>
-                                            <?php if (!empty($debug)) { ?>
-                                                <details class="margin-bottom-10">
-                                                    <summary><strong><?php _e('Debug') ?></strong></summary>
-                                                    <div class="margin-top-10">
-                                                        <?php if (!empty($debug['generation_source'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Copy Source') ?>:</strong> <?php _esc($debug['generation_source']) ?></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['openai']['error'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('OpenAI Debug') ?>:</strong> <?php _esc($debug['openai']['attempt'] . ' - ' . $debug['openai']['error']) ?></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['render']['background']['used_source'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Background Source') ?>:</strong> <?php _e('Uploaded asset used') ?></p>
-                                                        <?php } elseif (!empty($debug['render']['background']['fallback_gradient'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Background Source') ?>:</strong> <?php _e('Fallback gradient used') ?></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['source_video_used'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Video Source') ?>:</strong> <?php _e('Using original uploaded MP4') ?></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['render']['background']['used_path'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Used Path') ?>:</strong> <code><?php _esc($debug['render']['background']['used_path']) ?></code></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['render']['background']['remote_provider'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Remote Provider') ?>:</strong> <?php _esc($debug['render']['background']['remote_provider']) ?></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['render']['background']['remote_url'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Remote URL') ?>:</strong> <code><?php _esc($debug['render']['background']['remote_url']) ?></code></p>
-                                                        <?php } ?>
-                                                        <?php if (isset($debug['render']['background']['remote_source_downloaded'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Remote Source Downloaded') ?>:</strong> <?php _esc($debug['render']['background']['remote_source_downloaded'] ? 'yes' : 'no') ?></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['render']['background']['remote_source_path'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Remote Source Path') ?>:</strong> <code><?php _esc($debug['render']['background']['remote_source_path']) ?></code></p>
-                                                        <?php } ?>
-                                                        <?php if (!empty($debug['render']['background']['attempted_paths'])) { ?>
-                                                            <p class="margin-bottom-5"><strong><?php _e('Attempted Paths') ?>:</strong> <code><?php _esc(implode(' | ', $debug['render']['background']['attempted_paths'])) ?></code></p>
-                                                        <?php } ?>
-                                                    </div>
-                                                </details>
-                                            <?php } ?>
                                             <?php
                                             $captionExport = $post['caption'];
                                             if (!empty($hashtags)) {
@@ -265,6 +231,9 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                             $downloadLabel = (!empty($videoUrl) && $post['post_type'] === 'reel') ? __('Download Reel') : __('Download Post');
                                             ?>
                                             <div class="social-post-actions margin-top-15">
+                                                <button type="button" class="social-action-btn social-vote-btn<?php echo (int) $post['vote_value'] === 1 ? ' is-active' : ''; ?>" data-id="<?php _esc($post['id']) ?>" data-vote="1" title="<?php _e('Thumbs up') ?>" aria-label="<?php _e('Thumbs up') ?>"><i class="fa fa-thumbs-up"></i></button>
+                                                <button type="button" class="social-action-btn social-vote-btn<?php echo (int) $post['vote_value'] === -1 ? ' is-active' : ''; ?>" data-id="<?php _esc($post['id']) ?>" data-vote="-1" title="<?php _e('Thumbs down and regenerate') ?>" aria-label="<?php _e('Thumbs down and regenerate') ?>"><i class="fa fa-thumbs-down"></i></button>
+                                                <button type="button" class="social-action-btn social-regenerate-btn" data-id="<?php _esc($post['id']) ?>" title="<?php _e('Regenerate image') ?>" aria-label="<?php _e('Regenerate image') ?>"><i class="fa fa-refresh"></i></button>
                                                 <a href="<?php echo $downloadUrl; ?>" class="social-action-btn" download title="<?php _esc($downloadLabel) ?>" aria-label="<?php _esc($downloadLabel) ?>"><i class="fa fa-download"></i></a>
                                                 <a href="#" class="social-action-btn download-caption" data-title="<?php _esc($post['title']) ?>" data-caption="<?php _esc($captionExport) ?>" title="<?php _e('Download Caption') ?>" aria-label="<?php _e('Download Caption') ?>"><i class="fa fa-file-text-o"></i></a>
                                                 <?php if (!empty($videoUrl) && $post['post_type'] === 'reel') { ?>
@@ -342,6 +311,18 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
     }
     .social-action-btn {
         flex: 0 0 auto;
+    }
+    .social-action-btn.is-active {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+    }
+    .social-overlay-input {
+        min-height: 78px;
+        resize: vertical;
+    }
+    .social-overlay-actions {
+        margin-top: 10px;
     }
 </style>
 <script>

@@ -71,19 +71,6 @@ if (isset($access_token)) {
 
         $stripe_secret_key = get_option('stripe_secret_key');
         $stripe_publishable_key = get_option('stripe_publishable_key');
-    } else if ($payment_type == "website_order" || $payment_type == "website_booking") {
-        $payment_mode = "one_time";
-        $user_id = isset($_SESSION['quickad'][$access_token]['user_id']) ? (int) $_SESSION['quickad'][$access_token]['user_id'] : 0;
-        $item_pro_id = (int) $_SESSION['quickad'][$access_token]['product_id'];
-        $amount = $_SESSION['quickad'][$access_token]['amount'];
-        $base_amount = isset($_SESSION['quickad'][$access_token]['base_amount']) ? $_SESSION['quickad'][$access_token]['base_amount'] : $amount;
-        $trans_desc = $_SESSION['quickad'][$access_token]['trans_desc'];
-        $website_site_id = (int) $_SESSION['quickad'][$access_token]['website_site_id'];
-        $return_url = $_SESSION['quickad'][$access_token]['return_url'];
-        $cancel_url = $_SESSION['quickad'][$access_token]['cancel_url'];
-
-        $stripe_secret_key = get_option('stripe_secret_key');
-        $stripe_publishable_key = get_option('stripe_publishable_key');
     } else {
         $plan_interval = 'Order';
         $payment_mode = 'one_time';
@@ -145,16 +132,6 @@ if (!empty($action)) {
                             'item_urgent' => $item_urgent,
                             'item_highlight' => $item_highlight
                         );
-                    } elseif ($payment_type == "website_order" || $payment_type == "website_booking") {
-                        $meta_data = array(
-                            'user_id' => $user_id,
-                            'request_id' => $item_pro_id,
-                            'website_site_id' => $website_site_id,
-                            'title' => $title,
-                            'amount' => $amount,
-                            'trans_desc' => $trans_desc,
-                            'payment_type' => $payment_type
-                        );
                     } else {
                         $meta_data = array(
                             'order_id' => $order_id,
@@ -175,7 +152,7 @@ if (!empty($action)) {
                                 )
                             ),
                             'metadata' => $meta_data,
-                            'success_url' => ($payment_type == "website_order" || $payment_type == "website_booking") ? $return_url : $link['PAYMENT'] . "/?access_token=" . $access_token . "&i=stripe&action=stripe_ipn",
+                            'success_url' => $link['PAYMENT'] . "/?access_token=" . $access_token . "&i=stripe&action=stripe_ipn",
                             'cancel_url' => $cancel_url,
                         ]);
                     } catch (\Exception $exception) {
@@ -287,11 +264,6 @@ if (!empty($action)) {
 
                 </script>
                 <?php
-            } else if ($payment_type == "website_order" || $payment_type == "website_booking") {
-                $redirectUrl = !empty($_SESSION['quickad'][$access_token]['return_url']) ? $_SESSION['quickad'][$access_token]['return_url'] : $config['site_url'];
-                unset($_SESSION['quickad'][$access_token]);
-                headerRedirect($redirectUrl);
-                exit();
             } else {
                 message(__('Success'), __('Payment Successful'), $link['TRANSACTION']);
             }
