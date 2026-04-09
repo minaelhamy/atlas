@@ -3120,6 +3120,167 @@ function social_media_get_builder_launch_target($user_id)
     return social_media_detect_builder_target($profile, $intelligence);
 }
 
+function social_media_get_builder_payload($user_id)
+{
+    $profile = social_media_get_profile($user_id);
+    $intelligence = social_media_get_company_intelligence($user_id);
+    $user = get_user_data(null, $user_id);
+    $target = social_media_detect_builder_target($profile, $intelligence);
+
+    $companyName = trim((string) (!empty($profile['company_name']) ? $profile['company_name'] : (!empty($user['name']) ? $user['name'] : $user['username'])));
+    $slugSource = trim((string) (!empty($profile['company_name']) ? $profile['company_name'] : $companyName));
+    $slug = create_slug($slugSource !== '' ? $slugSource : $user['username']);
+    $siteName = trim((string) (!empty($profile['company_name']) ? $profile['company_name'] : $companyName));
+
+    return [
+        'atlas_user_id' => (int) $user['id'],
+        'username' => (string) $user['username'],
+        'name' => (string) (!empty($user['name']) ? $user['name'] : $user['username']),
+        'email' => (string) $user['email'],
+        'phone' => (string) (!empty($user['phone']) ? $user['phone'] : ''),
+        'password_hash' => (string) (!empty($user['password']) ? $user['password'] : ''),
+        'company_name' => $companyName,
+        'site_name' => $siteName !== '' ? $siteName : $companyName,
+        'slug' => (string) $slug,
+        'site_type' => $target['type'],
+        'company_description' => (string) (!empty($profile['company_description']) ? $profile['company_description'] : ''),
+        'ideal_customer_profile' => (string) (!empty($profile['ideal_customer_profile']) ? $profile['ideal_customer_profile'] : ''),
+        'top_problems_solved' => social_media_normalize_list(!empty($profile['top_problems_solved']) ? $profile['top_problems_solved'] : []),
+        'unique_selling_points' => social_media_normalize_list(!empty($profile['unique_selling_points']) ? $profile['unique_selling_points'] : []),
+        'brand_colors' => social_media_normalize_list(!empty($profile['brand_colors']) ? $profile['brand_colors'] : []),
+        'tone_attributes' => social_media_normalize_list(!empty($profile['tone_attributes']) ? $profile['tone_attributes'] : []),
+        'reference_brands' => social_media_normalize_list(!empty($profile['reference_brands']) ? $profile['reference_brands'] : []),
+        'intelligence_summary' => (string) (!empty($intelligence['company_summary']) ? $intelligence['company_summary'] : ''),
+        'competitive_edges' => (string) (!empty($intelligence['competitive_edges']) ? $intelligence['competitive_edges'] : ''),
+        'exp' => time() + 900,
+    ];
+}
+
+function social_media_encode_builder_payload(array $payload)
+{
+    $json = json_encode($payload);
+    if ($json === false) {
+        return '';
+    }
+
+    return rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
+}
+
+function social_media_sign_builder_payload($payloadEncoded)
+{
+    $sharedSecret = (string) get_env_setting('WEBSITE_PLATFORM_SHARED_SECRET', get_option('site_url'));
+    return hash_hmac('sha256', $payloadEncoded, $sharedSecret);
+}
+
+function social_media_post_builder_provision($url, array $data)
+{
+    $responseBody = '';
+    $statusCode = 0;
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($data),
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+        ]);
+        $responseBody = (string) curl_exec($ch);
+        $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+    } else {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/x-www-form-urlencoded\r\nAccept: application/json\r\n",
+                'content' => http_build_query($data),
+                'timeout' => 20,
+                'ignore_errors' => true,
+            ],
+        ]);
+        $responseBody = (string) @file_get_contents($url, false, $context);
+        if (!empty($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $match)) {
+            $statusCode = (int) $match[1];
+        }
+    }
+
+    $decoded = json_decode($responseBody, true);
+
+    return [
+        'status' => $statusCode,
+        'body' => $responseBody,
+        'json' => is_array($decoded) ? $decoded : null,
+    ];
+}
+
+function social_media_get_builder_login_url($baseUrl, $email = '')
+{
+    $query = ['source' => 'atlas'];
+    if ($email !== '') {
+        $query['atlas_email'] = $email;
+    }
+
+    return rtrim($baseUrl, '/') . '/?' . http_build_query($query);
+}
+
+function social_media_prepare_builder_login($user_id, $targetType = 'auto', $persistTarget = true)
+{
+    $target = social_media_get_builder_launch_target($user_id);
+    if ($targetType === 'ecommerce' || $targetType === 'service') {
+        if ($target['type'] !== $targetType) {
+            $target = $targetType === 'ecommerce'
+                ? ['type' => 'ecommerce', 'name' => 'Bazaar', 'url' => rtrim((string) get_env_setting('BAZAAR_URL', 'https://bazaar.hatchers.ai'), '/')]
+                : ['type' => 'service', 'name' => 'Servio', 'url' => rtrim((string) get_env_setting('SERVIO_URL', 'https://servio.hatchers.ai'), '/')];
+        }
+    }
+
+    $payload = social_media_get_builder_payload($user_id);
+    $payload['site_type'] = $target['type'];
+    $payloadEncoded = social_media_encode_builder_payload($payload);
+    $signature = social_media_sign_builder_payload($payloadEncoded);
+    $response = social_media_post_builder_provision(rtrim($target['url'], '/') . '/atlas/provision', [
+        'payload' => $payloadEncoded,
+        'sig' => $signature,
+    ]);
+
+    if (empty($response['json']) || empty($response['json']['success'])) {
+        return [
+            'success' => false,
+            'target' => $target,
+            'error' => !empty($response['json']['error']) ? $response['json']['error'] : __('Could not sync your builder account right now.'),
+            'status' => (int) $response['status'],
+            'response' => $response,
+        ];
+    }
+
+    if ($persistTarget) {
+        update_user_option($user_id, 'builder_platform_type', $target['type']);
+        update_user_option($user_id, 'builder_platform_url', $target['url']);
+        update_user_option($user_id, 'builder_platform_last_email', $payload['email']);
+    }
+
+    return [
+        'success' => true,
+        'target' => $target,
+        'payload' => $payload,
+        'response' => $response,
+        'login_url' => social_media_get_builder_login_url($target['url'], $payload['email']),
+    ];
+}
+
+function social_media_sync_existing_builder_account($user_id)
+{
+    $targetType = trim((string) get_user_option($user_id, 'builder_platform_type', ''));
+    if ($targetType === '') {
+        return ['success' => true, 'skipped' => true];
+    }
+
+    return social_media_prepare_builder_login($user_id, $targetType, false);
+}
+
 function social_media_post_metadata_array($post)
 {
     $metadata = !empty($post['metadata']) && is_array($post['metadata'])

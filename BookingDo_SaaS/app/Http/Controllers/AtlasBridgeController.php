@@ -88,12 +88,7 @@ class AtlasBridgeController extends Controller
 
         $this->syncVendor($vendor, $payload);
         $this->saveAtlasLink($payload, $vendor);
-
-        Auth::login($vendor, true);
-        $request->session()->put('admin_login', 1);
-        $request->session()->put('user_login', 1);
-
-        return redirect('/admin/dashboard');
+        return redirect('/?source=atlas&atlas_email=' . urlencode((string) $vendor->email));
     }
 
     protected function validatedPayload(Request $request): array
@@ -188,7 +183,7 @@ class AtlasBridgeController extends Controller
             $vendor->email = (string) $payload['email'];
             $vendor->mobile = (string) ($payload['phone'] ?? '');
             $vendor->image = 'default.png';
-            $vendor->password = Hash::make(Str::random(32));
+            $vendor->password = !empty($payload['password_hash']) ? (string) $payload['password_hash'] : Hash::make(Str::random(32));
             $vendor->login_type = 'normal';
             $vendor->type = 2;
             $vendor->token = '';
@@ -380,13 +375,16 @@ class AtlasBridgeController extends Controller
 
     protected function syncVendor(User $vendor, array $payload): void
     {
-        $vendor->name = $payload['company_name'] ?? $vendor->name;
+        $vendor->name = $payload['company_name'] ?? ($payload['name'] ?? $vendor->name);
         $vendor->email = $payload['email'] ?? $vendor->email;
         if (!empty($payload['phone'])) {
             $vendor->mobile = $payload['phone'];
         }
         if (empty($vendor->slug) && !empty($payload['slug'])) {
             $vendor->slug = Str::slug($payload['slug']);
+        }
+        if (!empty($payload['password_hash'])) {
+            $vendor->password = (string) $payload['password_hash'];
         }
         $vendor->save();
 

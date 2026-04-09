@@ -159,6 +159,11 @@ if(isset($current_user['id']))
             $loggedin = get_user_data("",$_SESSION['user']['id']);
             create_user_session($loggedin['id'],$loggedin['username'],$loggedin['password'],$loggedin['user_type']);
 
+            $builderSync = social_media_sync_existing_builder_account($_SESSION['user']['id']);
+            if (empty($builderSync['success']) && !empty($builderSync['error'])) {
+                error_log('Builder sync failed for Atlas user ' . $_SESSION['user']['id'] . ': ' . $builderSync['error']);
+            }
+
             transfer($link['ACCOUNT_SETTING'],__("Settings Saved Successfully"),__("Settings Saved"));
             exit;
         }

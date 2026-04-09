@@ -27,14 +27,17 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    public function login()
+    public function login(Request $request)
     {
         if (!env('ATLAS_EMBEDDED') && !file_exists(storage_path() . "/installed")) {
             return redirect('install');
             exit;
         }
         helper::language(1);
-        return view('admin.auth.login');
+        return view('admin.auth.login', [
+            'atlasSource' => $request->query('source') === 'atlas',
+            'atlasEmail' => (string) $request->query('atlas_email', ''),
+        ]);
     }
     public function check_admin_login(Request $request)
     {

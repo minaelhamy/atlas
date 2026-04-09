@@ -16,6 +16,9 @@
                                     <div>
                                         <h2 class="fw-bold text-color title-text mb-2 color-changer">{{ trans('labels.login') }}</h2>
                                         <p class="text-color color-changer">{{ trans('labels.please_login') }}</p>
+                                        @if (!empty($atlasSource))
+                                            <p class="mt-2 mb-0 small text-muted">Use your Hatchers credentials to login.</p>
+                                        @endif
                                     </div>
                                     <!-- FOR SMALL DEVICE TOP CATEGORIES -->
                                    
@@ -49,7 +52,8 @@
                                         <label for="email" class="form-label">{{ trans('labels.email') }}<span
                                                 class="text-danger"> * </span></label>
                                         <input type="email" class="form-control extra-padding" name="email"
-                                            placeholder="{{ trans('labels.email') }}" id="email" required>
+                                            placeholder="{{ trans('labels.email') }}" id="email"
+                                            value="{{ old('email', $atlasEmail ?? '') }}" required>
 
                                     </div>
                                     <div class="form-group">
