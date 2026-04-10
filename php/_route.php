@@ -35,6 +35,7 @@ $router->map('GET|POST','/affiliate-program/?', 'global/affiliate-program.php');
 $router->map('GET|POST','/withdrawals/?', 'global/withdrawals.php');
 $router->map('GET','/manifest.json/?', 'global/manifest_json.php');
 $router->map('GET|POST','/test/?', 'global/test.php');
+$router->map('POST','/hatchers/founder-sync/?', 'global/hatchers-founder-sync.php');
 
 $router->map('GET|POST','/ai-templates/?', 'app/ai-templates.php');
 $router->map('GET|POST','/ai-templates/[*:slug]/?', 'app/ai-template-create.php');
