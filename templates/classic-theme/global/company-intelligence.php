@@ -215,6 +215,17 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
 .btn-generate{height:40px;padding:0 22px;background:#871F7A;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:background 0.1s}
 .btn-generate:hover{background:#6d1864}
 .btn-generate i{font-size:12px}
+.action-plan-box{background:#faf9f5;border:1px solid #e8e5de;border-radius:12px;padding:16px 18px;margin-bottom:18px}
+.action-plan-title{font-size:13.5px;font-weight:600;color:#1a1a1a;margin-bottom:6px}
+.action-plan-sub{font-size:12px;color:#888;line-height:1.5;margin-bottom:12px}
+.action-plan-list{display:flex;flex-direction:column;gap:10px}
+.action-plan-item{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 13px;background:#fff;border:1px solid #e8e5de;border-radius:10px}
+.action-plan-copy strong{display:block;font-size:12.5px;color:#1a1a1a;margin-bottom:4px}
+.action-plan-copy span{display:block;font-size:11.5px;color:#666;line-height:1.5}
+.action-plan-meta{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.action-plan-platform{font-size:10px;font-weight:700;letter-spacing:.08em;color:#871F7A;background:#f5eaf4;border:1px solid #ead5e8;border-radius:20px;padding:4px 8px}
+.action-plan-link{font-size:11.5px;color:#1a1a1a;text-decoration:none;font-weight:600}
+.action-plan-link:hover{color:#871F7A}
 .footer-center{flex:1}
 #prev-btn,#next-btn,#final-save-btn{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 #final-save-btn.atlas-hidden{display:none!important}
@@ -286,6 +297,26 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                         <input class="atlas-hidden" type="text" name="instagram_handle" id="instagram_handle" value="<?php _esc($social_profile['instagram_handle']) ?>">
 
                         <div class="body">
+                            <?php if (!empty($founder_action_plan)) { ?>
+                                <div class="action-plan-box">
+                                    <div class="action-plan-title">Atlas Execution Priorities</div>
+                                    <div class="action-plan-sub">These are the highest-value next moves Atlas sees across LMS, Bazaar, Servio, and Atlas right now.</div>
+                                    <div class="action-plan-list">
+                                        <?php foreach ($founder_action_plan as $action) { ?>
+                                            <div class="action-plan-item">
+                                                <div class="action-plan-copy">
+                                                    <strong><?php _esc($action['title']) ?></strong>
+                                                    <span><?php _esc($action['reason']) ?></span>
+                                                </div>
+                                                <div class="action-plan-meta">
+                                                    <span class="action-plan-platform"><?php _esc(strtoupper($action['platform'])) ?></span>
+                                                    <a class="action-plan-link" href="<?php _esc($action['url']) ?>"><?php _esc(!empty($action['cta']) ? $action['cta'] : __('Open')) ?></a>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+                                </div>
+                            <?php } ?>
                             <div class="panel active" data-panel="1">
                                 <div class="ai-zone">
                                     <div class="ai-badge"><i class="fa fa-star-o"></i> AI Extract</div>

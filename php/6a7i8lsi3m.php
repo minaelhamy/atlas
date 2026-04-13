@@ -1281,6 +1281,15 @@ function generate_content()
                     break;
             }
 
+            if (function_exists('hatchers_enrich_prompt_with_intelligence')) {
+                $prompt = hatchers_enrich_prompt_with_intelligence(
+                    $prompt,
+                    $_SESSION['user']['id'],
+                    'ai template ' . $_POST['ai_template'],
+                    'atlas'
+                );
+            }
+
             // check bad words
             if ($word = check_bad_words($prompt)) {
                 $result['success'] = false;
@@ -1974,6 +1983,81 @@ function send_ai_message()
     die(json_encode($result));
 }
 
+function hatchers_stream_inline_chat_response($text)
+{
+    $text = trim((string) $text);
+    if ($text === '') {
+        $text = "I'm Atlas. I can help with guidance and confirmed write actions across Hatchers.";
+    }
+
+    $chunks = preg_split('/(\s+)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+    foreach ($chunks as $chunk) {
+        $payload = [
+            'choices' => [
+                [
+                    'delta' => [
+                        'content' => $chunk,
+                    ],
+                ],
+            ],
+        ];
+        echo 'data: ' . json_encode($payload) . PHP_EOL . PHP_EOL;
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        ob_flush();
+        flush();
+    }
+
+    echo 'data: [DONE]' . PHP_EOL . PHP_EOL;
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    ob_flush();
+    flush();
+}
+
+function hatchers_save_inline_chat_response($userId, $conversationId, $lastMessageId, $aiMessage)
+{
+    global $config;
+
+    $aiMessage = trim((string) $aiMessage);
+    if ($aiMessage === '') {
+        return;
+    }
+
+    $chat = ORM::for_table($config['db']['pre'] . 'ai_chat')
+        ->where('user_id', $userId)
+        ->find_one($lastMessageId);
+
+    if (empty($chat)) {
+        return;
+    }
+
+    $chat->set('ai_message', $aiMessage);
+    $chat->set('date', date('Y-m-d H:i:s'));
+    $chat->save();
+
+    $updateConversation = ORM::for_table($config['db']['pre'] . 'ai_chat_conversations')
+        ->find_one($conversationId);
+
+    if (!empty($updateConversation)) {
+        $updateConversation->set('updated_at', date('Y-m-d H:i:s'));
+        $updateConversation->set('last_message', strlimiter(strip_tags($aiMessage), 100));
+        $updateConversation->save();
+    }
+
+    $usedTokens = max(1, str_word_count(strip_tags($aiMessage)));
+    $wordUsed = ORM::for_table($config['db']['pre'] . 'word_used')->create();
+    $wordUsed->user_id = $userId;
+    $wordUsed->words = $usedTokens;
+    $wordUsed->date = date('Y-m-d H:i:s');
+    $wordUsed->save();
+
+    $totalWordsUsed = (int) get_user_option($userId, 'total_words_used', 0);
+    update_user_option($userId, 'total_words_used', $totalWordsUsed + $usedTokens);
+}
+
 function chat_stream()
 {
     $result = array();
@@ -2114,6 +2198,14 @@ function chat_stream()
             $system_prompt .= "\n\nRecent company history from prior agent conversations:\n" . $history_context;
         }
         $system_prompt .= "\n\nIf the user asks for content, strategy, messaging, or positioning, tailor the answer to their company and competitors instead of giving generic advice.";
+        if (function_exists('hatchers_enrich_system_prompt_with_intelligence')) {
+            $system_prompt = hatchers_enrich_system_prompt_with_intelligence(
+                $system_prompt,
+                $_SESSION['user']['id'],
+                !empty($chat_bot['name']) ? 'chat bot ' . $chat_bot['name'] : 'atlas ai chat',
+                'atlas'
+            );
+        }
 
         // get last 5 messages
         $sql = "SELECT * FROM
@@ -2150,6 +2242,29 @@ function chat_stream()
             $history[] = [$ROLE => $USER, $CONTENT => $chat['user_message']];
             if (!empty($chat['ai_message'])) {
                 $history[] = [$ROLE => $ASSISTANT, $CONTENT => $chat['ai_message']];
+            }
+        }
+
+        $lastUserMessage = '';
+        foreach (array_reverse($chats) as $chat) {
+            if (!empty($chat['user_message'])) {
+                $lastUserMessage = trim((string) $chat['user_message']);
+                break;
+            }
+        }
+
+        if ($lastUserMessage !== '') {
+            $writeAction = hatchers_handle_write_action_message($_SESSION['user']['id'], $lastUserMessage, [
+                'role' => '',
+                'app' => 'atlas',
+            ]);
+
+            if (!empty($writeAction['handled'])) {
+                $aiMessage = trim((string) ($writeAction['reply'] ?? ''));
+                hatchers_save_inline_chat_response($_SESSION['user']['id'], $conversation_id, $_GET['last_message_id'], $aiMessage);
+                hatchers_stream_inline_chat_response($aiMessage);
+                ORM::reset_db();
+                return;
             }
         }
 

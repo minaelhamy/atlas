@@ -1311,6 +1311,12 @@ function social_media_get_company_context_text($user_id)
     if (!empty($intelligence['summary_text'])) {
         $parts[] = "Stored company intelligence:\n" . $intelligence['summary_text'];
     }
+    if (function_exists('hatchers_get_founder_intelligence_text')) {
+        $hatchersContext = hatchers_get_founder_intelligence_text($user_id);
+        if ($hatchersContext !== '') {
+            $parts[] = "Shared Hatchers founder intelligence:\n" . $hatchersContext;
+        }
+    }
     $referenceBrandSnapshots = social_media_get_reference_brand_snapshots($profile);
     if (!empty($referenceBrandSnapshots)) {
         $referenceLines = [];
@@ -3796,6 +3802,11 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
 {
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/OpenAi.php';
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
+
+    if (function_exists('hatchers_enrich_system_prompt_with_intelligence')) {
+        $system = hatchers_enrich_system_prompt_with_intelligence($system, $user_id, 'social media generation', 'atlas');
+        $userPrompt = hatchers_enrich_prompt_with_intelligence($userPrompt, $user_id, 'social media generation brief', 'atlas');
+    }
 
     $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
     $modelsToTry = social_media_get_chat_model_candidates();

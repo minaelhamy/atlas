@@ -99,6 +99,30 @@ overall_header(__("Dashboard"));
                 </div>
             </div>
 
+            <div class="dashboard-box intelligence-panel-box atlas-dashboard-intelligence margin-top-0 margin-bottom-24">
+                <div class="headline">
+                    <h3><i class="icon-feather-navigation"></i> <?php _e("Next Best Actions") ?></h3>
+                </div>
+                <div class="content with-padding">
+                    <?php if (!empty($founder_action_plan)) { ?>
+                        <div class="atlas-dashboard-quick-list">
+                            <?php foreach ($founder_action_plan as $action) { ?>
+                                <a href="<?php _esc($action['url']) ?>" class="atlas-dashboard-quick-item">
+                                    <span class="atlas-dashboard-quick-avatar"><i class="icon-feather-arrow-up-right"></i></span>
+                                    <span class="atlas-dashboard-quick-copy">
+                                        <strong><?php _esc($action['title']) ?></strong>
+                                        <small><?php _esc($action['reason']) ?></small>
+                                    </span>
+                                    <span class="atlas-dashboard-quick-meta"><?php _esc(strtoupper($action['platform'])) ?></span>
+                                </a>
+                            <?php } ?>
+                        </div>
+                    <?php } else { ?>
+                        <p class="margin-bottom-0"><?php _e("Atlas will surface execution actions here as founder intelligence becomes richer across LMS, Bazaar, and Servio.") ?></p>
+                    <?php } ?>
+                </div>
+            </div>
+
             <div class="row atlas-dashboard-secondary-row">
                 <div class="col-lg-6">
                     <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">

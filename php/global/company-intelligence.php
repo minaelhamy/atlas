@@ -2,6 +2,7 @@
 if (isset($current_user['id'])) {
     $social_profile = social_media_get_profile($_SESSION['user']['id']);
     $company_intelligence = social_media_get_company_intelligence($_SESSION['user']['id']);
+    $founder_action_plan = hatchers_get_founder_action_plan($_SESSION['user']['id'], 6);
     $social_error = '';
 
     if (isset($_POST['company-intelligence-submit'])) {
@@ -66,6 +67,7 @@ if (isset($current_user['id'])) {
         HtmlTemplate::display('global/company-intelligence', [
             'social_profile' => $social_profile,
             'company_intelligence' => $company_intelligence,
+            'founder_action_plan' => $founder_action_plan,
             'reference_brand_snapshots' => $reference_brand_snapshots,
             'social_error' => $social_error,
             'current_avatar' => !empty($current_user['image']) ? $current_user['image'] : 'default_user.png',
