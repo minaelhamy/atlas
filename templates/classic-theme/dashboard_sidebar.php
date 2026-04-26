@@ -10,7 +10,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                 <a href="<?php url("DASHBOARD") ?>" class="atlas-sidebar-brand-link">
                     <span class="atlas-sidebar-brand-copy">
                         <strong><?php _esc($config['site_title']) ?></strong>
-                        <small><?php _e("Your AI workspace") ?></small>
+                        <small><?php _e("Your creative operating system") ?></small>
                     </span>
                 </a>
             </div>
@@ -27,24 +27,24 @@ $plan_settings = $current_user['plan']['settings']; ?>
             <!-- Navigation -->
             <div class="dashboard-nav">
                 <div class="dashboard-nav-inner">
-                    <ul data-submenu-title="<?php _e("My Account") ?>">
+                    <ul data-submenu-title="<?php _e("Studio Home") ?>">
                         <li class="<?php echo CURRENT_PAGE == 'app/dashboard' ? 'active' : ''; ?>"><a
                                     href="<?php url("DASHBOARD") ?>"><i
-                                        class="icon-feather-grid"></i> <?php _e("Dashboard") ?></a></li>
+                                        class="icon-feather-grid"></i> <?php _e("Studio Home") ?></a></li>
                     </ul>
 
-                    <ul data-submenu-title="<?php _e("Organize and Manage") ?>">
+                    <ul data-submenu-title="<?php _e("Brand and Campaigns") ?>">
                         <li class="<?php echo CURRENT_PAGE == 'global/company-intelligence' ? 'active' : ''; ?>"><a
                                     href="<?php url("COMPANY_INTELLIGENCE") ?>"><i
-                                        class="icon-feather-activity"></i> <?php _e("Company Intelligence") ?></a></li>
+                                        class="icon-feather-activity"></i> <?php _e("Brand Studio") ?></a></li>
                         <li class="<?php echo CURRENT_PAGE == 'app/build-website' ? 'active' : ''; ?>"><a
                                     href="<?php url("BUILD_WEBSITE") ?>"><i
-                                        class="icon-feather-monitor"></i> <?php _e("Build Website") ?></a></li>
+                                        class="icon-feather-monitor"></i> <?php _e("Website Studio") ?></a></li>
                         <?php if ($config['enable_ai_images']) {
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
-                                <li class="<?php echo in_array(CURRENT_PAGE, ['app/ai-images', 'app/ai-images-campaign', 'app/ai-images-grid'], true) ? 'active' : ''; ?>"><a
+                                <li class="<?php echo in_array(CURRENT_PAGE, ['app/ai-images', 'app/ai-images-campaign', 'app/ai-images-grid', 'app/ai-campaign-detail'], true) ? 'active' : ''; ?>"><a
                                             href="<?php url("AI_IMAGES") ?>"><i
-                                                class="icon-feather-image"></i> <?php _e("Social Media Automation") ?></a></li>
+                                                class="icon-feather-image"></i> <?php _e("Campaign Studio") ?></a></li>
                             <?php }
                         }
 
@@ -52,7 +52,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                             if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                 <li class="<?php echo CURRENT_PAGE == 'app/ai-chat' || CURRENT_PAGE == 'app/ai-chat-bots' ? 'active' : ''; ?>">
                                     <a href="<?php url("AI_CHAT_BOTS") ?>">
-                                        <i class="icon-feather-message-circle"></i> <?php _e("Your Ai Agents") ?>
+                                        <i class="icon-feather-message-circle"></i> <?php _e("Atlas Agents") ?>
                                     </a></li>
                             <?php }
                         }
@@ -85,7 +85,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                         } ?>
                     </ul>
 
-                    <ul data-submenu-title="<?php _e("Account") ?>">
+                    <ul data-submenu-title="<?php _e("Workspace and Billing") ?>">
 
                         <?php if ($config['enable_affiliate_program']) {
                             if (get_option('allow_affiliate_payouts', 1)) { ?>
@@ -128,8 +128,8 @@ $plan_settings = $current_user['plan']['settings']; ?>
             <!-- Navigation / End -->
             <div class="atlas-sidebar-footer">
                 <div class="atlas-sidebar-footer-card">
-                    <strong><?php _e("Private Workspace") ?></strong>
-                    <span><?php _e("Company-aware agents, social content, and business context in one place.") ?></span>
+                    <strong><?php _e("Atlas Studio") ?></strong>
+                    <span><?php _e("Brand context, campaign strategy, and creative output working together in one place.") ?></span>
                 </div>
             </div>
         </div>

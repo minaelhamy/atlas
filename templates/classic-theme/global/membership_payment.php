@@ -1,26 +1,36 @@
 <?php
 overall_header(__("Upgrade Membership"));
 ?>
-    <div id="titlebar">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2><?php _e("Upgrade Membership") ?></h2>
-                    <!-- Breadcrumbs -->
-                    <nav id="breadcrumbs">
-                        <ul>
-                            <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Upgrade") ?></li>
-                        </ul>
-                    </nav>
+<!-- Dashboard Container -->
+<div class="dashboard-container">
 
-                </div>
+    <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
+
+    <div class="dashboard-content-container" data-simplebar>
+        <div class="dashboard-content-inner">
+            <div class="dashboard-headline">
+                <h3><?php _e("Upgrade Membership") ?></h3>
+                <nav id="breadcrumbs" class="dark">
+                    <ul>
+                        <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
+                        <li><?php _e("Upgrade") ?></li>
+                    </ul>
+                </nav>
             </div>
-        </div>
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-xl-8 col-lg-8 content-right-offset">
+
+            <div class="atlas-workflow-hero margin-bottom-24">
+                <span class="atlas-workflow-eyebrow"><?php _e("Plan checkout") ?></span>
+                <h2><?php _e("Activate the membership tier that matches your next stage") ?></h2>
+                <p><?php _e("Review the payment path, confirm the billing model, and move your workspace onto the plan that supports your next launch phase.") ?></p>
+            </div>
+
+            <div class="row">
+                <div class="col-xl-8 col-lg-8 content-right-offset">
+                    <div class="dashboard-box margin-top-0">
+                        <div class="headline">
+                            <h3><i class="icon-feather-credit-card"></i> <?php _e("Membership payment method") ?></h3>
+                        </div>
+                        <div class="content with-padding">
                 <form id="subscribeForm" method="POST" novalidate="novalidate" enctype="multipart/form-data">
                     <h3><?php _e("Payment Method") ?></h3>
                     <div class="payment margin-top-30">
@@ -317,6 +327,8 @@ overall_header(__("Upgrade Membership"));
                             class="button big ripple-effect margin-top-40 margin-bottom-65 subscribeNow"
                             id="subscribeNow"><?php _e("Submit") ?></button>
                 </form>
+                        </div>
+                    </div>
             </div>
             <div class="col-xl-4 col-lg-4 margin-top-0 margin-bottom-60">
                 <div class="boxed-widget summary margin-top-0">
@@ -678,5 +690,5 @@ overall_header(__("Upgrade Membership"));
     </script>
 
 <?php
-overall_footer();
+include_once TEMPLATE_PATH . '/overall_footer_dashboard.php';
 ?>

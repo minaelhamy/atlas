@@ -1,5 +1,5 @@
 <?php
-overall_header(__("Daily use templates"));
+overall_header(__("Template Studio"));
 ?>
     <!-- Dashboard Container -->
     <div class="dashboard-container">
@@ -14,7 +14,7 @@ overall_header(__("Daily use templates"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("Daily use templates") ?>
+                        <?php _e("Template Studio") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -30,9 +30,14 @@ overall_header(__("Daily use templates"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Daily use templates") ?></li>
+                            <li><?php _e("Template Studio") ?></li>
                         </ul>
                     </nav>
+                </div>
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("One-off creation") ?></span>
+                    <h2><?php _e("Pick a template and make one focused asset fast") ?></h2>
+                    <p><?php _e("Template Studio is for the moments when you do not need a full campaign. Choose a format, add the context, and let Atlas produce a single useful output quickly.") ?></p>
                 </div>
                 <div>
                     <input id="template-search" placeholder="<?php _e('Search...'); ?>" type="text"
@@ -41,7 +46,7 @@ overall_header(__("Daily use templates"));
                 <div class="template-categories" data-template-library>
                     <ul>
                         <li class="active"><button type="button" class="ai-templates-category"
-                                                   data-category="all"><?php _e("All templates") ?></button></li>
+                                                   data-category="all"><?php _e("All assets") ?></button></li>
                         <?php
                         foreach ($ai_templates as $category) {
                             if (!empty($category['templates'])) {
@@ -142,6 +147,25 @@ overall_header(__("Daily use templates"));
         </div>
     </div>
 <?php ob_start() ?>
+<style>
+    .ai-templates h4 {
+        font-size: 22px;
+        line-height: 1.12;
+        letter-spacing: -0.03em;
+        margin-bottom: 8px;
+    }
+    .ai-templates p {
+        color: #6f6659;
+        line-height: 1.6;
+        font-size: 14px;
+    }
+    .ai-templates-category-title h4 {
+        margin: 12px 0 16px;
+        font-size: 24px;
+        letter-spacing: -0.03em;
+        color: #241f19;
+    }
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var library = document.querySelector('[data-template-library]');

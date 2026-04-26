@@ -28,6 +28,8 @@ if (isset($current_user['id'])) {
     $membership_settings = $membership['settings'];
     $company_intelligence = social_media_get_company_intelligence($_SESSION['user']['id']);
     $founder_action_plan = hatchers_get_founder_action_plan($_SESSION['user']['id'], 5);
+    $recent_campaign_briefs = hatchers_get_recent_campaign_records($_SESSION['user']['id'], 3);
+    $archived_campaign_briefs = hatchers_get_archived_campaign_records($_SESSION['user']['id'], 3);
 
     $top_agents = [];
     if ($config['enable_ai_chat']) {
@@ -111,6 +113,8 @@ if (isset($current_user['id'])) {
         'total_images_used' => $total_images_used ?: 0,
         'company_intelligence' => $company_intelligence,
         'founder_action_plan' => $founder_action_plan,
+        'recent_campaign_briefs' => $recent_campaign_briefs,
+        'archived_campaign_briefs' => $archived_campaign_briefs,
         'top_agents' => $top_agents,
         'recent_social_posts' => $recent_social_posts,
         'recent_generated_content' => $recent_generated_content

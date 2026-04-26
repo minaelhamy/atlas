@@ -2,29 +2,31 @@
 overall_header(__("Membership Plan"));
 ?>
 <?php print_adsense_code('header_bottom'); ?>
-    <!-- Titlebar
-    ================================================== -->
-    <div id="titlebar" class="gradient">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2><?php _e("Membership Plan") ?></h2>
-                    <!-- Breadcrumbs -->
-                    <nav id="breadcrumbs">
+    <div class="dashboard-container">
+        <?php include_once TEMPLATE_PATH.'/dashboard_sidebar.php'; ?>
+        <div class="dashboard-content-container" data-simplebar>
+            <div class="dashboard-content-inner">
+                <div class="dashboard-headline">
+                    <h3><?php _e("Membership Plan") ?></h3>
+                    <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
                             <li><?php _e("Membership Plan") ?></li>
                         </ul>
                     </nav>
                 </div>
-            </div>
-        </div>
-    </div>
-    <!-- Page Content
-    ================================================== -->
-    <div class="container">
-        <div class="row">
-            <div class="col-xl-12">
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Plans and usage") ?></span>
+                    <h2><?php _e("Choose the Atlas plan that fits your workflow") ?></h2>
+                    <p><?php _e("Compare ongoing memberships and prepaid options in one workspace so billing feels like part of Atlas, not a separate product.") ?></p>
+                </div>
+
+                <div class="dashboard-box margin-top-0 margin-bottom-30">
+                    <div class="headline">
+                        <h3><i class="icon-feather-award"></i> <?php _e("Plans") ?></h3>
+                    </div>
+                    <div class="content with-padding">
                 <div class="tabs pricing-tabs">
                     <?php if (!empty($prepaid_plans)) { ?>
                         <div class="tabs-header">
@@ -304,10 +306,32 @@ overall_header(__("Membership Plan"));
                         <?php } ?>
                     </div>
                 </div>
+                    </div>
+                </div>
+                <div class="dashboard-footer-spacer"></div>
+                <div class="small-footer margin-top-15">
+                    <div class="footer-copyright"><?php _esc($config['copyright_text']); ?></div>
+                    <ul class="footer-social-links">
+                        <?php
+                        if($config['facebook_link'] != "")
+                            echo '<li><a href="'._esc($config['facebook_link'],false).'" target="_blank" rel="nofollow"><i class="fa fa-facebook"></i></a></li>';
+                        if($config['twitter_link'] != "")
+                            echo '<li><a href="'._esc($config['twitter_link'],false).'" target="_blank" rel="nofollow"><i class="fa fa-twitter"></i></a></li>';
+                        if($config['instagram_link'] != "")
+                            echo '<li><a href="'._esc($config['instagram_link'],false).'" target="_blank" rel="nofollow"><i class="fa fa-instagram"></i></a></li>';
+                        if($config['linkedin_link'] != "")
+                            echo '<li><a href="'._esc($config['linkedin_link'],false).'" target="_blank" rel="nofollow"><i class="fa fa-linkedin"></i></a></li>';
+                        if($config['pinterest_link'] != "")
+                            echo '<li><a href="'._esc($config['pinterest_link'],false).'" target="_blank" rel="nofollow"><i class="fa fa-pinterest"></i></a></li>';
+                        if($config['youtube_link'] != "")
+                            echo '<li><a href="'._esc($config['youtube_link'],false).'" target="_blank" rel="nofollow"><i class="fa fa-youtube"></i></a></li>';
+                        ?>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="margin-top-80"></div>
 <?php
 overall_footer();
 ?>

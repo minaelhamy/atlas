@@ -11,6 +11,9 @@ if (!is_array($payload)) {
 $result = hatchers_find_or_create_user($payload);
 $user = $result['user'];
 $intelligence = hatchers_update_founder_intelligence($user->id(), $payload);
+hatchers_push_os_snapshot($user->id(), trim((string) ($payload['current_page'] ?? 'company-intelligence')), [
+    'activity' => trim((string) ($payload['sync_summary'] ?? 'Atlas intelligence synced.')),
+]);
 
 hatchers_json_response(200, [
     'success' => true,

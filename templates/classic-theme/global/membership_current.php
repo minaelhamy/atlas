@@ -23,6 +23,12 @@ overall_header(__("Membership"));
                 </nav>
             </div>
 
+            <div class="atlas-workflow-hero margin-bottom-24">
+                <span class="atlas-workflow-eyebrow"><?php _e("Membership") ?></span>
+                <h2><?php _e("Track the plan powering your Atlas workspace") ?></h2>
+                <p><?php _e("Review your current membership, billing mode, renewal timing, and the next move available for your studio.") ?></p>
+            </div>
+
             <!-- Row -->
             <div class="row">
                 <!-- Dashboard Box -->
@@ -30,7 +36,7 @@ overall_header(__("Membership"));
                     <div class="dashboard-box">
                         <!-- Headline -->
                         <div class="headline">
-                            <h3><i class="icon-feather-gift"></i> <?php _e("Current Plan") ?></h3>
+                            <h3><i class="icon-feather-gift"></i> <?php _e("Workspace membership") ?></h3>
                         </div>
                         <div class="content with-padding">
                             <div class="table-responsive">

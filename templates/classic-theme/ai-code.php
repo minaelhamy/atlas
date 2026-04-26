@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__('AI Code'));
+overall_header(__('Code Studio'));
 
 
 ?>
@@ -17,7 +17,7 @@ overall_header(__('AI Code'));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e('AI Code') ?>
+                        <?php _e('Code Studio') ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -33,9 +33,15 @@ overall_header(__('AI Code'));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e('AI Code') ?></li>
+                            <li><?php _e('Code Studio') ?></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Developer utility") ?></span>
+                    <h2><?php _e("Describe what you need and let Atlas draft the code") ?></h2>
+                    <p><?php _e("Code Studio is for fast code generation inside Atlas when you need a snippet, function, or starting point without leaving the workspace.") ?></p>
                 </div>
 
                 <div class="row">
@@ -46,7 +52,7 @@ overall_header(__('AI Code'));
                                 <!-- Headline -->
                                 <div class="headline">
                                     <h3>
-                                        <i class="icon-feather-code"></i><?php _e('AI Code') ?>
+                                        <i class="icon-feather-code"></i><?php _e('Code Request') ?>
                                     </h3>
                                 </div>
                                 <div class="content with-padding">
@@ -73,7 +79,7 @@ overall_header(__('AI Code'));
                         <div class="dashboard-box margin-top-0 margin-bottom-30">
                             <!-- Headline -->
                             <div class="headline">
-                                <h3><i class="fa fa-align-left"></i><?php _e("Generated Result") ?></h3>
+                                <h3><i class="fa fa-align-left"></i><?php _e("Generated Code") ?></h3>
                             </div>
                             <div class="content with-padding">
                                 <div class="ai-generated-text markdown-body" id="content-focus">

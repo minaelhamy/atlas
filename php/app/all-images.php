@@ -13,6 +13,15 @@ if (isset($current_user['id'])) {
     else
         $page = $_GET['page'];
 
+    $campaignId = isset($_GET['campaign_id']) ? trim((string) $_GET['campaign_id']) : '';
+    $selectedCampaign = null;
+    if ($campaignId !== '') {
+        $selectedCampaign = hatchers_get_campaign_record_by_id($_SESSION['user']['id'], $campaignId);
+        if (empty($selectedCampaign)) {
+            $campaignId = '';
+        }
+    }
+
     $limit = 25;
 
     social_media_bootstrap();
@@ -21,15 +30,26 @@ if (isset($current_user['id'])) {
         ->where('user_id', $_SESSION['user']['id'])
         ->order_by_desc('id');
 
-    $total = $orm->count();
+    $rows = $orm->find_many();
+    $filteredRows = [];
+    foreach ($rows as $row) {
+        $meta = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
+        $meta = is_array($meta) ? $meta : [];
+        $campaignMeta = !empty($meta['campaign']) && is_array($meta['campaign']) ? $meta['campaign'] : [];
 
-    $rows = $orm
-        ->limit($limit)
-        ->offset(($page - 1) * $limit)
-        ->find_many();
+        if ($campaignId !== '' && trim((string) ($campaignMeta['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+
+        $filteredRows[] = $row;
+    }
+
+    $total = count($filteredRows);
+
+    $pagedRows = array_slice($filteredRows, ($page - 1) * $limit, $limit);
 
     $images = array();
-    foreach ($rows as $row) {
+    foreach ($pagedRows as $row) {
         $meta = !empty($row['metadata']) ? json_decode($row['metadata'], true) : [];
         $images[$row['id']]['id'] = $row['id'];
         $images[$row['id']]['title'] = $row['title'];
@@ -41,11 +61,16 @@ if (isset($current_user['id'])) {
         $images[$row['id']]['hashtags'] = !empty($meta['hashtags']) && is_array($meta['hashtags']) ? implode(' ', $meta['hashtags']) : '';
         $images[$row['id']]['design'] = !empty($meta['design']) && is_array($meta['design']) ? $meta['design'] : [];
         $images[$row['id']]['debug'] = !empty($meta['debug']) && is_array($meta['debug']) ? $meta['debug'] : [];
+        $images[$row['id']]['campaign'] = !empty($meta['campaign']) && is_array($meta['campaign']) ? $meta['campaign'] : [];
         $images[$row['id']]['date'] = date('d M, Y', strtotime($row['created_at']));
         $images[$row['id']]['time'] = date('H:i:s', strtotime($row['created_at']));
     }
 
-    $pagging = pagenav($total, $page, $limit, $link['ALL_IMAGES']);
+    $pageLink = $link['ALL_IMAGES'];
+    if ($campaignId !== '') {
+        $pageLink .= '?campaign_id=' . rawurlencode($campaignId);
+    }
+    $pagging = pagenav($total, $page, $limit, $pageLink, $campaignId !== '' ? 1 : 0);
 
     $start = date('Y-m-01');
     $end = date_create(date('Y-m-t'))->modify('+1 day')->format('Y-m-d');
@@ -60,7 +85,8 @@ if (isset($current_user['id'])) {
         'pagging' => $pagging,
         'show_paging' => (int)($total > $limit),
         'total_images_used' => $total_images_used,
-        'images_limit' => $images_limit
+        'images_limit' => $images_limit,
+        'selected_campaign' => $selectedCampaign
     ));
 } else {
     headerRedirect($link['LOGIN']);

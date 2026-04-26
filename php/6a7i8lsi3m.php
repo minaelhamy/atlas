@@ -1449,6 +1449,30 @@ function generate_image()
                 die(json_encode($result));
             }
 
+            if (!empty($_POST['campaign_id'])) {
+                hatchers_update_campaign_form_state($_SESSION['user']['id'], $_POST['campaign_id'], [
+                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
+                    'funnel_stage' => isset($_POST['funnel_stage']) ? $_POST['funnel_stage'] : '',
+                    'focus_area' => isset($_POST['focus_area']) ? $_POST['focus_area'] : '',
+                    'content_angle' => isset($_POST['content_angle']) ? $_POST['content_angle'] : '',
+                    'use_case' => isset($_POST['use_case']) ? $_POST['use_case'] : '',
+                    'grid_style' => isset($_POST['grid_style']) ? $_POST['grid_style'] : '',
+                    'description' => isset($_POST['description']) ? $_POST['description'] : '',
+                ]);
+            }
+
+            $campaignContext = [];
+            $batchKey = uniqid('campaign_');
+            if (!empty($_POST['campaign_id'])) {
+                $campaignRecord = hatchers_get_campaign_record_by_id($_SESSION['user']['id'], $_POST['campaign_id']);
+                if (!empty($campaignRecord)) {
+                    $campaignContext = [
+                        'id' => $campaignRecord['id'],
+                        'title' => !empty($campaignRecord['title']) ? $campaignRecord['title'] : '',
+                    ];
+                }
+            }
+
             $prompt = social_media_build_campaign_brief($_POST);
 
             // check bad words
@@ -1459,7 +1483,18 @@ function generate_image()
             }
 
             $ideas = social_media_generate_batch($_SESSION['user']['id'], $prompt);
-            $posts = social_media_store_generated_posts($_SESSION['user']['id'], $ideas, $prompt);
+            $posts = social_media_store_generated_posts($_SESSION['user']['id'], $ideas, $prompt, [
+                'batch_key' => $batchKey,
+                'campaign' => $campaignContext,
+            ]);
+
+            if (!empty($campaignContext['id'])) {
+                hatchers_record_campaign_generation($_SESSION['user']['id'], $campaignContext['id'], [
+                    'batch_key' => $batchKey,
+                    'post_count' => count($posts),
+                    'generator' => 'campaign_posts',
+                ]);
+            }
 
             $image_used = ORM::for_table($config['db']['pre'] . 'image_used')->create();
             $image_used->user_id = $_SESSION['user']['id'];
@@ -1526,6 +1561,29 @@ function generate_instagram_grid()
                 die(json_encode($result));
             }
 
+            if (!empty($_POST['campaign_id'])) {
+                hatchers_update_campaign_form_state($_SESSION['user']['id'], $_POST['campaign_id'], [
+                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
+                    'funnel_stage' => isset($_POST['funnel_stage']) ? $_POST['funnel_stage'] : '',
+                    'focus_area' => isset($_POST['focus_area']) ? $_POST['focus_area'] : '',
+                    'content_angle' => isset($_POST['content_angle']) ? $_POST['content_angle'] : '',
+                    'use_case' => isset($_POST['use_case']) ? $_POST['use_case'] : '',
+                    'description' => isset($_POST['description']) ? $_POST['description'] : '',
+                ]);
+            }
+
+            $campaignContext = [];
+            $batchKey = uniqid('grid_');
+            if (!empty($_POST['campaign_id'])) {
+                $campaignRecord = hatchers_get_campaign_record_by_id($_SESSION['user']['id'], $_POST['campaign_id']);
+                if (!empty($campaignRecord)) {
+                    $campaignContext = [
+                        'id' => $campaignRecord['id'],
+                        'title' => !empty($campaignRecord['title']) ? $campaignRecord['title'] : '',
+                    ];
+                }
+            }
+
             $prompt = social_media_build_campaign_brief($_POST);
 
             if ($word = check_bad_words($prompt)) {
@@ -1535,10 +1593,18 @@ function generate_instagram_grid()
             }
 
             $gridBatch = social_media_generate_instagram_grid($_SESSION['user']['id'], $prompt, $_POST);
-            $batchKey = uniqid('grid_');
             $posts = social_media_store_generated_posts($_SESSION['user']['id'], $gridBatch['items'], $prompt, [
-                'batch_key' => $batchKey
+                'batch_key' => $batchKey,
+                'campaign' => $campaignContext,
             ]);
+
+            if (!empty($campaignContext['id'])) {
+                hatchers_record_campaign_generation($_SESSION['user']['id'], $campaignContext['id'], [
+                    'batch_key' => $batchKey,
+                    'post_count' => count($posts),
+                    'generator' => 'instagram_grid',
+                ]);
+            }
 
             $image_used = ORM::for_table($config['db']['pre'] . 'image_used')->create();
             $image_used->user_id = $_SESSION['user']['id'];

@@ -13,16 +13,27 @@ overall_header(__("Transactions"));
                 <?php print_adsense_code('header_bottom'); ?>
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
-                    <h3><?php _e("Transactions") ?></h3>
+                    <h3><?php _e("Billing History") ?></h3>
                     <!-- Breadcrumbs -->
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Transactions") ?></li>
+                            <li><?php _e("Billing History") ?></li>
                         </ul>
                     </nav>
                 </div>
 
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Payments and invoices") ?></span>
+                    <h2><?php _e("Review your Atlas billing activity") ?></h2>
+                    <p><?php _e("Track membership purchases, payment status, and invoice access from one billing history view.") ?></p>
+                </div>
+
+                <div class="dashboard-box margin-top-0 margin-bottom-30">
+                    <div class="headline">
+                        <h3><i class="icon-feather-credit-card"></i> <?php _e("Billing Transactions") ?></h3>
+                    </div>
+                    <div class="content with-padding">
                 <table id="datatable">
                     <thead>
                     <tr>
@@ -64,6 +75,8 @@ overall_header(__("Transactions"));
                         </tbody>
                     <?php } ?>
                 </table>
+                    </div>
+                </div>
 
                 <div class="margin-bottom-30"></div>
 

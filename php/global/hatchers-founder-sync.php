@@ -116,6 +116,54 @@ if (!empty($payload['phone'])) {
 }
 update_user_option($user->id(), 'hatchers_source', 'lms');
 
+$osUrl = rtrim((string) get_env_setting('HATCHERS_OS_URL', 'https://app.hatchers.ai'), '/');
+if ($osUrl !== '') {
+    $snapshotPayload = [
+        'email' => $user->email,
+        'username' => $user->username,
+        'updated_at' => date('c'),
+        'readiness_score' => 35,
+        'current_page' => 'company-intelligence',
+        'key_counts' => [
+            'generated_posts_count' => 0,
+            'generated_campaigns_count' => 0,
+            'generated_images_count' => 0,
+        ],
+        'status_flags' => [
+            'company_profile_complete' => !empty($payload['company_brief']),
+            'company_intelligence_complete' => false,
+        ],
+        'recent_activity' => [
+            'Founder access provisioned in Atlas.',
+        ],
+        'summary' => [
+            'company_name' => $name !== '' ? $name : $username,
+            'business_model' => '',
+            'brand_voice' => '',
+            'primary_growth_goal' => '',
+            'latest_content_summary' => '',
+        ],
+    ];
+
+    $snapshotBody = json_encode($snapshotPayload);
+    if ($snapshotBody !== false) {
+        $snapshotSignature = hash_hmac('sha256', $snapshotBody, $sharedSecret);
+        $ch = curl_init($osUrl . '/integrations/snapshots/atlas');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($snapshotBody),
+            'X-Hatchers-Signature: ' . $snapshotSignature,
+        ]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $snapshotBody);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+}
+
 hatchers_sync_respond(200, [
     'success' => true,
     'created' => $isNew,

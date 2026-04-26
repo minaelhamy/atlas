@@ -554,11 +554,223 @@ function hatchers_get_founder_intelligence_text($userId, array $options = [])
 function hatchers_get_platform_urls()
 {
     return [
+        'os' => rtrim((string) get_env_setting('HATCHERS_OS_URL', 'https://app.hatchers.ai'), '/'),
         'atlas' => rtrim((string) get_env_setting('ATLAS_URL', get_option('site_url')), '/'),
         'lms' => rtrim((string) get_env_setting('LMS_URL', 'https://lms.hatchers.ai'), '/'),
         'bazaar' => rtrim((string) get_env_setting('BAZAAR_URL', 'https://bazaar.hatchers.ai'), '/'),
         'servio' => rtrim((string) get_env_setting('SERVIO_URL', 'https://servio.hatchers.ai'), '/'),
     ];
+}
+
+function hatchers_resolve_website_autopilot_assets($userId)
+{
+    $intelligence = hatchers_get_founder_intelligence($userId);
+    $sources = isset($intelligence['sources']) && is_array($intelligence['sources']) ? $intelligence['sources'] : [];
+    $osSnapshot = !empty($sources['os']['snapshot']) && is_array($sources['os']['snapshot']) ? $sources['os']['snapshot'] : [];
+    $websiteAutopilot = !empty($osSnapshot['website_autopilot']) && is_array($osSnapshot['website_autopilot']) ? $osSnapshot['website_autopilot'] : [];
+    $assetSlots = !empty($websiteAutopilot['asset_slots']) && is_array($websiteAutopilot['asset_slots']) ? $websiteAutopilot['asset_slots'] : [];
+
+    if (empty($assetSlots)) {
+        return [];
+    }
+
+    $resolved = [];
+    foreach ($assetSlots as $slot) {
+        if (!is_array($slot)) {
+            continue;
+        }
+
+        $query = trim((string) ($slot['query'] ?? ''));
+        if ($query === '') {
+            continue;
+        }
+
+        $assets = [];
+        if (function_exists('social_media_search_pexels')) {
+            $assets = social_media_search_pexels($query, 4);
+        }
+
+        $selected = !empty($assets[0]) && is_array($assets[0]) ? $assets[0] : [];
+        $resolved[] = [
+            'slot_key' => trim((string) ($slot['slot_key'] ?? '')),
+            'slot_label' => trim((string) ($slot['slot_label'] ?? '')),
+            'query' => $query,
+            'status' => !empty($selected) ? 'selected' : 'requested',
+            'provider' => !empty($selected['provider']) ? $selected['provider'] : 'pexels',
+            'asset_url' => !empty($selected['url']) ? $selected['url'] : '',
+            'preview_url' => !empty($selected['thumb']) ? $selected['thumb'] : (!empty($selected['url']) ? $selected['url'] : ''),
+            'alt_text' => !empty($slot['alt_text']) ? $slot['alt_text'] : (!empty($selected['title']) ? $selected['title'] : ''),
+            'credit_name' => !empty($selected['author_name']) ? $selected['author_name'] : '',
+            'credit_url' => !empty($selected['author_url']) ? $selected['author_url'] : '',
+            'asset_title' => !empty($selected['title']) ? $selected['title'] : '',
+            'visual_brief' => trim((string) ($slot['visual_brief'] ?? '')),
+        ];
+    }
+
+    return $resolved;
+}
+
+function hatchers_push_os_snapshot($userId, $currentPage = 'atlas', array $extra = [])
+{
+    $sharedSecret = hatchers_shared_secret();
+    $urls = hatchers_get_platform_urls();
+    if ($sharedSecret === '' || empty($urls['os'])) {
+        return false;
+    }
+
+    $userId = (int) $userId;
+    if ($userId <= 0) {
+        return false;
+    }
+
+    $user = get_user_by_id($userId);
+    if (empty($user)) {
+        return false;
+    }
+
+    $intelligence = hatchers_get_founder_intelligence($userId);
+    $history = hatchers_get_assistant_history($userId);
+    $actions = hatchers_get_founder_action_plan($userId, 6);
+    $company = isset($intelligence['company']) && is_array($intelligence['company']) ? $intelligence['company'] : [];
+    $sources = isset($intelligence['sources']) && is_array($intelligence['sources']) ? $intelligence['sources'] : [];
+    $operations = isset($intelligence['operations']) && is_array($intelligence['operations']) ? $intelligence['operations'] : [];
+
+    $companyProfileComplete = !empty($company['company_name']) && !empty($company['company_description']);
+    $companyIntelligenceComplete = $companyProfileComplete && (!empty($company['target_audience']) || !empty($company['ideal_customer_profile']) || !empty($company['content_goals']));
+    $brandVoice = trim((string) ($company['brand_voice'] ?? ''));
+    $businessModel = trim((string) ($company['business_model'] ?? ''));
+    $companyName = trim((string) ($company['company_name'] ?? $user['name']));
+    $primaryGrowthGoal = '';
+    if (!empty($company['content_goals'])) {
+        $primaryGrowthGoal = is_array($company['content_goals']) ? implode(', ', array_slice($company['content_goals'], 0, 3)) : trim((string) $company['content_goals']);
+    }
+
+    $generatedPostsCount = 0;
+    $generatedCampaignsCount = 0;
+    $generatedImagesCount = (int) get_user_option($userId, 'total_images_used', 0);
+    $recentCampaigns = hatchers_get_recent_campaign_records($userId, 3);
+    $archivedCampaigns = hatchers_get_archived_campaign_records($userId, 3);
+
+    foreach ($history as $entry) {
+        if (trim((string) ($entry['app'] ?? '')) === 'atlas') {
+            $generatedPostsCount++;
+        }
+    }
+
+    if (!empty($operations['campaigns']) && is_array($operations['campaigns'])) {
+        if (isset($operations['campaigns']['count']) && is_numeric($operations['campaigns']['count'])) {
+            $generatedCampaignsCount = max($generatedCampaignsCount, (int) $operations['campaigns']['count']);
+        }
+
+        foreach ($operations['campaigns'] as $value) {
+            if (is_numeric($value)) {
+                $generatedCampaignsCount = max($generatedCampaignsCount, (int) $value);
+            }
+        }
+    }
+
+    if (!empty($sources['atlas']['snapshot']) && is_array($sources['atlas']['snapshot'])) {
+        $atlasSource = $sources['atlas']['snapshot'];
+        $generatedPostsCount = max($generatedPostsCount, (int) ($atlasSource['generated_posts_count'] ?? 0));
+        $generatedCampaignsCount = max($generatedCampaignsCount, (int) ($atlasSource['generated_campaigns_count'] ?? 0));
+        $generatedImagesCount = max($generatedImagesCount, (int) ($atlasSource['generated_images_count'] ?? 0));
+    }
+
+    $websiteAutopilotAssets = hatchers_resolve_website_autopilot_assets($userId);
+    if (!empty($websiteAutopilotAssets)) {
+        $generatedImagesCount = max($generatedImagesCount, count($websiteAutopilotAssets));
+    }
+
+    $readinessScore = min(
+        100,
+        20
+        + ($companyProfileComplete ? 25 : 0)
+        + ($companyIntelligenceComplete ? 20 : 0)
+        + min(15, $generatedPostsCount * 3)
+        + min(10, $generatedCampaignsCount * 5)
+        + min(10, count($actions) * 2)
+    );
+
+    $payload = [
+        'email' => trim((string) $user['email']),
+        'username' => trim((string) $user['username']),
+        'updated_at' => date('c'),
+        'readiness_score' => $readinessScore,
+        'current_page' => $currentPage,
+        'key_counts' => [
+            'generated_posts_count' => $generatedPostsCount,
+            'generated_campaigns_count' => $generatedCampaignsCount,
+            'generated_images_count' => $generatedImagesCount,
+            'recommended_actions_count' => count($actions),
+        ],
+        'status_flags' => [
+            'company_profile_complete' => $companyProfileComplete,
+            'company_intelligence_complete' => $companyIntelligenceComplete,
+        ],
+        'recent_activity' => [
+            trim((string) ($extra['activity'] ?? 'Atlas intelligence synced.')),
+            'Assistant history entries: ' . count($history) . '.',
+            !empty($websiteAutopilotAssets) ? 'Website autopilot asset slots prepared in Atlas.' : '',
+        ],
+        'summary' => [
+            'company_name' => $companyName,
+            'business_model' => $businessModel,
+            'brand_voice' => $brandVoice,
+            'primary_growth_goal' => $primaryGrowthGoal,
+            'latest_content_summary' => trim((string) ($extra['latest_content_summary'] ?? '')),
+            'website_autopilot_assets_count' => count($websiteAutopilotAssets),
+            'recent_campaigns' => array_map(function ($campaign) {
+                return [
+                    'id' => isset($campaign['id']) ? $campaign['id'] : '',
+                    'title' => isset($campaign['title']) ? $campaign['title'] : '',
+                    'description' => isset($campaign['description']) ? strlimiter(strip_tags((string) $campaign['description']), 120) : '',
+                    'status' => isset($campaign['status']) ? $campaign['status'] : 'drafted',
+                    'updated_at' => isset($campaign['updated_at']) ? $campaign['updated_at'] : '',
+                    'generated_posts_count' => isset($campaign['generated_posts_count']) ? (int) $campaign['generated_posts_count'] : 0,
+                    'last_generated_at' => isset($campaign['last_generated_at']) ? $campaign['last_generated_at'] : '',
+                    'url' => hatchers_campaign_record_url(isset($campaign['id']) ? $campaign['id'] : ''),
+                ];
+            }, $recentCampaigns),
+            'archived_campaigns' => array_map(function ($campaign) {
+                return [
+                    'id' => isset($campaign['id']) ? $campaign['id'] : '',
+                    'title' => isset($campaign['title']) ? $campaign['title'] : '',
+                    'description' => isset($campaign['description']) ? strlimiter(strip_tags((string) $campaign['description']), 120) : '',
+                    'status' => isset($campaign['status']) ? $campaign['status'] : 'archived',
+                    'updated_at' => isset($campaign['updated_at']) ? $campaign['updated_at'] : '',
+                    'generated_posts_count' => isset($campaign['generated_posts_count']) ? (int) $campaign['generated_posts_count'] : 0,
+                    'last_generated_at' => isset($campaign['last_generated_at']) ? $campaign['last_generated_at'] : '',
+                    'url' => hatchers_campaign_record_url(isset($campaign['id']) ? $campaign['id'] : ''),
+                ];
+            }, $archivedCampaigns),
+        ],
+        'website_autopilot' => [
+            'asset_slots' => $websiteAutopilotAssets,
+        ],
+    ];
+
+    $body = json_encode($payload);
+    if ($body === false) {
+        return false;
+    }
+
+    $ch = curl_init($urls['os'] . '/integrations/snapshots/atlas');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($body),
+            'X-Hatchers-Signature: ' . hash_hmac('sha256', $body, $sharedSecret),
+        ],
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+
+    return true;
 }
 
 function hatchers_get_founder_action_plan($userId, $limit = 6)
@@ -732,6 +944,631 @@ function hatchers_get_action_drafts($userId)
     return hatchers_decode_json_option($userId, 'hatchers_action_drafts', []);
 }
 
+function hatchers_get_campaign_records($userId)
+{
+    return hatchers_decode_json_option($userId, 'hatchers_campaign_records', []);
+}
+
+function hatchers_save_campaign_records($userId, array $campaigns)
+{
+    update_user_option($userId, 'hatchers_campaign_records', json_encode(array_slice(array_values($campaigns), -50)));
+}
+
+function hatchers_filter_campaign_records(array $campaigns, $includeArchived = false, $onlyArchived = false)
+{
+    return array_values(array_filter($campaigns, function ($campaign) use ($includeArchived, $onlyArchived) {
+        $status = trim((string) ($campaign['status'] ?? 'drafted'));
+        $isArchived = $status === 'archived';
+
+        if ($onlyArchived) {
+            return $isArchived;
+        }
+
+        if ($includeArchived) {
+            return true;
+        }
+
+        return !$isArchived;
+    }));
+}
+
+function hatchers_get_recent_campaign_records($userId, $limit = 3, $includeArchived = false)
+{
+    $campaigns = hatchers_filter_campaign_records(
+        hatchers_get_campaign_records($userId),
+        $includeArchived,
+        false
+    );
+    usort($campaigns, function ($left, $right) {
+        return strtotime(isset($right['updated_at']) ? $right['updated_at'] : '') <=> strtotime(isset($left['updated_at']) ? $left['updated_at'] : '');
+    });
+
+    return array_slice($campaigns, 0, max(1, (int) $limit));
+}
+
+function hatchers_get_archived_campaign_records($userId, $limit = 6)
+{
+    $campaigns = hatchers_filter_campaign_records(
+        hatchers_get_campaign_records($userId),
+        true,
+        true
+    );
+    usort($campaigns, function ($left, $right) {
+        return strtotime(isset($right['updated_at']) ? $right['updated_at'] : '') <=> strtotime(isset($left['updated_at']) ? $left['updated_at'] : '');
+    });
+
+    return array_slice($campaigns, 0, max(1, (int) $limit));
+}
+
+function hatchers_find_campaign_record(array $campaigns, $targetName = '')
+{
+    if (empty($campaigns)) {
+        return [null, null];
+    }
+
+    $targetName = mb_strtolower(trim((string) $targetName));
+    if ($targetName === '') {
+        $lastIndex = count($campaigns) - 1;
+        return [isset($campaigns[$lastIndex]) ? $campaigns[$lastIndex] : null, $lastIndex];
+    }
+
+    foreach ($campaigns as $index => $campaign) {
+        $title = mb_strtolower(trim((string) ($campaign['title'] ?? '')));
+        if ($title === $targetName) {
+            return [$campaign, $index];
+        }
+    }
+
+    return [null, null];
+}
+
+function hatchers_get_campaign_record_by_id($userId, $campaignId = '')
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return null;
+    }
+
+    $campaigns = hatchers_get_campaign_records($userId);
+    foreach ($campaigns as $campaign) {
+        if (trim((string) ($campaign['id'] ?? '')) === $campaignId) {
+            return $campaign;
+        }
+    }
+
+    return null;
+}
+
+function hatchers_campaign_edit_url()
+{
+    $urls = hatchers_get_platform_urls();
+    return $urls['atlas'] . '/ai-images/campaign';
+}
+
+function hatchers_campaign_detail_url($campaignId = '')
+{
+    $urls = hatchers_get_platform_urls();
+    $base = $urls['atlas'] . '/ai-images/campaign-detail';
+    $campaignId = trim((string) $campaignId);
+
+    if ($campaignId === '') {
+        return $base;
+    }
+
+    return $base . '?campaign_id=' . rawurlencode($campaignId);
+}
+
+function hatchers_campaign_record_url($campaignId = '')
+{
+    return hatchers_campaign_detail_url($campaignId);
+}
+
+function hatchers_create_campaign_record($userId, array $payload)
+{
+    $campaigns = hatchers_get_campaign_records($userId);
+    $now = date('Y-m-d H:i:s');
+    $title = trim((string) ($payload['title'] ?? ''));
+    if ($title === '') {
+        $title = 'Campaign brief';
+    }
+
+    $campaign = [
+        'id' => hatchers_make_action_id(),
+        'title' => $title,
+        'description' => trim((string) ($payload['description'] ?? 'Created from Hatchers OS by Atlas.')),
+        'actor_role' => trim((string) ($payload['actor_role'] ?? 'founder')),
+        'status' => 'drafted',
+        'created_at' => $now,
+        'updated_at' => $now,
+    ];
+
+    $campaigns[] = $campaign;
+    hatchers_save_campaign_records($userId, $campaigns);
+
+    hatchers_update_founder_intelligence($userId, [
+        'app' => 'atlas',
+        'role' => $campaign['actor_role'],
+        'operations' => [
+            'campaigns' => [
+                'count' => count($campaigns),
+                'latest' => [
+                    'id' => $campaign['id'],
+                    'title' => $campaign['title'],
+                    'updated_at' => $campaign['updated_at'],
+                ],
+            ],
+        ],
+        'sync_summary' => 'Atlas created a native campaign brief "' . $campaign['title'] . '"',
+    ]);
+
+    hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+        'activity' => 'Atlas campaign brief created.',
+        'latest_content_summary' => $campaign['title'],
+    ]);
+
+    return [
+        'success' => true,
+        'record_id' => $campaign['id'],
+        'title' => $campaign['title'],
+        'edit_url' => hatchers_campaign_record_url($campaign['id']),
+        'reply' => 'Done. I created that campaign brief natively in Atlas and synced it back into Hatchers OS.',
+    ];
+}
+
+function hatchers_update_campaign_record($userId, array $payload)
+{
+    $campaigns = hatchers_get_campaign_records($userId);
+    list($campaign, $index) = hatchers_find_campaign_record($campaigns, isset($payload['target_name']) ? $payload['target_name'] : '');
+    if (empty($campaign) || $index === null) {
+        return [
+            'success' => false,
+            'error' => 'The requested campaign was not found in Atlas.',
+        ];
+    }
+
+    $field = trim((string) ($payload['field'] ?? ''));
+    $value = trim((string) ($payload['value'] ?? ''));
+    if ($field === '' || $value === '') {
+        return [
+            'success' => false,
+            'error' => 'Update field and value are required.',
+        ];
+    }
+
+    if ($field === 'title') {
+        $campaign['title'] = $value;
+    } elseif (in_array($field, ['description', 'content'], true)) {
+        $campaign['description'] = $value;
+    } else {
+        return [
+            'success' => false,
+            'error' => 'Unsupported campaign field update.',
+        ];
+    }
+
+    $campaign['updated_at'] = date('Y-m-d H:i:s');
+    $campaigns[$index] = $campaign;
+    hatchers_save_campaign_records($userId, $campaigns);
+
+    hatchers_update_founder_intelligence($userId, [
+        'app' => 'atlas',
+        'role' => trim((string) ($payload['actor_role'] ?? 'founder')),
+        'operations' => [
+            'campaigns' => [
+                'count' => count($campaigns),
+                'latest' => [
+                    'id' => $campaign['id'],
+                    'title' => $campaign['title'],
+                    'updated_at' => $campaign['updated_at'],
+                ],
+            ],
+        ],
+        'sync_summary' => 'Atlas updated a native campaign brief "' . $campaign['title'] . '"',
+    ]);
+
+    hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+        'activity' => 'Atlas campaign brief updated.',
+        'latest_content_summary' => $campaign['title'],
+    ]);
+
+    return [
+        'success' => true,
+        'record_id' => $campaign['id'],
+        'title' => $campaign['title'],
+        'edit_url' => hatchers_campaign_edit_url(),
+        'reply' => 'Done. I updated that campaign brief natively in Atlas and synced it back into Hatchers OS.',
+    ];
+}
+
+function hatchers_update_campaign_detail($userId, $campaignId, array $payload)
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return [
+            'success' => false,
+            'error' => 'Campaign id is required.',
+        ];
+    }
+
+    $campaigns = hatchers_get_campaign_records($userId);
+    foreach ($campaigns as $index => $campaign) {
+        if (trim((string) ($campaign['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+
+        $title = trim((string) ($payload['title'] ?? ($campaign['title'] ?? '')));
+        if ($title === '') {
+            return [
+                'success' => false,
+                'error' => 'Campaign title is required.',
+            ];
+        }
+
+        $campaign['title'] = $title;
+        $campaign['description'] = trim((string) ($payload['description'] ?? ($campaign['description'] ?? '')));
+        $campaign['updated_at'] = date('Y-m-d H:i:s');
+
+        $cleanState = [
+            'campaign_type' => trim((string) ($payload['campaign_type'] ?? ($campaign['form_state']['campaign_type'] ?? ''))),
+            'funnel_stage' => trim((string) ($payload['funnel_stage'] ?? ($campaign['form_state']['funnel_stage'] ?? ''))),
+            'focus_area' => trim((string) ($payload['focus_area'] ?? ($campaign['form_state']['focus_area'] ?? ''))),
+            'content_angle' => trim((string) ($payload['content_angle'] ?? ($campaign['form_state']['content_angle'] ?? ''))),
+            'use_case' => trim((string) ($payload['use_case'] ?? ($campaign['form_state']['use_case'] ?? ''))),
+            'grid_style' => trim((string) ($payload['grid_style'] ?? ($campaign['form_state']['grid_style'] ?? ''))),
+            'description' => trim((string) ($payload['strategy_notes'] ?? ($campaign['form_state']['description'] ?? ''))),
+        ];
+
+        $campaign['form_state'] = hatchers_compact_array($cleanState);
+        $campaigns[$index] = $campaign;
+        hatchers_save_campaign_records($userId, $campaigns);
+
+        hatchers_update_founder_intelligence($userId, [
+            'app' => 'atlas',
+            'role' => trim((string) ($payload['actor_role'] ?? 'founder')),
+            'operations' => [
+                'campaigns' => [
+                    'count' => count($campaigns),
+                    'latest' => [
+                        'id' => $campaign['id'],
+                        'title' => $campaign['title'],
+                        'updated_at' => $campaign['updated_at'],
+                    ],
+                ],
+            ],
+            'sync_summary' => 'Atlas updated campaign detail for "' . $campaign['title'] . '"',
+        ]);
+
+        hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+            'activity' => 'Atlas campaign detail updated.',
+            'latest_content_summary' => $campaign['title'],
+        ]);
+
+        return [
+            'success' => true,
+            'record_id' => $campaign['id'],
+            'title' => $campaign['title'],
+            'edit_url' => hatchers_campaign_record_url($campaign['id']),
+            'reply' => 'Done. I updated the campaign detail and synced it back into Hatchers OS.',
+        ];
+    }
+
+    return [
+        'success' => false,
+        'error' => 'The requested campaign was not found in Atlas.',
+    ];
+}
+
+function hatchers_duplicate_campaign_record($userId, $campaignId)
+{
+    $campaign = hatchers_get_campaign_record_by_id($userId, $campaignId);
+    if (empty($campaign)) {
+        return [
+            'success' => false,
+            'error' => 'The requested campaign was not found in Atlas.',
+        ];
+    }
+
+    $title = trim((string) ($campaign['title'] ?? 'Campaign brief'));
+    $payload = [
+        'title' => $title . ' Copy',
+        'description' => trim((string) ($campaign['description'] ?? '')),
+        'actor_role' => trim((string) ($campaign['actor_role'] ?? 'founder')),
+    ];
+
+    $result = hatchers_create_campaign_record($userId, $payload);
+    if (empty($result['success']) || empty($result['record_id'])) {
+        return $result;
+    }
+
+    hatchers_update_campaign_detail($userId, $result['record_id'], [
+        'title' => $payload['title'],
+        'description' => $payload['description'],
+        'campaign_type' => $campaign['form_state']['campaign_type'] ?? '',
+        'funnel_stage' => $campaign['form_state']['funnel_stage'] ?? '',
+        'focus_area' => $campaign['form_state']['focus_area'] ?? '',
+        'content_angle' => $campaign['form_state']['content_angle'] ?? '',
+        'use_case' => $campaign['form_state']['use_case'] ?? '',
+        'grid_style' => $campaign['form_state']['grid_style'] ?? '',
+        'strategy_notes' => $campaign['form_state']['description'] ?? '',
+        'actor_role' => $payload['actor_role'],
+    ]);
+
+    return [
+        'success' => true,
+        'record_id' => $result['record_id'],
+        'title' => $payload['title'],
+        'edit_url' => hatchers_campaign_record_url($result['record_id']),
+        'reply' => 'Done. I duplicated that campaign in Atlas.',
+    ];
+}
+
+function hatchers_archive_campaign_record($userId, $campaignId)
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return [
+            'success' => false,
+            'error' => 'Campaign id is required.',
+        ];
+    }
+
+    $campaigns = hatchers_get_campaign_records($userId);
+    foreach ($campaigns as $index => $campaign) {
+        if (trim((string) ($campaign['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+
+        $campaign['status'] = 'archived';
+        $campaign['archived_at'] = date('Y-m-d H:i:s');
+        $campaign['updated_at'] = $campaign['archived_at'];
+        $campaigns[$index] = $campaign;
+        hatchers_save_campaign_records($userId, $campaigns);
+
+        hatchers_update_founder_intelligence($userId, [
+            'app' => 'atlas',
+            'role' => 'founder',
+            'operations' => [
+                'campaigns' => [
+                    'count' => count($campaigns),
+                    'latest' => [
+                        'id' => $campaign['id'],
+                        'title' => $campaign['title'],
+                        'updated_at' => $campaign['updated_at'],
+                    ],
+                ],
+            ],
+            'sync_summary' => 'Atlas archived campaign "' . $campaign['title'] . '"',
+        ]);
+
+        hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+            'activity' => 'Atlas campaign archived.',
+            'latest_content_summary' => $campaign['title'],
+        ]);
+
+        return [
+            'success' => true,
+            'record_id' => $campaign['id'],
+            'title' => $campaign['title'],
+            'edit_url' => hatchers_campaign_record_url($campaign['id']),
+            'reply' => 'Done. I archived that campaign in Atlas.',
+        ];
+    }
+
+    return [
+        'success' => false,
+        'error' => 'The requested campaign was not found in Atlas.',
+    ];
+}
+
+function hatchers_restore_campaign_record($userId, $campaignId)
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return [
+            'success' => false,
+            'error' => 'Campaign id is required.',
+        ];
+    }
+
+    $campaigns = hatchers_get_campaign_records($userId);
+    foreach ($campaigns as $index => $campaign) {
+        if (trim((string) ($campaign['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+
+        $campaign['status'] = 'drafted';
+        $campaign['restored_at'] = date('Y-m-d H:i:s');
+        $campaign['updated_at'] = $campaign['restored_at'];
+        unset($campaign['archived_at']);
+        $campaigns[$index] = $campaign;
+        hatchers_save_campaign_records($userId, $campaigns);
+
+        hatchers_update_founder_intelligence($userId, [
+            'app' => 'atlas',
+            'role' => 'founder',
+            'operations' => [
+                'campaigns' => [
+                    'count' => count($campaigns),
+                    'latest' => [
+                        'id' => $campaign['id'],
+                        'title' => $campaign['title'],
+                        'updated_at' => $campaign['updated_at'],
+                    ],
+                ],
+            ],
+            'sync_summary' => 'Atlas restored campaign "' . $campaign['title'] . '"',
+        ]);
+
+        hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+            'activity' => 'Atlas campaign restored.',
+            'latest_content_summary' => $campaign['title'],
+        ]);
+
+        return [
+            'success' => true,
+            'record_id' => $campaign['id'],
+            'title' => $campaign['title'],
+            'edit_url' => hatchers_campaign_record_url($campaign['id']),
+            'reply' => 'Done. I restored that campaign in Atlas.',
+        ];
+    }
+
+    return [
+        'success' => false,
+        'error' => 'The requested campaign was not found in Atlas.',
+    ];
+}
+
+function hatchers_update_campaign_form_state($userId, $campaignId, array $formState)
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return false;
+    }
+
+    $campaigns = hatchers_get_campaign_records($userId);
+    foreach ($campaigns as $index => $campaign) {
+        if (trim((string) ($campaign['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+
+        $cleanState = [
+            'campaign_type' => trim((string) ($formState['campaign_type'] ?? '')),
+            'funnel_stage' => trim((string) ($formState['funnel_stage'] ?? '')),
+            'focus_area' => trim((string) ($formState['focus_area'] ?? '')),
+            'content_angle' => trim((string) ($formState['content_angle'] ?? '')),
+            'use_case' => trim((string) ($formState['use_case'] ?? '')),
+            'grid_style' => trim((string) ($formState['grid_style'] ?? '')),
+            'description' => trim((string) ($formState['description'] ?? '')),
+        ];
+
+        $campaign['form_state'] = hatchers_compact_array($cleanState);
+        $campaign['updated_at'] = date('Y-m-d H:i:s');
+        $campaigns[$index] = $campaign;
+        hatchers_save_campaign_records($userId, $campaigns);
+
+        hatchers_update_founder_intelligence($userId, [
+            'app' => 'atlas',
+            'role' => 'founder',
+            'operations' => [
+                'campaigns' => [
+                    'count' => count($campaigns),
+                    'latest' => [
+                        'id' => $campaign['id'],
+                        'title' => $campaign['title'],
+                        'updated_at' => $campaign['updated_at'],
+                    ],
+                ],
+            ],
+            'sync_summary' => 'Atlas saved campaign form state for "' . $campaign['title'] . '"',
+        ]);
+
+        hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+            'activity' => 'Atlas campaign strategy selections saved.',
+            'latest_content_summary' => $campaign['title'],
+        ]);
+
+        return true;
+    }
+
+    return false;
+}
+
+function hatchers_record_campaign_generation($userId, $campaignId, array $payload = [])
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return false;
+    }
+
+    $campaigns = hatchers_get_campaign_records($userId);
+    foreach ($campaigns as $index => $campaign) {
+        if (trim((string) ($campaign['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+
+        $generation = [
+            'batch_key' => trim((string) ($payload['batch_key'] ?? '')),
+            'post_count' => max(0, (int) ($payload['post_count'] ?? 0)),
+            'generator' => trim((string) ($payload['generator'] ?? 'campaign')),
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $history = !empty($campaign['recent_generations']) && is_array($campaign['recent_generations'])
+            ? $campaign['recent_generations']
+            : [];
+        $history[] = $generation;
+
+        $campaign['recent_generations'] = array_slice($history, -6);
+        $campaign['last_batch_key'] = $generation['batch_key'];
+        $campaign['last_generated_at'] = $generation['created_at'];
+        $campaign['generated_posts_count'] = max(
+            (int) ($campaign['generated_posts_count'] ?? 0),
+            0
+        ) + $generation['post_count'];
+        $campaign['updated_at'] = $generation['created_at'];
+
+        $campaigns[$index] = $campaign;
+        hatchers_save_campaign_records($userId, $campaigns);
+
+        hatchers_update_founder_intelligence($userId, [
+            'app' => 'atlas',
+            'role' => 'founder',
+            'operations' => [
+                'campaigns' => [
+                    'count' => count($campaigns),
+                    'latest' => [
+                        'id' => $campaign['id'],
+                        'title' => $campaign['title'],
+                        'updated_at' => $campaign['updated_at'],
+                    ],
+                ],
+            ],
+            'sync_summary' => 'Atlas generated posts for campaign "' . $campaign['title'] . '"',
+        ]);
+
+        hatchers_push_os_snapshot($userId, 'atlas_campaign_brief', [
+            'activity' => 'Atlas generated campaign posts.',
+            'latest_content_summary' => $campaign['title'],
+        ]);
+
+        return true;
+    }
+
+    return false;
+}
+
+function hatchers_execute_external_action($userId, array $payload)
+{
+    $category = trim((string) ($payload['category'] ?? ''));
+    $operation = trim((string) ($payload['operation'] ?? 'create'));
+
+    if ($category !== 'campaign') {
+        return [
+            'success' => false,
+            'error' => 'Unsupported Atlas action category.',
+        ];
+    }
+
+    if ($operation === 'archive') {
+        return hatchers_archive_campaign_record($userId, isset($payload['campaign_id']) ? $payload['campaign_id'] : '');
+    }
+
+    if ($operation === 'restore') {
+        return hatchers_restore_campaign_record($userId, isset($payload['campaign_id']) ? $payload['campaign_id'] : '');
+    }
+
+    if ($operation === 'duplicate') {
+        return hatchers_duplicate_campaign_record($userId, isset($payload['campaign_id']) ? $payload['campaign_id'] : '');
+    }
+
+    if ($operation === 'update') {
+        return hatchers_update_campaign_record($userId, $payload);
+    }
+
+    return hatchers_create_campaign_record($userId, $payload);
+}
+
 function hatchers_detect_actor_role_from_text($message, $fallback = '')
 {
     $message = strtolower(trim((string) $message));
@@ -891,6 +1728,21 @@ function hatchers_execute_write_action($userId, array $action)
     }
 
     if ($type === 'draft_record') {
+        if (trim((string) ($action['category'] ?? '')) === 'campaign') {
+            $result = hatchers_create_campaign_record($userId, [
+                'title' => trim((string) ($action['title'] ?? 'Campaign brief')),
+                'description' => trim((string) ($action['request'] ?? '')),
+                'actor_role' => $actorRole !== '' ? $actorRole : 'founder',
+            ]);
+
+            return [
+                'success' => !empty($result['success']),
+                'reply' => !empty($result['success'])
+                    ? ($result['reply'] ?? 'Done. I created that campaign brief in Atlas.')
+                    : ($result['error'] ?? 'I could not create that campaign brief in Atlas right now.'),
+            ];
+        }
+
         $drafts = hatchers_get_action_drafts($userId);
         $draft = [
             'id' => hatchers_make_action_id(),

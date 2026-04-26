@@ -18,6 +18,21 @@ if (isset($current_user['id'])) {
     $content_angle_options = social_media_get_selection_options($campaign_catalog, 'content_examples');
     $use_case_options = social_media_get_selection_options($campaign_catalog, 'when_to_use');
     $funnel_stage_catalog = social_media_get_funnel_stage_catalog();
+    $selected_campaign = hatchers_get_campaign_record_by_id($_SESSION['user']['id'], isset($_GET['campaign_id']) ? $_GET['campaign_id'] : '');
+    $prefill_campaign_notes = '';
+    $selected_campaign_form = [];
+    $campaign_posts = [];
+    if (!empty($selected_campaign)) {
+        $prefill_campaign_notes = trim((string) ($selected_campaign['title'] ?? ''));
+        $description = trim((string) ($selected_campaign['description'] ?? ''));
+        if ($description !== '') {
+            $prefill_campaign_notes .= ($prefill_campaign_notes !== '' ? "\n\n" : '') . $description;
+        }
+        $selected_campaign_form = !empty($selected_campaign['form_state']) && is_array($selected_campaign['form_state'])
+            ? $selected_campaign['form_state']
+            : [];
+        $campaign_posts = social_media_get_posts_for_campaign($_SESSION['user']['id'], $selected_campaign['id'], 18);
+    }
 
     HtmlTemplate::display('ai-images', array(
         'total_images_used' => $total_images_used,
@@ -28,7 +43,11 @@ if (isset($current_user['id'])) {
         'focus_options' => $focus_options,
         'content_angle_options' => $content_angle_options,
         'use_case_options' => $use_case_options,
-        'funnel_stage_catalog' => $funnel_stage_catalog
+        'funnel_stage_catalog' => $funnel_stage_catalog,
+        'selected_campaign' => $selected_campaign,
+        'prefill_campaign_notes' => $prefill_campaign_notes,
+        'selected_campaign_form' => $selected_campaign_form,
+        'campaign_posts' => $campaign_posts
     ));
 } else {
     headerRedirect($link['LOGIN']);

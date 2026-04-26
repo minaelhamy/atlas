@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("All Generated Content"));
+overall_header(__("Document Library"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("All Generated Content"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("All Generated Content") ?>
+                        <?php _e("Document Library") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,15 +32,21 @@ overall_header(__("All Generated Content"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("All Generated Content") ?></li>
+                            <li><?php _e("Document Library") ?></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Saved output") ?></span>
+                    <h2><?php _e("Browse your saved Atlas documents") ?></h2>
+                    <p><?php _e("This is the archive for one-off written outputs created through Template Studio and other Atlas generation workflows.") ?></p>
                 </div>
 
                 <div class="dashboard-box margin-top-0 margin-bottom-30">
                     <!-- Headline -->
                     <div class="headline">
-                        <h3><i class="icon-feather-file"></i><?php _e("All Generated Content") ?></h3>
+                        <h3><i class="icon-feather-file"></i><?php _e("Saved Documents") ?></h3>
                     </div>
                     <div class="content with-padding">
                         <table class="basic-table">

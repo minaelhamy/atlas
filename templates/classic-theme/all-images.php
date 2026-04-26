@@ -8,7 +8,7 @@ overall_header(__("All Social Posts"));
             <?php print_adsense_code('header_bottom'); ?>
             <div class="dashboard-headline">
                 <h3 class="d-flex align-items-center">
-                    <?php _e("All Social Posts") ?>
+                    <?php echo !empty($selected_campaign) ? __('Campaign Output Library') : __('Atlas Output Library') ?>
                     <div class="word-used-wrapper margin-left-10">
                         <i class="icon-feather-bar-chart-2"></i>
                         <?php echo '<i id="quick-images-left">' .
@@ -22,14 +22,35 @@ overall_header(__("All Social Posts"));
                 <nav id="breadcrumbs" class="dark">
                     <ul>
                         <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                        <li><?php _e("All Social Posts") ?></li>
+                        <?php if (!empty($selected_campaign)) { ?>
+                            <li><a href="<?php _esc(hatchers_campaign_record_url($selected_campaign['id'])) ?>"><?php _e("Campaign Studio") ?></a></li>
+                            <li><?php _e("Campaign Output Library") ?></li>
+                        <?php } else { ?>
+                            <li><?php _e("Atlas Output Library") ?></li>
+                        <?php } ?>
                     </ul>
                 </nav>
             </div>
 
+            <div class="atlas-workflow-hero margin-bottom-24">
+                <span class="atlas-workflow-eyebrow"><?php _e("Output archive") ?></span>
+                <h2><?php echo !empty($selected_campaign) ? __('Browse this campaign’s full creative output') : __('Browse everything Atlas has generated so far') ?></h2>
+                <p><?php echo !empty($selected_campaign)
+                    ? __('This library keeps every post connected to the campaign strategy that created it, so review, download, and reuse stay tied to the original direction.')
+                    : __('This is your running creative archive across campaigns, one-off generations, and saved outputs.') ?></p>
+            </div>
+
+            <?php if (!empty($selected_campaign)) { ?>
+                <div class="notification notice">
+                    <strong><?php _esc($selected_campaign['title']) ?></strong>
+                    <?php _e("Only posts linked to this campaign are shown here.") ?>
+                    <a href="<?php url("ALL_IMAGES") ?>" class="margin-left-10"><strong><?php _e("View all posts") ?></strong></a>
+                </div>
+            <?php } ?>
+
             <div class="dashboard-box margin-top-0 margin-bottom-30">
                 <div class="headline">
-                    <h3><i class="icon-feather-grid"></i><?php _e("Social Post Library") ?></h3>
+                    <h3><i class="icon-feather-grid"></i><?php echo !empty($selected_campaign) ? __('Campaign Creative Library') : __('Creative Library'); ?></h3>
                 </div>
                 <div class="content with-padding">
                     <div class="row">
@@ -59,6 +80,9 @@ overall_header(__("All Social Posts"));
                                             <span class="dashboard-status-button yellow"><?php _esc(ucfirst($image['post_type'])) ?></span>
                                             <h4 class="margin-top-15"><?php _esc($image['title']) ?></h4>
                                             <p class="margin-bottom-10"><?php _esc($image['description']) ?></p>
+                                            <?php if (!empty($image['campaign']['title']) && empty($selected_campaign)) { ?>
+                                                <p class="margin-bottom-10"><strong><?php _e("Campaign") ?>:</strong> <a href="<?php _esc(hatchers_campaign_record_url($image['campaign']['id'])) ?>"><?php _esc($image['campaign']['title']) ?></a></p>
+                                            <?php } ?>
                                             <?php if (!empty($image['hashtags'])) { ?>
                                                 <p class="margin-bottom-10"><strong><?php _e("Hashtags") ?>:</strong> <?php _esc($image['hashtags']) ?></p>
                                             <?php } ?>
@@ -174,6 +198,9 @@ overall_header(__("All Social Posts"));
 </div>
 <?php ob_start() ?>
 <style>
+    .atlas-output-library-note {
+        color: #6f6659;
+    }
     .social-post-card .social-post-preview img {
         width: 100%;
         border-radius: 12px 12px 0 0;

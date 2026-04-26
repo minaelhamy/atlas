@@ -1,5 +1,5 @@
 <?php
-overall_header(__("Account Setting"));
+overall_header(__("Workspace Settings"));
 ?>
     <!-- Dashboard Container -->
     <div class="dashboard-container">
@@ -13,14 +13,20 @@ overall_header(__("Account Setting"));
                 <?php print_adsense_code('header_bottom'); ?>
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
-                    <h3><?php _e("Account Setting") ?></h3>
+                    <h3><?php _e("Workspace Settings") ?></h3>
                     <!-- Breadcrumbs -->
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Account Setting") ?></li>
+                            <li><?php _e("Workspace Settings") ?></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Profile and billing") ?></span>
+                    <h2><?php _e("Manage your Atlas workspace, identity, and billing details") ?></h2>
+                    <p><?php _e("This is where you update your personal account settings, invoice details, and the core workspace information that supports the rest of Atlas.") ?></p>
                 </div>
 
                 <!-- Row -->
@@ -30,7 +36,7 @@ overall_header(__("Account Setting"));
                         <div class="dashboard-box margin-top-0">
                             <!-- Headline -->
                             <div class="headline">
-                                <h3><i class="icon-feather-settings"></i> <?php _e("Account Setting") ?></h3>
+                                <h3><i class="icon-feather-settings"></i> <?php _e("Workspace Settings") ?></h3>
                             </div>
                             <div class="content with-padding">
                                 <form method="post" accept-charset="UTF-8" enctype="multipart/form-data">

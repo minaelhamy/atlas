@@ -38,6 +38,12 @@ overall_header(__('Speech to Text'));
                     </nav>
                 </div>
 
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Audio utility") ?></span>
+                    <h2><?php _e("Upload audio and turn it into editable text") ?></h2>
+                    <p><?php _e("Atlas can transcribe interviews, voice notes, and long-form audio into a draft you can refine and export inside the same workspace.") ?></p>
+                </div>
+
                 <div class="row">
                     <!-- Dashboard Box -->
                     <div class="col-md-4">
@@ -46,7 +52,7 @@ overall_header(__('Speech to Text'));
                                 <!-- Headline -->
                                 <div class="headline">
                                     <h3>
-                                        <i class="icon-feather-headphones"></i><?php _e('Speech to Text') ?>
+                                        <i class="icon-feather-headphones"></i><?php _e('Transcription Request') ?>
                                     </h3>
                                 </div>
                                 <div class="content with-padding">
@@ -150,7 +156,7 @@ overall_header(__('Speech to Text'));
                         <div class="dashboard-box margin-top-0 margin-bottom-30">
                             <!-- Headline -->
                             <div class="headline">
-                                <h3><i class="fa fa-align-left"></i><?php _e("Generated Result") ?></h3>
+                                <h3><i class="fa fa-align-left"></i><?php _e("Transcript Draft") ?></h3>
                                 <div class="margin-left-auto line-height-1">
                                     <a href="#" class="button ripple-effect btn-sm" id="export_to_word"
                                        data-tippy-placement="top"

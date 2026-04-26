@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("Your Ai Agents"));
+overall_header(__("Atlas Agents"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("Your Ai Agents"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("Your Ai Agents") ?>
+                        <?php _e("Atlas Agents") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,9 +32,14 @@ overall_header(__("Your Ai Agents"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Your Ai Agents") ?></li>
+                            <li><?php _e("Atlas Agents") ?></li>
                         </ul>
                     </nav>
+                </div>
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Agent workspace") ?></span>
+                    <h2><?php _e("Work with an Atlas agent in a focused conversation") ?></h2>
+                    <p><?php _e("This is the operational side of Atlas Studio: keep one conversation per problem, switch agents when needed, and use prompts and exports without losing context.") ?></p>
                 </div>
                 <?php if ($membership_ai_chat && ($bot_id == null || in_array($bot_id, $membership_ai_chatbots))) { ?>
                     <div class="notification notice atlas-inline-notice">

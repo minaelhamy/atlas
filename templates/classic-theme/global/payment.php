@@ -1,27 +1,36 @@
 <?php
 overall_header(__("Payment Methods"));
 ?>
-<div id="titlebar">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h2><?php _e("Payment Methods") ?></h2>
-                <!-- Breadcrumbs -->
-                <nav id="breadcrumbs">
+<!-- Dashboard Container -->
+<div class="dashboard-container">
+
+    <?php include_once TEMPLATE_PATH . '/dashboard_sidebar.php'; ?>
+
+    <div class="dashboard-content-container" data-simplebar>
+        <div class="dashboard-content-inner">
+            <div class="dashboard-headline">
+                <h3><?php _e("Payment Methods") ?></h3>
+                <nav id="breadcrumbs" class="dark">
                     <ul>
                         <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
                         <li><?php _e("Payment Methods") ?></li>
                     </ul>
                 </nav>
-
             </div>
-        </div>
-    </div>
-</div>
-<div class="container">
-    <div class="row">
-        <div class="col-xl-8 col-lg-8 content-right-offset">
-            <h3><?php _e("Payment Methods") ?></h3>
+
+            <div class="atlas-workflow-hero margin-bottom-24">
+                <span class="atlas-workflow-eyebrow"><?php _e("Checkout") ?></span>
+                <h2><?php _e("Choose how this order should be paid") ?></h2>
+                <p><?php _e("Atlas keeps the payment step inside the workspace so you can confirm the right method, review the total, and complete the order with confidence.") ?></p>
+            </div>
+
+            <div class="row">
+                <div class="col-xl-8 col-lg-8 content-right-offset">
+                    <div class="dashboard-box margin-top-0">
+                        <div class="headline">
+                            <h3><i class="icon-feather-credit-card"></i> <?php _e("Available payment methods") ?></h3>
+                        </div>
+                        <div class="content with-padding">
             <form id="subscribeForm" method="POST" novalidate="novalidate" enctype="multipart/form-data">
                 <div class="payment margin-top-30">
                     <!--WALLET PAYMENT-->
@@ -234,6 +243,8 @@ overall_header(__("Payment Methods"));
                 <input type="hidden" name="token" value="<?php _esc($token) ?>"/>
                 <button type="submit" name="Submit" class="button big ripple-effect margin-top-40 margin-bottom-65 subscribeNow" id="subscribeNow"><?php _e("Confirm and Pay") ?></button>
             </form>
+                        </div>
+                    </div>
         </div>
         <div class="col-xl-4 col-lg-4 margin-top-0 margin-bottom-60">
             <div class="boxed-widget summary margin-top-0">
@@ -591,5 +602,5 @@ overall_header(__("Payment Methods"));
     </script>
 
 <?php
-overall_footer();
+include_once TEMPLATE_PATH . '/overall_footer_dashboard.php';
 ?>

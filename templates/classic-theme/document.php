@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__('View Document'));
+overall_header(__('Document Studio'));
 
 
 ?>
@@ -16,21 +16,27 @@ overall_header(__('View Document'));
                 <?php print_adsense_code('header_bottom'); ?>
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
-                    <h3><?php _e('View Document') ?></h3>
+                    <h3><?php _e('Document Studio') ?></h3>
                     <!-- Breadcrumbs -->
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
                             <li><a href="<?php url("ALL_DOCUMENTS") ?>"><?php _e("All Documents") ?></a></li>
-                            <li><?php _e('View Document') ?></li>
+                            <li><?php _e('Document Studio') ?></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Edit and export") ?></span>
+                    <h2><?php _e("Refine, save, and export your generated document") ?></h2>
+                    <p><?php _e("Atlas keeps the generated draft editable here so you can title it, clean it up, and export it without leaving the studio.") ?></p>
                 </div>
 
                 <div class="dashboard-box margin-top-0 margin-bottom-30">
                     <!-- Headline -->
                     <div class="headline">
-                        <h3><i class="fa fa-align-left"></i><?php _e("View Document") ?></h3>
+                        <h3><i class="fa fa-align-left"></i><?php _e("Current Draft") ?></h3>
                         <?php if($template_slug != 'quickai-ai-code' && $template_slug != 'ai-code'){ ?>
                         <div class="margin-left-auto line-height-1">
                             <a href="#" class="button ripple-effect btn-sm" id="export_to_word"

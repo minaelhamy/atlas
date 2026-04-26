@@ -34,14 +34,17 @@
     --atlas-bg: #f7f6f2;
     --atlas-panel: rgba(255, 255, 255, 0.84);
     --atlas-panel-strong: #ffffff;
+    --atlas-panel-soft: rgba(250, 247, 241, 0.82);
     --atlas-line: rgba(32, 33, 36, 0.08);
     --atlas-line-strong: rgba(32, 33, 36, 0.14);
     --atlas-text: #222222;
     --atlas-muted: #7f7b74;
     --atlas-muted-soft: #9f9a91;
     --atlas-accent: #151515;
+    --atlas-accent-warm: #8b7250;
     --atlas-accent-soft: #efede6;
     --atlas-shadow: 0 24px 70px rgba(31, 27, 18, 0.08);
+    --atlas-shadow-soft: 0 16px 40px rgba(31, 27, 18, 0.05);
     --atlas-radius-xl: 28px;
     --atlas-radius-lg: 22px;
     --atlas-radius-md: 16px;
@@ -248,6 +251,7 @@ i,
     font-size: 14px;
     margin: 2px 0;
     min-height: 46px;
+    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 
 .dashboard-nav ul li.active a,
@@ -256,6 +260,7 @@ i,
     background: var(--atlas-button-bg);
     color: var(--atlas-button-text);
     box-shadow: inset 0 0 0 1px rgba(23, 23, 23, 0.06);
+    transform: translateX(1px);
 }
 
 .dashboard-nav ul li.active ul li a,
@@ -337,8 +342,9 @@ i,
 
 .atlas-sidebar-footer-card {
     border-radius: 18px;
-    border: 1px solid var(--atlas-line);
-    background: rgba(247, 246, 242, 0.92);
+    border: 1px solid rgba(37, 31, 22, 0.08);
+    background: linear-gradient(180deg, #201d1a 0%, #30271d 100%);
+    box-shadow: 0 18px 42px rgba(26, 21, 15, 0.14);
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -348,10 +354,11 @@ i,
 .atlas-sidebar-footer-card strong {
     font-size: 14px;
     font-weight: 600;
+    color: #fff;
 }
 
 .atlas-sidebar-footer-card span {
-    color: var(--atlas-muted);
+    color: rgba(255, 255, 255, 0.72);
     font-size: 13px;
     line-height: 1.5;
 }
@@ -370,6 +377,18 @@ i,
     padding: 28px 28px 100px;
     min-height: calc(100vh - 56px);
     position: relative;
+}
+
+.dashboard-content-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 220px;
+    border-radius: 32px 32px 0 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at top right, rgba(255, 224, 180, 0.22), transparent 24%),
+        radial-gradient(circle at top left, rgba(194, 227, 255, 0.18), transparent 20%);
 }
 
 .dashboard-headline {
@@ -421,6 +440,37 @@ i,
     box-shadow: none;
 }
 
+.notification.notice,
+.notification.success,
+.notification.error,
+.notification.warning,
+.small-notification {
+    padding: 16px 18px;
+}
+
+.status-not-available,
+.status-available {
+    display: block;
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    border: 1px solid var(--atlas-line);
+}
+
+.status-available {
+    background: #f1f8f1;
+    color: #3f6b46;
+    border-color: rgba(63, 107, 70, 0.15);
+}
+
+.status-not-available {
+    background: #fff3ef;
+    color: #9a4739;
+    border-color: rgba(154, 71, 57, 0.14);
+}
+
 .atlas-inline-notice {
     background: rgba(248, 247, 243, 0.82);
     color: var(--atlas-muted);
@@ -439,7 +489,8 @@ i,
 .messages-container {
     background: var(--atlas-panel-strong);
     border: 1px solid var(--atlas-line);
-    box-shadow: none;
+    box-shadow: var(--atlas-shadow-soft);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease;
 }
 
 .dashboard-box .headline,
@@ -455,6 +506,12 @@ i,
     font-weight: 500;
     color: var(--atlas-text);
     letter-spacing: -0.03em;
+}
+
+.dashboard-box:hover,
+.messages-container:hover {
+    border-color: rgba(32, 33, 36, 0.12);
+    box-shadow: 0 22px 54px rgba(31, 27, 18, 0.07);
 }
 
 .dashboard-box .content.with-padding {
@@ -485,6 +542,31 @@ select:focus,
 .with-border:focus {
     border-color: rgba(23, 23, 23, 0.2) !important;
     background: #fff !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #9a948b !important;
+}
+
+.bootstrap-select.btn-group .dropdown-menu {
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 18px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 18px 42px rgba(31, 27, 18, 0.08);
+}
+
+.bootstrap-select.btn-group .dropdown-menu li a {
+    border-radius: 12px;
+    color: var(--atlas-text);
+    padding: 10px 12px;
+}
+
+.bootstrap-select.btn-group .dropdown-menu li.selected a,
+.bootstrap-select.btn-group .dropdown-menu li a:hover {
+    background: var(--atlas-button-bg);
 }
 
 .submit-field h5,
@@ -518,6 +600,7 @@ a.button:hover {
     transform: translateY(-1px);
     background: var(--atlas-button-bg-hover) !important;
     color: var(--atlas-button-text) !important;
+    box-shadow: 0 10px 22px rgba(31, 27, 18, 0.06), 0 1px 0 rgba(255, 255, 255, 0.86) inset !important;
 }
 
 .button.gray,
@@ -558,11 +641,27 @@ a.button:hover {
 
 .social-post-card .social-post-preview img,
 .social-post-card .social-post-preview video {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
     border-radius: 18px 18px 0 0;
 }
 
 .social-post-card .social-post-body {
     background: transparent;
+}
+
+.social-post-card {
+    overflow: hidden;
+}
+
+.social-post-card .content {
+    padding: 0;
+}
+
+.social-post-card .social-post-body.with-padding {
+    padding: 18px 18px 16px;
+    border-top: 1px solid rgba(32, 33, 36, 0.06);
 }
 
 .social-action-btn {
@@ -858,7 +957,7 @@ a.button:hover {
 .atlas-dashboard-intelligence-card {
     border-radius: 18px;
     border: 1px solid var(--atlas-line);
-    background: rgba(247, 246, 242, 0.72);
+    background: linear-gradient(180deg, rgba(250, 247, 241, 0.88) 0%, rgba(245, 242, 236, 0.72) 100%);
     padding: 18px;
 }
 
@@ -896,15 +995,18 @@ a.button:hover {
     gap: 14px;
     border-radius: 18px;
     border: 1px solid var(--atlas-line);
-    background: rgba(247, 246, 242, 0.72);
+    background: linear-gradient(180deg, rgba(250, 247, 241, 0.88) 0%, rgba(245, 242, 236, 0.72) 100%);
     padding: 12px;
     color: var(--atlas-text);
+    transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
 .atlas-dashboard-quick-item:hover,
 .atlas-dashboard-post-item:hover {
     color: var(--atlas-text);
     background: rgba(255, 255, 255, 0.92);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(31, 27, 18, 0.06);
 }
 
 .atlas-dashboard-quick-avatar {
@@ -961,6 +1063,13 @@ a.button:hover {
     background: var(--atlas-accent-soft);
 }
 
+.atlas-dashboard-list-box .headline h3,
+.atlas-dashboard-intelligence .headline h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
 @media (max-width: 1199px) {
     .atlas-dashboard-stats .fun-fact {
         flex: 1 1 calc(50% - 16px);
@@ -986,6 +1095,250 @@ a.button:hover {
 
 .social-generator-progress-bar {
     background: #171717 !important;
+}
+
+.sidebar-widget,
+.widget,
+.boxed-widget {
+    border-radius: 22px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: var(--atlas-shadow-soft);
+}
+
+.sidebar-widget,
+.widget {
+    padding: 22px;
+}
+
+.boxed-widget .boxed-widget-headline {
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--atlas-line);
+    background: transparent;
+}
+
+.boxed-widget .boxed-widget-headline h3,
+.widget-title,
+.sidebar-widget h3 {
+    font-size: 18px;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: var(--atlas-text);
+    margin-bottom: 0;
+}
+
+.boxed-widget .boxed-widget-inner {
+    padding: 20px 22px;
+}
+
+.boxed-widget.summary ul li {
+    border-color: var(--atlas-line);
+    color: #635c54;
+    padding: 12px 0;
+}
+
+.boxed-widget.summary ul li.total-costs {
+    color: var(--atlas-text);
+}
+
+.table-responsive,
+.default-table,
+.basic-table {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.default-table table,
+.table-responsive table,
+table.dataTable,
+table.basic-table {
+    margin-bottom: 0 !important;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.default-table table tbody tr:hover,
+.table-responsive table tbody tr:hover,
+table.dataTable tbody tr:hover,
+table.basic-table tbody tr:hover {
+    background: rgba(248, 245, 240, 0.86);
+}
+
+table.basic-table td,
+table td {
+    color: #5f594f;
+}
+
+.pagination-container .pagination ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pagination-container .pagination ul li a {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--atlas-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+}
+
+.pagination-container .pagination ul li a.current-page,
+.pagination-container .pagination ul li a:hover {
+    background: var(--atlas-button-bg);
+    border-color: rgba(23, 23, 23, 0.08);
+}
+
+.payment {
+    display: grid;
+    gap: 14px;
+}
+
+.payment-tab {
+    border-radius: 20px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    box-shadow: var(--atlas-shadow-soft);
+}
+
+.payment-tab-trigger {
+    padding: 18px 20px;
+    background: transparent;
+}
+
+.payment-tab-content {
+    padding: 0 20px 20px;
+    color: #635c54;
+}
+
+.payment-tab.payment-tab-active {
+    border-color: rgba(23, 23, 23, 0.12);
+    box-shadow: 0 18px 42px rgba(31, 27, 18, 0.08);
+}
+
+.payment-logo {
+    border-radius: 12px;
+}
+
+.accordion__item {
+    border-radius: 20px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: var(--atlas-shadow-soft);
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.accordion-header {
+    padding: 18px 20px;
+    color: var(--atlas-text);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+.accordion-body__contents {
+    padding: 0 20px 20px;
+    color: #625c53;
+    line-height: 1.75;
+}
+
+.uploadButton {
+    gap: 12px;
+}
+
+.uploadButton-button {
+    border-radius: 14px !important;
+}
+
+.uploadButton-file-name {
+    color: var(--atlas-muted);
+}
+
+.blog-post,
+.blog-widget,
+.single-testimonial,
+.comments-box {
+    border-radius: 22px;
+    border: 1px solid var(--atlas-line);
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: var(--atlas-shadow-soft);
+}
+
+.blog-post-content,
+.blog-widget,
+.comments-box {
+    color: #5f594f;
+}
+
+.blog-post {
+    overflow: hidden;
+}
+
+.blog-post-content {
+    padding: 22px;
+}
+
+.blog-post-content h3,
+.blog-widget .widget-title {
+    color: var(--atlas-text);
+}
+
+.blog-post-date,
+.blog-post-info,
+.post-date,
+.recent-post-widget-content .post-date {
+    color: var(--atlas-muted);
+}
+
+.recent-post-widget > div {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--atlas-line);
+}
+
+.recent-post-widget > div:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.recent-post-widget > div:first-child {
+    padding-top: 0;
+}
+
+.recent-post-widget .post-thumb,
+.recent-post-widget img {
+    border-radius: 16px;
+}
+
+.latest-comments ul li {
+    margin-bottom: 16px;
+}
+
+.comments-box {
+    padding: 18px;
+}
+
+.comments-text p,
+.blog-widget p,
+.user-html,
+.html-pages {
+    color: #5f594f;
+    line-height: 1.8;
+}
+
+.task-tags a,
+.task-tags span {
+    border-radius: 999px;
+    background: rgba(247, 246, 242, 0.94);
+    border: 1px solid var(--atlas-line);
+    color: #5f594f;
 }
 
 .atlas-workflow-shell {
@@ -1028,8 +1381,9 @@ a.button:hover {
 .atlas-wizard-card {
     border-radius: 26px;
     border: 1px solid var(--atlas-line);
-    background: rgba(255, 255, 255, 0.76);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(250, 247, 241, 0.82) 100%);
     padding: 24px 26px;
+    box-shadow: var(--atlas-shadow-soft);
 }
 
 .atlas-wizard-header {
@@ -1102,6 +1456,8 @@ a.button:hover {
     text-decoration: none;
     color: var(--atlas-text);
     transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease, color .22s ease;
+    overflow: hidden;
+    position: relative;
 }
 
 .atlas-automation-card:hover {
@@ -1141,6 +1497,15 @@ a.button:hover {
 
 .atlas-automation-card .content.with-padding {
     padding: 26px;
+}
+
+.atlas-automation-card::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 78px;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, rgba(232, 225, 213, 0.18) 100%);
 }
 
 .atlas-automation-card-top {

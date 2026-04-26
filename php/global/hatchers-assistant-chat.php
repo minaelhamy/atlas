@@ -30,6 +30,10 @@ if (!empty($writeAction['handled'])) {
     }
 
     hatchers_record_assistant_exchange($user->id(), trim((string) ($payload['app'] ?? 'atlas')), $message, $reply);
+    hatchers_push_os_snapshot($user->id(), trim((string) ($payload['current_page'] ?? 'atlas_assistant_chat')), [
+        'activity' => 'Atlas assistant conversation synced.',
+        'latest_content_summary' => trim(substr($reply, 0, 180)),
+    ]);
 
     hatchers_json_response(200, [
         'success' => true,
@@ -75,6 +79,10 @@ if ($reply === '') {
 }
 
 hatchers_record_assistant_exchange($user->id(), trim((string) ($payload['app'] ?? 'atlas')), $message, $reply);
+hatchers_push_os_snapshot($user->id(), trim((string) ($payload['current_page'] ?? 'atlas_assistant_chat')), [
+    'activity' => 'Atlas assistant conversation synced.',
+    'latest_content_summary' => trim(substr($reply, 0, 180)),
+]);
 
 hatchers_json_response(200, [
     'success' => true,

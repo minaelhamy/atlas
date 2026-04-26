@@ -13,14 +13,20 @@ overall_header(__("Withdrawals"));
                 <?php print_adsense_code('header_bottom'); ?>
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
-                    <h3><?php _e("Withdrawals") ?></h3>
+                    <h3><?php _e("Affiliate Payouts") ?></h3>
                     <!-- Breadcrumbs -->
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Withdrawals") ?></li>
+                            <li><?php _e("Affiliate Payouts") ?></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Payout requests") ?></span>
+                    <h2><?php _e("Request, track, and review affiliate withdrawals") ?></h2>
+                    <p><?php _e("Use this workspace to request an affiliate payout and monitor the full payout queue from pending to paid.") ?></p>
                 </div>
 
 
@@ -28,7 +34,7 @@ overall_header(__("Withdrawals"));
                     <div class="dashboard-box js-accordion-item">
                         <div class="headline d-block js-accordion-header">
                             <h3>
-                                <i class="fa fa-bell-o"></i> <?php _e("Request withdrawal"); ?>
+                                <i class="fa fa-bell-o"></i> <?php _e("Request payout"); ?>
                             </h3>
                         </div>
                         <div class="content with-padding js-accordion-body">
@@ -93,7 +99,7 @@ overall_header(__("Withdrawals"));
                 <div class="dashboard-box">
                     <div class="headline">
                         <h3>
-                            <i class="fa fa-list-alt"></i> <?php _e("Withdrawal Requests"); ?>
+                            <i class="fa fa-list-alt"></i> <?php _e("Payout Request History"); ?>
                         </h3>
                     </div>
                     <div class="content with-padding">

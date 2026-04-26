@@ -11,6 +11,19 @@ $currentLogo = !empty($social_profile['company_logo']) ? $social_profile['compan
 $currentLogoUrl = !empty($currentLogo) ? $config['site_url'] . 'storage/company/' . $currentLogo : '';
 $brandColorSource = !empty($social_profile['company_website']) ? $social_profile['company_website'] : 'your website';
 $allToneOptions = ['Bold & direct', 'Educational', 'Playful', 'Inspirational', 'Grounded / real', 'Professional', 'Conversational', 'Minimal / quiet'];
+$websiteTitle = !empty($websiteSnapshot['title']) ? $websiteSnapshot['title'] : '';
+$websiteDescription = !empty($websiteSnapshot['description']) ? $websiteSnapshot['description'] : '';
+$websiteHeadings = !empty($websiteSnapshot['headings']) && is_array($websiteSnapshot['headings']) ? array_values(array_filter($websiteSnapshot['headings'])) : [];
+$websiteSummaryPoints = !empty($websiteSnapshot['summary_points']) && is_array($websiteSnapshot['summary_points']) ? array_values(array_filter($websiteSnapshot['summary_points'])) : [];
+$websitePreviewRows = array_slice(array_unique(array_filter(array_merge($websiteSummaryPoints, $websiteHeadings))), 0, 4);
+$brandStatusRows = array_values(array_filter([
+    !empty($social_profile['company_website']) ? 'Website imported' : '',
+    !empty($social_profile['company_description']) ? 'Positioning written' : '',
+    !empty($social_profile['ideal_customer_profile']) ? 'ICP defined' : '',
+    !empty($brandColors) ? 'Palette confirmed' : '',
+    !empty($toneAttributes) ? 'Tone selected' : '',
+]));
+$referenceBrandPreview = array_slice($referenceBrands, 0, 3);
 
 $summaryParts = [];
 if (!empty($social_profile['company_name'])) {
@@ -45,8 +58,11 @@ $aiSuggestions = [
 ?>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-.wrap{background:#f2f0eb;padding:28px 20px 40px;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
-.shell{background:#fff;border:0.5px solid #e0ddd6;border-radius:16px;max-width:780px;margin:0 auto;overflow:hidden}
+.wrap{background:
+radial-gradient(circle at top left, rgba(255,225,191,.35), transparent 26%),
+radial-gradient(circle at top right, rgba(194,229,255,.34), transparent 24%),
+#f5f1ea;padding:28px 20px 40px;font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+.shell{background:rgba(255,255,255,.94);border:1px solid #e8ded1;border-radius:24px;max-width:1240px;margin:0 auto;overflow:hidden;box-shadow:0 24px 64px rgba(43,31,14,.08)}
 .hdr{padding:24px 28px 20px;border-bottom:0.5px solid #eee}
 .hdr-title{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:4px;letter-spacing:-0.01em}
 .hdr-sub{font-size:13px;color:#888;margin-bottom:18px;line-height:1.5;max-width:580px}
@@ -59,9 +75,32 @@ $aiSuggestions = [
 .step.done .step-num{border-color:#2FAF49;background:#2FAF49;color:#fff}
 .step-connector{flex:1;height:1px;background:#e0ddd6;margin:0 10px;max-width:60px}
 .body{padding:24px 28px}
+.atlas-brand-shell{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
+.atlas-brand-rail{display:flex;flex-direction:column;gap:16px;position:sticky;top:24px}
+.atlas-brand-card{border:1px solid #eadfce;border-radius:18px;background:linear-gradient(180deg,#fffefb 0%,#faf6ef 100%);padding:18px 18px 16px;box-shadow:0 10px 24px rgba(48,34,13,.04)}
+.atlas-brand-card.dark{background:linear-gradient(180deg,#1d1d1b 0%,#2d2419 100%);border-color:#3c3227;color:#fff}
+.atlas-brand-kicker{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7b68;margin-bottom:10px}
+.atlas-brand-card.dark .atlas-brand-kicker{color:#e7d7be}
+.atlas-brand-title{font-size:17px;font-weight:600;letter-spacing:-.02em;color:#1c1a16;margin-bottom:6px}
+.atlas-brand-card.dark .atlas-brand-title{color:#fff}
+.atlas-brand-text{font-size:12.5px;line-height:1.6;color:#766b5d}
+.atlas-brand-card.dark .atlas-brand-text{color:rgba(255,255,255,.76)}
+.atlas-brand-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.atlas-brand-list-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.72);border:1px solid #efe5d8}
+.atlas-brand-card.dark .atlas-brand-list-item{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08)}
+.atlas-brand-list-item i{font-size:12px;color:#2faf49;margin-top:3px}
+.atlas-brand-card.dark .atlas-brand-list-item i{color:#9de0a7}
+.atlas-brand-list-item span{font-size:12px;line-height:1.5;color:#574b3d}
+.atlas-brand-card.dark .atlas-brand-list-item span{color:rgba(255,255,255,.82)}
+.atlas-brand-pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.atlas-brand-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid #eadfce;color:#5d4f3e;font-size:11px;font-weight:600}
+.atlas-brand-card.dark .atlas-brand-pill{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#fff}
+.atlas-brand-preview-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.atlas-brand-preview-meta span{font-size:11px;padding:5px 9px;border-radius:999px;background:#f2ede6;color:#7b6b57}
+.atlas-brand-main{min-width:0}
 .panel{display:none}
 .panel.active{display:block}
-.ai-zone{border:1.5px dashed #c8a8c4;border-radius:12px;padding:18px 20px;margin-bottom:22px;background:#fdf8fd}
+.ai-zone{border:1px solid #e1d1ef;border-radius:18px;padding:20px 22px;margin-bottom:22px;background:linear-gradient(180deg,#fff8ff 0%,#fbf5ff 100%);box-shadow:0 10px 26px rgba(130,77,135,.06)}
 .ai-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:#871F7A;background:#f5eaf4;border:1px solid #e0d0de;border-radius:20px;padding:3px 10px;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px}
 .ai-badge i{font-size:10px}
 .ai-zone-title{font-size:13.5px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
@@ -241,6 +280,8 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
 .btn-add-hex:hover{background:#f5f3ee}
 .btn-cancel-hex{height:34px;padding:0 12px;background:transparent;border:none;color:#aaa;font-size:12px;font-family:inherit;cursor:pointer}
 @media (max-width: 991px){
+  .atlas-brand-shell{grid-template-columns:1fr}
+  .atlas-brand-rail{position:static}
   .ai-input-row,.section-title-row,.gen-strip,.footer-bar,.website-row{flex-direction:column;align-items:stretch}
   .review-grid{grid-template-columns:1fr}
   .footer-center{align-items:flex-start}
@@ -266,14 +307,14 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
             <div class="wrap">
                 <div class="shell">
                     <div class="hdr">
-                        <div class="hdr-title" id="hdr-title">Tell us about your business</div>
-                        <div class="hdr-sub" id="hdr-sub">This takes 2 minutes. Your answers power everything Atlas generates.</div>
+                        <div class="hdr-title" id="hdr-title">Build your brand DNA</div>
+                        <div class="hdr-sub" id="hdr-sub">Atlas will read your website, shape your positioning, and turn it into a usable creative system.</div>
                         <div class="steps">
-                            <div class="step active" data-step="1"><div class="step-num">1</div><span>Business info</span></div>
+                            <div class="step active" data-step="1"><div class="step-num">1</div><span>Brand input</span></div>
                             <div class="step-connector"></div>
-                            <div class="step" data-step="2"><div class="step-num">2</div><span>Brand guidelines</span></div>
+                            <div class="step" data-step="2"><div class="step-num">2</div><span>Creative system</span></div>
                             <div class="step-connector"></div>
-                            <div class="step" data-step="3"><div class="step-num">3</div><span>Review</span></div>
+                            <div class="step" data-step="3"><div class="step-num">3</div><span>Approve & generate</span></div>
                         </div>
                     </div>
 
@@ -297,39 +338,95 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                         <input class="atlas-hidden" type="text" name="instagram_handle" id="instagram_handle" value="<?php _esc($social_profile['instagram_handle']) ?>">
 
                         <div class="body">
-                            <?php if (!empty($founder_action_plan)) { ?>
-                                <div class="action-plan-box">
-                                    <div class="action-plan-title">Atlas Execution Priorities</div>
-                                    <div class="action-plan-sub">These are the highest-value next moves Atlas sees across LMS, Bazaar, Servio, and Atlas right now.</div>
-                                    <div class="action-plan-list">
-                                        <?php foreach ($founder_action_plan as $action) { ?>
-                                            <div class="action-plan-item">
-                                                <div class="action-plan-copy">
-                                                    <strong><?php _esc($action['title']) ?></strong>
-                                                    <span><?php _esc($action['reason']) ?></span>
-                                                </div>
-                                                <div class="action-plan-meta">
-                                                    <span class="action-plan-platform"><?php _esc(strtoupper($action['platform'])) ?></span>
-                                                    <a class="action-plan-link" href="<?php _esc($action['url']) ?>"><?php _esc(!empty($action['cta']) ? $action['cta'] : __('Open')) ?></a>
-                                                </div>
+                            <div class="atlas-brand-shell">
+                                <aside class="atlas-brand-rail">
+                                    <div class="atlas-brand-card dark">
+                                        <div class="atlas-brand-kicker"><i class="fa fa-magic"></i> Atlas brand studio</div>
+                                        <div class="atlas-brand-title"><?php _esc(!empty($social_profile['company_name']) ? $social_profile['company_name'] : 'Your company profile') ?></div>
+                                        <div class="atlas-brand-text"><?php _esc($summaryText) ?></div>
+                                        <?php if (!empty($brandStatusRows)) { ?>
+                                            <div class="atlas-brand-list">
+                                                <?php foreach ($brandStatusRows as $statusRow) { ?>
+                                                    <div class="atlas-brand-list-item"><i class="fa fa-check-circle-o"></i><span><?php _esc($statusRow) ?></span></div>
+                                                <?php } ?>
                                             </div>
                                         <?php } ?>
                                     </div>
-                                </div>
-                            <?php } ?>
+
+                                    <div class="atlas-brand-card">
+                                        <div class="atlas-brand-kicker"><i class="fa fa-globe"></i> Website readback</div>
+                                        <div class="atlas-brand-title"><?php _esc(!empty($websiteTitle) ? $websiteTitle : 'Import your website to let Atlas draft this for you') ?></div>
+                                        <div class="atlas-brand-text"><?php _esc(!empty($websiteDescription) ? $websiteDescription : 'Atlas will pull your website summary, customer language, and likely positioning signals into this workflow.') ?></div>
+                                        <?php if (!empty($websitePreviewRows)) { ?>
+                                            <div class="atlas-brand-list">
+                                                <?php foreach ($websitePreviewRows as $previewRow) { ?>
+                                                    <div class="atlas-brand-list-item"><i class="fa fa-angle-right"></i><span><?php _esc($previewRow) ?></span></div>
+                                                <?php } ?>
+                                            </div>
+                                        <?php } ?>
+                                        <div class="atlas-brand-preview-meta">
+                                            <span><?php echo count($websiteHeadings); ?> headings</span>
+                                            <span><?php echo count($websiteSummaryPoints); ?> summary cues</span>
+                                            <span><?php _esc(!empty($social_profile['website_extracted_at']) ? 'Last scan: ' . $social_profile['website_extracted_at'] : 'Not scanned yet') ?></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="atlas-brand-card">
+                                        <div class="atlas-brand-kicker"><i class="fa fa-pencil-square-o"></i> What Atlas will create</div>
+                                        <div class="atlas-brand-title">From brief to usable creative direction</div>
+                                        <div class="atlas-brand-list">
+                                            <div class="atlas-brand-list-item"><i class="fa fa-check-circle-o"></i><span>Sharper ICP and clearer brand promise</span></div>
+                                            <div class="atlas-brand-list-item"><i class="fa fa-check-circle-o"></i><span>Brand voice, palette, and reference system</span></div>
+                                            <div class="atlas-brand-list-item"><i class="fa fa-check-circle-o"></i><span>Campaign-ready hooks, posts, and visual direction</span></div>
+                                        </div>
+                                        <?php if (!empty($referenceBrandPreview) || !empty($toneAttributes)) { ?>
+                                            <div class="atlas-brand-pill-row">
+                                                <?php foreach (array_slice($toneAttributes, 0, 3) as $toneAttribute) { ?>
+                                                    <span class="atlas-brand-pill"><?php _esc($toneAttribute) ?></span>
+                                                <?php } ?>
+                                                <?php foreach ($referenceBrandPreview as $referenceBrand) { ?>
+                                                    <span class="atlas-brand-pill"><?php _esc($referenceBrand) ?></span>
+                                                <?php } ?>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+
+                                    <?php if (!empty($founder_action_plan)) { ?>
+                                        <div class="action-plan-box">
+                                            <div class="action-plan-title">Atlas Execution Priorities</div>
+                                            <div class="action-plan-sub">These are the highest-value next moves Atlas sees across LMS, Bazaar, Servio, and Atlas right now.</div>
+                                            <div class="action-plan-list">
+                                                <?php foreach ($founder_action_plan as $action) { ?>
+                                                    <div class="action-plan-item">
+                                                        <div class="action-plan-copy">
+                                                            <strong><?php _esc($action['title']) ?></strong>
+                                                            <span><?php _esc($action['reason']) ?></span>
+                                                        </div>
+                                                        <div class="action-plan-meta">
+                                                            <span class="action-plan-platform"><?php _esc(strtoupper($action['platform'])) ?></span>
+                                                            <a class="action-plan-link" href="<?php _esc($action['url']) ?>"><?php _esc(!empty($action['cta']) ? $action['cta'] : __('Open')) ?></a>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+                                </aside>
+
+                                <div class="atlas-brand-main">
                             <div class="panel active" data-panel="1">
                                 <div class="ai-zone">
                                     <div class="ai-badge"><i class="fa fa-star-o"></i> AI Extract</div>
-                                    <div class="ai-zone-title">Let AI read your website and fill this in</div>
-                                    <div class="ai-zone-sub">Paste your URL and Atlas will extract your ICP, problems, and USPs automatically. You can edit everything after.</div>
+                                    <div class="ai-zone-title">Import your website and let Atlas draft the brand</div>
+                                    <div class="ai-zone-sub">Paste your URL and Atlas will extract your positioning, ICP, problems, and differentiators first. You can still edit every field after.</div>
                                     <div class="ai-input-row">
                                         <input class="ai-input" type="text" placeholder="https://yourwebsite.com" id="company_website" name="company_website" value="<?php _esc($social_profile['company_website']) ?>">
-                                        <button class="btn-extract" type="button" id="extract-btn">Extract with AI</button>
+                                        <button class="btn-extract" type="button" id="extract-btn">Import with Atlas</button>
                                     </div>
-                                    <div class="ai-note"><i class="fa fa-info-circle"></i> Your site is only read for extraction — never stored or shared.</div>
+                                    <div class="ai-note"><i class="fa fa-info-circle"></i> Your site is only read for extraction signals and brand setup.</div>
                                 </div>
 
-                                <div class="divider-label"><span>or fill in manually</span></div>
+                                <div class="divider-label"><span>or shape it manually</span></div>
 
                                 <div class="field-group">
                                     <div class="field-label">Company description</div>
@@ -514,10 +611,10 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                                 <div class="gen-strip">
                                     <div class="gen-icon"><i class="fa fa-star-o"></i></div>
                                     <div class="gen-body">
-                                        <div class="gen-title">Ready to generate your marketing statements</div>
-                                        <div class="gen-sub">Atlas will use this profile to write your hooks, value propositions, and Instagram content.</div>
+                                        <div class="gen-title">Ready to turn this into a campaign system</div>
+                                        <div class="gen-sub">Atlas will use this profile to generate clearer hooks, offers, campaigns, and content directions.</div>
                                     </div>
-                                    <button class="btn-gen-now" type="button" id="refresh-intelligence"><i class="fa fa-star-o"></i> Generate now</button>
+                                    <button class="btn-gen-now" type="button" id="refresh-intelligence"><i class="fa fa-star-o"></i> Build my strategy</button>
                                 </div>
 
                                 <div class="website-row">
@@ -580,6 +677,8 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                                 </div>
                                 <?php if(!empty($social_error)){ ?><div class="field-hint" style="margin-top:10px;color:#c05959;"><?php _esc($social_error) ?></div><?php } ?>
                             </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="footer-bar">
@@ -589,7 +688,7 @@ textarea::placeholder,input[type=text]::placeholder{color:#c8c8c8}
                                 <div class="saved-note" id="saved-note"><i class="fa fa-check"></i> Not saved yet</div>
                             </div>
                             <button class="btn-next" type="button" id="next-btn">Save & continue <i class="fa fa-arrow-right"></i></button>
-                            <button class="btn-generate atlas-hidden" type="button" id="final-save-btn"><i class="fa fa-star-o"></i> Try to generate content</button>
+                            <button class="btn-generate atlas-hidden" type="button" id="final-save-btn"><i class="fa fa-star-o"></i> Open campaign studio</button>
                         </div>
                     </form>
                 </div>
@@ -617,9 +716,9 @@ $(function () {
     var currentStep = 1;
     var socialMediaAutomationUrl = (window.siteurl || '<?php echo addslashes($config['site_url']); ?>') + 'ai-images';
     var stepMeta = {
-        1: {title: 'Tell us about your business', sub: 'This takes 2 minutes. Your answers power everything Atlas generates.'},
-        2: {title: "What's your visual direction?", sub: 'We pulled your brand colors from your website. Confirm them, add your logo, then set your tone and references.'},
-        3: {title: 'Review your business profile', sub: 'Check everything looks right. Edit any section before generating.'}
+        1: {title: 'Build your brand DNA', sub: 'Atlas starts by understanding your website, positioning, and ideal customer.'},
+        2: {title: "Shape your creative system", sub: 'Confirm your palette, tone, and brand references so Atlas knows how to create.'},
+        3: {title: 'Approve and launch the strategy', sub: 'Review the profile Atlas will use for campaign generation before moving into creation.'}
     };
     var suggestionState = {
         company_description: 'full',
@@ -870,7 +969,7 @@ $(function () {
 
     $('#extract-btn').on('click', function () {
         var $btn = $(this);
-        $btn.addClass('atlas-saving').text('Extracting...');
+        $btn.addClass('atlas-saving').text('Importing...');
         $.post(ajaxurl + '?action=extract_company_profile', {website: $('#company_website').val()}, function (response) {
             response = typeof response === 'string' ? JSON.parse(response) : response;
             if (!response.success) {
@@ -902,7 +1001,7 @@ $(function () {
             updateReview();
             quick_alert(response.message || 'Website extracted successfully.', 'success');
         }).always(function () {
-            $btn.removeClass('atlas-saving').text('Extract with AI');
+            $btn.removeClass('atlas-saving').text('Import with Atlas');
         });
     });
 
@@ -1022,7 +1121,7 @@ $(function () {
 
     $('#refresh-intelligence').on('click', function () {
         var $btn = $(this);
-        $btn.addClass('atlas-saving').html('<i class="fa fa-star-o"></i> Generating...');
+        $btn.addClass('atlas-saving').html('<i class="fa fa-star-o"></i> Building...');
         saveDraft(3, function () {
             $.post(ajaxurl + '?action=refresh_company_intelligence', {}, function (response) {
             response = typeof response === 'string' ? JSON.parse(response) : response;
@@ -1040,7 +1139,7 @@ $(function () {
             }).fail(function () {
                 quick_alert('Unable to refresh company intelligence right now.', 'error');
             }).always(function () {
-                $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Generate now');
+                $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Build my strategy');
             });
         });
     });
@@ -1053,7 +1152,7 @@ $(function () {
             goToSocialMediaAutomation();
         });
         setTimeout(function () {
-            $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Try to generate content');
+            $btn.removeClass('atlas-saving').html('<i class="fa fa-star-o"></i> Open campaign studio');
         }, 600);
     });
 

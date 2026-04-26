@@ -23,6 +23,12 @@ overall_header(__("Affiliate Program"));
                     </nav>
                 </div>
 
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Growth Loop") ?></span>
+                    <h2><?php _e("Track referrals and earnings from the Atlas affiliate program") ?></h2>
+                    <p><?php _e("Use this workspace to share your referral link, monitor commissions, and understand how your affiliate activity is performing over time.") ?></p>
+                </div>
+
                 <!-- Fun Facts Container -->
                 <div class="fun-facts-container">
                     <div class="fun-fact" data-fun-fact-color="#b81b7f">

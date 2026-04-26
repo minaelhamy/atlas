@@ -1,6 +1,6 @@
 <?php
 
-overall_header(__("Your Ai Agents"));
+overall_header(__("Atlas Agents"));
 ?>
 
     <!-- Dashboard Container -->
@@ -16,7 +16,7 @@ overall_header(__("Your Ai Agents"));
                 <!-- Dashboard Headline -->
                 <div class="dashboard-headline">
                     <h3 class="d-flex align-items-center">
-                        <?php _e("Your Ai Agents") ?>
+                        <?php _e("Atlas Agents") ?>
                         <div class="word-used-wrapper margin-left-10">
                             <i class="icon-feather-bar-chart-2"></i>
                             <?php echo '<i id="quick-words-left">' .
@@ -32,9 +32,14 @@ overall_header(__("Your Ai Agents"));
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><?php _e("Your Ai Agents") ?></li>
+                            <li><?php _e("Atlas Agents") ?></li>
                         </ul>
                     </nav>
+                </div>
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Conversation studio") ?></span>
+                    <h2><?php _e("Choose the right Atlas agent for the job") ?></h2>
+                    <p><?php _e("Each agent carries a different role and way of thinking, so you can move from campaign strategy to messaging, research, and execution without leaving the Atlas studio.") ?></p>
                 </div>
                 <?php if ($membership_ai_chat) { ?>
                     <div class="notification notice">
@@ -46,7 +51,7 @@ overall_header(__("Your Ai Agents"));
                     </div>
                 <?php } ?>
 
-                <div>
+                <div class="atlas-agent-toolbar">
                     <input id="chat-bot-search" placeholder="<?php _e('Search...'); ?>" type="text"
                            class="with-border border-pilled">
                 </div>
@@ -78,7 +83,7 @@ overall_header(__("Your Ai Agents"));
                     /* if default chat bot is enabled */
                     if (get_option("enable_default_chat_bot", 1)) { ?>
                         <div class="col-lg-3 col-md-4 col-sm-6" data-search="<?php _esc($ai_chat_bot_name) ?>">
-                            <div class="dashboard-box margin-top-0 margin-bottom-30">
+                            <div class="dashboard-box margin-top-0 margin-bottom-30 atlas-agent-card">
                                 <div class="content text-center">
                                     <img src="<?php _esc($config['site_url']); ?>storage/profile/<?php _esc($ai_chat_bot_avatar) ?>"
                                          alt="<?php _esc($ai_chat_bot_name) ?>" class="rounded" width="100%">
@@ -114,7 +119,7 @@ overall_header(__("Your Ai Agents"));
                                 $img_url = get_avatar_url_by_name($chat_bot['name']);
                             ?>
                             <div class="col-lg-3 col-md-4 col-sm-6 category-<?php _esc($category['id']) ?>" data-search="<?php _esc($chat_bot['name'] . ' '. $role . ' ' . $category_title) ?>">
-                                <div class="dashboard-box margin-top-0 margin-bottom-30 <?php echo (!in_array($chat_bot['id'], $membership_ai_chatbots)) ? 'ai-templates-pro chatbots-pro' : ''; ?>">
+                                <div class="dashboard-box margin-top-0 margin-bottom-30 atlas-agent-card <?php echo (!in_array($chat_bot['id'], $membership_ai_chatbots)) ? 'ai-templates-pro chatbots-pro' : ''; ?>">
                                     <div class="content text-center">
                                         <?php if (!in_array($chat_bot['id'], $membership_ai_chatbots)) { ?>
                                             <span class="dashboard-status-button yellow"
@@ -171,6 +176,33 @@ overall_header(__("Your Ai Agents"));
         </div>
     </div>
 <?php ob_start() ?>
+<style>
+    .atlas-agent-toolbar {
+        margin-bottom: 18px;
+    }
+    .atlas-agent-card {
+        overflow: hidden;
+    }
+    .atlas-agent-card .content {
+        padding: 0;
+    }
+    .atlas-agent-card img {
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        display: block;
+    }
+    .atlas-agent-card h3 {
+        margin-bottom: 4px;
+        font-size: 22px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+    }
+    .atlas-agent-card small {
+        display: block;
+        color: #756b5e;
+        line-height: 1.5;
+    }
+</style>
 <?php
 $footer_content = ob_get_clean();
 include_once TEMPLATE_PATH . '/overall_footer_dashboard.php';

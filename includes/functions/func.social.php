@@ -2950,6 +2950,7 @@ function social_media_format_post_record($post, $userId = 0)
         'source_video' => !empty($metadata['source_video']) ? $config['site_url'] . 'storage/social_assets/' . $metadata['source_video'] : '',
         'source_video_file' => !empty($metadata['source_video']) ? $metadata['source_video'] : '',
         'debug' => $debug,
+        'campaign' => !empty($metadata['campaign']) && is_array($metadata['campaign']) ? $metadata['campaign'] : [],
         'vote_value' => !empty($feedback['vote_value']) ? (int) $feedback['vote_value'] : 0,
         'created_at' => !empty($post['created_at']) ? $post['created_at'] : '',
         'updated_at' => !empty($post['updated_at']) ? $post['updated_at'] : '',
@@ -3346,6 +3347,7 @@ function social_media_persist_post_record($user_id, $item, $brief = '', $options
     $excludedAssetKeys = array_values(array_filter((array) (!empty($options['excluded_asset_keys']) ? $options['excluded_asset_keys'] : [])));
     $forceAsset = !empty($options['asset']) && is_array($options['asset']) ? $options['asset'] : null;
     $strictExclusion = !empty($options['strict_asset_exclusion']);
+    $campaignContext = !empty($options['campaign']) && is_array($options['campaign']) ? $options['campaign'] : [];
 
     $keywords = array_merge(
         !empty($item['keywords']) && is_array($item['keywords']) ? $item['keywords'] : [],
@@ -3394,6 +3396,11 @@ function social_media_persist_post_record($user_id, $item, $brief = '', $options
     $record->preview_image = $preview;
     $record->metadata = json_encode([
         'brief' => $brief,
+        'campaign' => !empty($campaignContext) ? [
+            'id' => !empty($campaignContext['id']) ? trim((string) $campaignContext['id']) : '',
+            'title' => !empty($campaignContext['title']) ? trim((string) $campaignContext['title']) : '',
+            'batch_key' => $batchKey,
+        ] : [],
         'hook' => !empty($item['hook']) ? $item['hook'] : '',
         'cta' => !empty($item['cta']) ? $item['cta'] : '',
         'hashtags' => !empty($item['hashtags']) && is_array($item['hashtags']) ? $item['hashtags'] : [],
@@ -5398,6 +5405,7 @@ function social_media_store_generated_posts($user_id, $items, $brief = '', $opti
 {
     social_media_bootstrap();
     $batchKey = !empty($options['batch_key']) ? $options['batch_key'] : uniqid('batch_');
+    $campaignContext = !empty($options['campaign']) && is_array($options['campaign']) ? $options['campaign'] : [];
     $stored = [];
     $usedAssetIds = [];
 
@@ -5405,6 +5413,7 @@ function social_media_store_generated_posts($user_id, $items, $brief = '', $opti
         $result = social_media_persist_post_record($user_id, $item, $brief, [
             'batch_key' => $batchKey,
             'excluded_asset_keys' => $usedAssetIds,
+            'campaign' => $campaignContext,
         ]);
         if (!$result['success']) {
             continue;
@@ -5416,6 +5425,29 @@ function social_media_store_generated_posts($user_id, $items, $brief = '', $opti
     }
 
     return $stored;
+}
+
+function social_media_get_posts_for_campaign($user_id, $campaignId, $limit = 18)
+{
+    $campaignId = trim((string) $campaignId);
+    if ($campaignId === '') {
+        return [];
+    }
+
+    $posts = social_media_get_recent_posts($user_id, max($limit * 4, 36));
+    $matches = [];
+    foreach ($posts as $post) {
+        $campaign = !empty($post['campaign']) && is_array($post['campaign']) ? $post['campaign'] : [];
+        if (trim((string) ($campaign['id'] ?? '')) !== $campaignId) {
+            continue;
+        }
+        $matches[] = $post;
+        if (count($matches) >= $limit) {
+            break;
+        }
+    }
+
+    return $matches;
 }
 
 function social_media_save_asset($payload)

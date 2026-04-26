@@ -9,13 +9,31 @@ overall_header(__("Dashboard"));
             <?php print_adsense_code('header_bottom'); ?>
 
             <div class="dashboard-headline">
-                <h3><?php _e("Dashboard") ?></h3>
+                <h3><?php _e("Atlas Studio Home") ?></h3>
                 <nav id="breadcrumbs" class="dark">
                     <ul>
                         <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                        <li><?php _e("Dashboard") ?></li>
+                        <li><?php _e("Atlas Studio Home") ?></li>
                     </ul>
                 </nav>
+            </div>
+
+            <div class="atlas-dashboard-studio-hero margin-bottom-24">
+                <div class="atlas-dashboard-studio-main">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Atlas creative operating system") ?></span>
+                    <h2><?php _e("Brand context in. Campaigns and assets out.") ?></h2>
+                    <p><?php _e("Atlas is now structured like a studio: define the brand once, shape campaign direction, then generate posts, grids, and one-off assets without losing strategic consistency.") ?></p>
+                    <div class="atlas-dashboard-studio-actions">
+                        <a href="<?php url("COMPANY_INTELLIGENCE") ?>" class="button ripple-effect atlas-primary-action"><?php _e("Open Brand Studio") ?></a>
+                        <a href="<?php url("AI_IMAGES") ?>" class="button gray ripple-effect"><?php _e("Open Campaign Studio") ?></a>
+                    </div>
+                </div>
+                <div class="atlas-dashboard-studio-side">
+                    <div class="atlas-dashboard-studio-card">
+                        <strong><?php _e("Current studio loop") ?></strong>
+                        <span><?php _e("Import the brand, choose the campaign direction, then use Atlas outputs as a connected creative system instead of isolated generations.") ?></span>
+                    </div>
+                </div>
             </div>
 
             <div class="fun-facts-container atlas-dashboard-stats">
@@ -127,7 +145,57 @@ overall_header(__("Dashboard"));
                 <div class="col-lg-6">
                     <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">
                         <div class="headline">
-                            <h3><i class="icon-feather-message-circle"></i> <?php _e("Your Most Used AI Agents") ?></h3>
+                            <h3><i class="icon-feather-target"></i> <?php _e("Recent Campaign Studios") ?></h3>
+                        </div>
+                        <div class="content with-padding">
+                            <?php if (!empty($recent_campaign_briefs)) { ?>
+                                <div class="atlas-dashboard-quick-list">
+                                    <?php foreach ($recent_campaign_briefs as $campaign) { ?>
+                                        <a href="<?php _esc(!empty($campaign['id']) ? hatchers_campaign_record_url($campaign['id']) : $link['AI_IMAGES_CAMPAIGN']) ?>" class="atlas-dashboard-quick-item">
+                                            <span class="atlas-dashboard-quick-avatar"><i class="icon-feather-target"></i></span>
+                                            <span class="atlas-dashboard-quick-copy">
+                                                <strong><?php _esc($campaign['title']) ?></strong>
+                                                <small><?php _esc(!empty($campaign['description']) ? strlimiter(strip_tags((string) $campaign['description']), 90) : __('Open campaign generator')) ?></small>
+                                            </span>
+                                            <span class="atlas-dashboard-quick-meta"><?php _esc(!empty($campaign['updated_at']) ? timeAgo($campaign['updated_at']) : __('Saved')) ?></span>
+                                        </a>
+                                    <?php } ?>
+                                </div>
+                            <?php } else { ?>
+                                <p class="margin-bottom-0"><?php _e("Create your first campaign studio in Atlas and it will appear here for quick access.") ?></p>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">
+                        <div class="headline">
+                            <h3><i class="icon-feather-archive"></i> <?php _e("Archived Campaign Studios") ?></h3>
+                        </div>
+                        <div class="content with-padding">
+                            <?php if (!empty($archived_campaign_briefs)) { ?>
+                                <div class="atlas-dashboard-quick-list">
+                                    <?php foreach ($archived_campaign_briefs as $campaign) { ?>
+                                        <a href="<?php _esc(!empty($campaign['id']) ? hatchers_campaign_record_url($campaign['id']) : $link['AI_IMAGES_CAMPAIGN']) ?>" class="atlas-dashboard-quick-item">
+                                            <span class="atlas-dashboard-quick-avatar"><i class="icon-feather-archive"></i></span>
+                                            <span class="atlas-dashboard-quick-copy">
+                                                <strong><?php _esc($campaign['title']) ?></strong>
+                                                <small><?php _esc(!empty($campaign['description']) ? strlimiter(strip_tags((string) $campaign['description']), 90) : __('Open archived campaign')) ?></small>
+                                            </span>
+                                            <span class="atlas-dashboard-quick-meta"><?php _esc(!empty($campaign['updated_at']) ? timeAgo($campaign['updated_at']) : __('Archived')) ?></span>
+                                        </a>
+                                    <?php } ?>
+                                </div>
+                            <?php } else { ?>
+                                <p class="margin-bottom-0"><?php _e("Archived campaigns will appear here so your active dashboard stays focused.") ?></p>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">
+                        <div class="headline">
+                            <h3><i class="icon-feather-message-circle"></i> <?php _e("Your Most Used Atlas Agents") ?></h3>
                         </div>
                         <div class="content with-padding">
                             <?php if (!empty($top_agents)) { ?>
@@ -154,7 +222,7 @@ overall_header(__("Dashboard"));
                 <div class="col-lg-6">
                     <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">
                         <div class="headline">
-                            <h3><i class="icon-feather-image"></i> <?php _e("Last Generated Posts") ?></h3>
+                            <h3><i class="icon-feather-image"></i> <?php _e("Latest Studio Output") ?></h3>
                         </div>
                         <div class="content with-padding">
                             <?php if (!empty($recent_social_posts)) { ?>
@@ -188,7 +256,7 @@ overall_header(__("Dashboard"));
                 <div class="col-lg-12">
                     <div class="dashboard-box margin-top-0 margin-bottom-24 atlas-dashboard-list-box">
                         <div class="headline">
-                            <h3><i class="icon-feather-file-text"></i> <?php _e("Latest Generated Content") ?></h3>
+                            <h3><i class="icon-feather-file-text"></i> <?php _e("Latest One-Off Assets") ?></h3>
                         </div>
                         <div class="content with-padding">
                             <?php if (!empty($recent_generated_content)) { ?>
@@ -240,6 +308,67 @@ overall_header(__("Dashboard"));
     </div>
 </div>
 <?php ob_start() ?>
+<style>
+    .atlas-dashboard-studio-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) 320px;
+        gap: 20px;
+        align-items: stretch;
+        padding: 26px 28px;
+        border-radius: 26px;
+        border: 1px solid rgba(223, 211, 190, 0.9);
+        background:
+            radial-gradient(circle at top right, rgba(255, 225, 180, 0.35), transparent 26%),
+            linear-gradient(180deg, rgba(255, 252, 247, 0.98) 0%, rgba(246, 241, 232, 0.96) 100%);
+        box-shadow: 0 18px 44px rgba(44, 31, 16, 0.06);
+    }
+    .atlas-dashboard-studio-main h2 {
+        margin: 0 0 10px;
+        font-size: clamp(30px, 4vw, 42px);
+        line-height: 0.98;
+        letter-spacing: -0.05em;
+        color: #221d17;
+    }
+    .atlas-dashboard-studio-main p {
+        margin: 0;
+        color: #6e6557;
+        line-height: 1.7;
+        font-size: 15px;
+        max-width: 760px;
+    }
+    .atlas-dashboard-studio-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+    .atlas-dashboard-studio-card {
+        height: 100%;
+        border-radius: 22px;
+        padding: 18px;
+        border: 1px solid rgba(38, 34, 27, 0.08);
+        background: linear-gradient(180deg, #201d19 0%, #30271d 100%);
+        box-shadow: 0 18px 42px rgba(25, 21, 15, 0.16);
+    }
+    .atlas-dashboard-studio-card strong {
+        display: block;
+        color: #fff;
+        font-size: 16px;
+        margin-bottom: 8px;
+        letter-spacing: -0.02em;
+    }
+    .atlas-dashboard-studio-card span {
+        display: block;
+        color: rgba(255,255,255,.76);
+        font-size: 13px;
+        line-height: 1.7;
+    }
+    @media (max-width: 991px) {
+        .atlas-dashboard-studio-hero {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 <script>
     (function ($) {
         $('.intelligence-refresh-btn').on('click', function (e) {

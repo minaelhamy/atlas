@@ -36,6 +36,11 @@ overall_header(__("Text to Speech"));
                         </ul>
                     </nav>
                 </div>
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Audio output") ?></span>
+                    <h2><?php _e("Turn written text into a voice-ready audio asset") ?></h2>
+                    <p><?php _e("Atlas can generate spoken audio from your script, keep a history of outputs, and help you choose language and voice inside one studio flow.") ?></p>
+                </div>
                 <form id="ai_text_speech" name="ai_text_speech" method="post" action="#">
                     <div class="submit-field margin-bottom-10">
                         <h6><?php _e("Text") ?></h6>
@@ -117,7 +122,7 @@ overall_header(__("Text to Speech"));
                     <!-- Headline -->
                     <div class="headline">
                         <h3>
-                            <i class="icon-feather-volume-2"></i><?php _e('Speeches') ?>
+                            <i class="icon-feather-volume-2"></i><?php _e('Audio Library') ?>
                         </h3>
                     </div>
                     <div class="content with-padding">

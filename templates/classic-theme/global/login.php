@@ -13,7 +13,12 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
                     <?php } else { ?>
                         <h3><?php _esc($config['site_title']) ?></h3>
                     <?php } ?>
-                    <span><?php _e("Hatchers AI workspace") ?></span>
+                    <span><?php _e("Atlas Studio access") ?></span>
+                </div>
+
+                <div class="atlas-login-intro">
+                    <h2><?php _e("Welcome back to your creative workspace") ?></h2>
+                    <p><?php _e("Log in to continue building your brand system, website direction, and campaign output from one guided studio.") ?></p>
                 </div>
 
                 <?php if(get_option("enable_user_registration", '1')) { ?>
@@ -128,6 +133,25 @@ $logo_dark = !empty($config['site_logo']) ? $config['site_url'] . 'storage/logo/
         color: #8d877f;
         font-size: 15px;
         font-weight: 500;
+    }
+
+    .atlas-login-intro {
+        margin-bottom: 22px;
+    }
+
+    .atlas-login-intro h2 {
+        font-size: 30px;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        margin-bottom: 10px;
+        color: #171717;
+    }
+
+    .atlas-login-intro p {
+        margin: 0;
+        color: #756d64;
+        line-height: 1.7;
+        font-size: 15px;
     }
 
     .atlas-login-page .input-with-icon-left,

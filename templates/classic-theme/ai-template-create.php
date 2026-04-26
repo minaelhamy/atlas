@@ -37,12 +37,22 @@ overall_header(!empty($ai_template['translations'][$config['lang_code']]['title'
                     <nav id="breadcrumbs" class="dark">
                         <ul>
                             <li><a href="<?php url("INDEX") ?>"><?php _e("Home") ?></a></li>
-                            <li><a href="<?php url("AI_TEMPLATES") ?>"><?php _e("Templates") ?></a></li>
+                            <li><a href="<?php url("AI_TEMPLATES") ?>"><?php _e("Template Studio") ?></a></li>
                             <li><?php echo !empty($ai_template['translations'][$config['lang_code']]['title'])
                                     ? $ai_template['translations'][$config['lang_code']]['title']
                                     : $ai_template['title']; ?></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div class="atlas-workflow-hero margin-bottom-24">
+                    <span class="atlas-workflow-eyebrow"><?php _e("Single asset workflow") ?></span>
+                    <h2><?php echo !empty($ai_template['translations'][$config['lang_code']]['title'])
+                            ? $ai_template['translations'][$config['lang_code']]['title']
+                            : $ai_template['title']; ?></h2>
+                    <p><?php echo !empty($ai_template['translations'][$config['lang_code']]['description'])
+                            ? $ai_template['translations'][$config['lang_code']]['description']
+                            : $ai_template['description']; ?></p>
                 </div>
 
                 <div class="row">
@@ -66,10 +76,8 @@ overall_header(!empty($ai_template['translations'][$config['lang_code']]['title'
                                     <?php } ?>
                                 </div>
                                 <div class="content with-padding">
-                                    <div class="notification small-notification notice">
-                                        <?php echo !empty($ai_template['translations'][$config['lang_code']]['description'])
-                                            ? $ai_template['translations'][$config['lang_code']]['description']
-                                            : $ai_template['description']; ?>
+                                    <div class="notification small-notification notice atlas-inline-notice">
+                                        <?php _e("Fill the inputs on the left, then Atlas will generate one focused output you can refine and save on the right.") ?>
                                     </div>
                                     <?php
                                     switch ($ai_template['slug']) {
