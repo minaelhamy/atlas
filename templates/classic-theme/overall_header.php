@@ -176,6 +176,10 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             <li><a href="<?php url("DASHBOARD") ?>"><i
                                                             class="icon-feather-grid"></i> <?php _e("Dashboard") ?></a>
                                             </li>
+                                            <li><a href="<?php url("COMPANY_INTELLIGENCE") ?>"><i
+                                                            class="icon-feather-settings"></i> <?php _e("Company Intelligence") ?>
+                                                </a>
+                                            </li>
                                             <?php if (get_option("enable_ai_templates", 1)) { ?>
                                                 <li><a href="<?php url("AI_TEMPLATES") ?>"><i
                                                                 class="icon-feather-layers"></i> <?php _e("Daily use templates") ?>
@@ -185,7 +189,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_images']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                                     <li><a href="<?php url("AI_IMAGES") ?>"><i
-                                                                    class="icon-feather-image"></i> <?php _e("Social Media Automation") ?>
+                                                                    class="icon-feather-image"></i> <?php _e("Campaign Studio") ?>
                                                         </a>
                                                     </li>
                                                 <?php }
@@ -193,7 +197,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_chat']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                                     <li><a href="<?php url("AI_CHAT_BOTS") ?>"><i
-                                                                    class="icon-feather-message-circle"></i> <?php _e("Your Ai Agents") ?>
+                                                                    class="icon-feather-message-circle"></i> <?php _e("Atlas Agents") ?>
                                                         </a></li>
                                                 <?php }
                                             }
@@ -210,14 +214,6 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                                                     class="icon-feather-volume-2"></i> <?php _e("Text to Speech") ?>
                                                         </a></li>
                                                 <?php }
-                                            }
-                                            if ($config['enable_ai_code']) {
-                                                if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_code'])) { ?>
-                                                    <li><a href="<?php url("AI_CODE") ?>"><i
-                                                                    class="icon-feather-code"></i> <?php _e("AI Code") ?>
-                                                        </a>
-                                                    </li>
-                                                <?php }
                                             } ?>
                                             <li><a href="<?php url("ALL_DOCUMENTS") ?>"><i
                                                             class="icon-feather-file-text"></i> <?php _e("All Generated Content") ?>
@@ -225,9 +221,6 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             <li><a href="<?php url("ALL_IMAGES") ?>"><i
                                                             class="icon-feather-grid"></i> <?php _e("All Social Posts") ?>
                                                 </a></li>
-                                            <li><a href="<?php url("MEMBERSHIP") ?>"><i
-                                                            class="icon-feather-gift"></i> <?php _e("Membership") ?></a>
-                                            </li>
                                             <li><a href="<?php url("ACCOUNT_SETTING") ?>"><i
                                                             class="icon-feather-settings"></i> <?php _e("Account Setting") ?>
                                                 </a></li>
@@ -358,6 +351,10 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             <li><a href="<?php url("DASHBOARD") ?>"><i
                                                             class="icon-feather-grid"></i> <?php _e("Dashboard") ?></a>
                                             </li>
+                                            <li><a href="<?php url("COMPANY_INTELLIGENCE") ?>"><i
+                                                            class="icon-feather-settings"></i> <?php _e("Company Intelligence") ?>
+                                                </a>
+                                            </li>
                                             <?php if (get_option("enable_ai_templates", 1)) { ?>
                                                 <li><a href="<?php url("AI_TEMPLATES") ?>"><i
                                                                 class="icon-feather-layers"></i> <?php _e("Daily use templates") ?>
@@ -367,7 +364,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_images']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_images_limit'])) { ?>
                                                     <li><a href="<?php url("AI_IMAGES") ?>"><i
-                                                                    class="icon-feather-image"></i> <?php _e("Social Media Automation") ?>
+                                                                    class="icon-feather-image"></i> <?php _e("Campaign Studio") ?>
                                                         </a>
                                                     </li>
                                                 <?php }
@@ -375,7 +372,7 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             if ($config['enable_ai_chat']) {
                                                 if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_chat'])) { ?>
                                                     <li><a href="<?php url("AI_CHAT_BOTS") ?>"><i
-                                                                    class="icon-feather-message-circle"></i> <?php _e("Your Ai Agents") ?>
+                                                                    class="icon-feather-message-circle"></i> <?php _e("Atlas Agents") ?>
                                                         </a></li>
                                                 <?php }
                                             }
@@ -392,14 +389,6 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                                                     class="icon-feather-volume-2"></i> <?php _e("Text to Speech") ?>
                                                         </a></li>
                                                 <?php }
-                                            }
-                                            if ($config['enable_ai_code']) {
-                                                if (!get_option('hide_plan_disabled_features') || (get_option('hide_plan_disabled_features') && $plan_settings['ai_code'])) { ?>
-                                                    <li><a href="<?php url("AI_CODE") ?>"><i
-                                                                    class="icon-feather-code"></i> <?php _e("AI Code") ?>
-                                                        </a>
-                                                    </li>
-                                                <?php }
                                             } ?>
                                             <li><a href="<?php url("ALL_DOCUMENTS") ?>"><i
                                                             class="icon-feather-file-text"></i> <?php _e("All Generated Content") ?>
@@ -407,9 +396,6 @@ $plan_settings = $current_user['plan']['settings']; ?>
                                             <li><a href="<?php url("ALL_IMAGES") ?>"><i
                                                             class="icon-feather-grid"></i> <?php _e("All Social Posts") ?>
                                                 </a></li>
-                                            <li><a href="<?php url("MEMBERSHIP") ?>"><i
-                                                            class="icon-feather-gift"></i> <?php _e("Membership") ?></a>
-                                            </li>
                                             <li><a href="<?php url("ACCOUNT_SETTING") ?>"><i
                                                             class="icon-feather-settings"></i> <?php _e("Account Setting") ?>
                                                 </a></li>
