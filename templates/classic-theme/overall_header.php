@@ -462,7 +462,13 @@ if ($is_login && !empty($current_user['id']) && function_exists('hatchers_get_fo
         <?php if ($is_login && !empty($atlasFounderContext['connected'])) { ?>
             <div class="atlas-founder-context-shell">
                 <div class="container">
-                    <div class="atlas-founder-context-bar">
+                    <<?php echo !empty($atlasFounderContext['needs_company_intelligence']) ? 'a' : 'div'; ?>
+                        class="atlas-founder-context-bar<?php echo !empty($atlasFounderContext['needs_company_intelligence']) ? ' atlas-founder-context-bar--actionable' : ''; ?>"
+                        <?php if (!empty($atlasFounderContext['needs_company_intelligence'])) { ?>
+                            href="<?php _esc($atlasFounderContext['company_intelligence_url']); ?>"
+                            title="<?php _e('Open Company Intelligence'); ?>"
+                        <?php } ?>
+                    >
                         <div class="atlas-founder-context-copy">
                             <span class="atlas-founder-context-eyebrow"><?php _e("Connected to Hatchers OS") ?></span>
                             <strong><?php _esc(!empty($atlasFounderContext['company_name']) ? $atlasFounderContext['company_name'] : __('Founder context is active')); ?></strong>
@@ -483,6 +489,9 @@ if ($is_login && !empty($current_user['id']) && function_exists('hatchers_get_fo
                                     : _esc(__('Atlas is using your synced company intelligence and live founder context.'));
                                 ?>
                             </span>
+                            <?php if (!empty($atlasFounderContext['needs_company_intelligence'])) { ?>
+                                <span class="atlas-founder-context-cta"><?php _e('Complete Company Intelligence to strengthen Atlas guidance'); ?></span>
+                            <?php } ?>
                         </div>
                         <div class="atlas-founder-context-metrics">
                             <span><?php _esc(__('Tasks') . ' ' . (int) ($atlasFounderContext['open_tasks'] ?? 0)); ?></span>
@@ -490,7 +499,7 @@ if ($is_login && !empty($current_user['id']) && function_exists('hatchers_get_fo
                             <span><?php _esc(__('Bookings') . ' ' . (int) ($atlasFounderContext['bookings'] ?? 0)); ?></span>
                             <span><?php _esc(strtoupper((string) ($atlasFounderContext['currency'] ?? 'USD')) . ' ' . number_format((float) ($atlasFounderContext['revenue'] ?? 0), 0)); ?></span>
                         </div>
-                    </div>
+                    </<?php echo !empty($atlasFounderContext['needs_company_intelligence']) ? 'a' : 'div'; ?>>
                 </div>
             </div>
         <?php } ?>

@@ -643,6 +643,9 @@ function hatchers_get_founder_context_summary($userId)
     $targetAudience = trim((string) ($company['target_audience'] ?? ''));
     $goal = trim((string) ($company['primary_growth_goal'] ?? ''));
     $updatedAt = trim((string) ($intelligence['updated_at'] ?? ''));
+    $companyDescription = trim((string) ($company['company_description'] ?? ''));
+    $idealCustomerProfile = trim((string) ($company['ideal_customer_profile'] ?? ''));
+    $differentiators = trim((string) ($company['differentiators'] ?? ''));
 
     $summary = [
         'connected' => !empty($intelligence),
@@ -660,6 +663,21 @@ function hatchers_get_founder_context_summary($userId)
         'updated_at' => $updatedAt,
         'has_company_intelligence' => $companyName !== '' || $targetAudience !== '' || $brandVoice !== '' || $goal !== '',
     ];
+
+    $completenessSignals = [
+        $companyName !== '',
+        $companyDescription !== '',
+        $businessModel !== '',
+        $targetAudience !== '',
+        $idealCustomerProfile !== '',
+        $brandVoice !== '',
+        $goal !== '',
+        $differentiators !== '',
+    ];
+    $completedSignals = count(array_filter($completenessSignals));
+    $summary['intelligence_completeness_score'] = (int) round(($completedSignals / max(1, count($completenessSignals))) * 100);
+    $summary['needs_company_intelligence'] = $summary['intelligence_completeness_score'] < 60;
+    $summary['company_intelligence_url'] = hatchers_get_platform_urls()['atlas'] . '/company-intelligence';
 
     $highlights = [];
     if ($companyName !== '') {
