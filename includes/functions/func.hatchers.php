@@ -623,6 +623,73 @@ function hatchers_get_founder_intelligence_text($userId, array $options = [])
     return implode("\n", $lines);
 }
 
+function hatchers_get_founder_context_summary($userId)
+{
+    $intelligence = hatchers_get_founder_intelligence($userId);
+    $founder = isset($intelligence['founder']) && is_array($intelligence['founder']) ? $intelligence['founder'] : [];
+    $company = isset($intelligence['company']) && is_array($intelligence['company']) ? $intelligence['company'] : [];
+    $operations = isset($intelligence['operations']) && is_array($intelligence['operations']) ? $intelligence['operations'] : [];
+
+    $execution = isset($operations['execution']) && is_array($operations['execution']) ? $operations['execution'] : [];
+    $commercial = isset($operations['commercial']) && is_array($operations['commercial']) ? $operations['commercial'] : [];
+
+    $companyName = trim((string) ($company['company_name'] ?? ''));
+    if ($companyName === '') {
+        $companyName = trim((string) ($founder['company_brief'] ?? ''));
+    }
+
+    $businessModel = trim((string) ($company['business_model'] ?? ''));
+    $brandVoice = trim((string) ($company['brand_voice'] ?? ''));
+    $targetAudience = trim((string) ($company['target_audience'] ?? ''));
+    $goal = trim((string) ($company['primary_growth_goal'] ?? ''));
+    $updatedAt = trim((string) ($intelligence['updated_at'] ?? ''));
+
+    $summary = [
+        'connected' => !empty($intelligence),
+        'company_name' => $companyName,
+        'business_model' => $businessModel,
+        'brand_voice' => $brandVoice,
+        'target_audience' => $targetAudience,
+        'primary_growth_goal' => $goal,
+        'open_tasks' => (int) ($execution['open_tasks'] ?? 0),
+        'completed_tasks' => (int) ($execution['completed_tasks'] ?? 0),
+        'orders' => (int) ($commercial['order_count'] ?? 0),
+        'bookings' => (int) ($commercial['booking_count'] ?? 0),
+        'revenue' => (float) ($commercial['gross_revenue'] ?? 0),
+        'currency' => trim((string) ($commercial['currency'] ?? 'USD')),
+        'updated_at' => $updatedAt,
+        'has_company_intelligence' => $companyName !== '' || $targetAudience !== '' || $brandVoice !== '' || $goal !== '',
+    ];
+
+    $highlights = [];
+    if ($companyName !== '') {
+        $highlights[] = $companyName;
+    }
+    if ($businessModel !== '') {
+        $highlights[] = $businessModel;
+    }
+    if ($targetAudience !== '') {
+        $highlights[] = 'Audience: ' . $targetAudience;
+    }
+    if ($brandVoice !== '') {
+        $highlights[] = 'Voice: ' . $brandVoice;
+    }
+    if ($goal !== '') {
+        $highlights[] = 'Goal: ' . $goal;
+    }
+
+    $metrics = [];
+    $metrics[] = 'Tasks ' . (int) ($execution['open_tasks'] ?? 0);
+    $metrics[] = 'Orders ' . (int) ($commercial['order_count'] ?? 0);
+    $metrics[] = 'Bookings ' . (int) ($commercial['booking_count'] ?? 0);
+    $metrics[] = strtoupper($summary['currency']) . ' ' . number_format((float) $summary['revenue'], 0);
+
+    $summary['highlights'] = $highlights;
+    $summary['metrics'] = $metrics;
+
+    return $summary;
+}
+
 function hatchers_get_platform_urls()
 {
     return [
@@ -1729,6 +1796,10 @@ function hatchers_build_write_action_from_message($message)
         }
     }
 
+    if (hatchers_is_instructional_question($message)) {
+        return [];
+    }
+
     if (!preg_match('/\b(add|create|draft|write|prepare|make)\b/i', $message)) {
         return [];
     }
@@ -1757,6 +1828,34 @@ function hatchers_build_write_action_from_message($message)
     }
 
     return [];
+}
+
+function hatchers_is_instructional_question($message)
+{
+    $message = trim((string) $message);
+    if ($message === '') {
+        return false;
+    }
+
+    $patterns = [
+        '/^\s*how\s+to\b/i',
+        '/^\s*how\s+do\s+i\b/i',
+        '/^\s*where\s+do\s+i\b/i',
+        '/^\s*what\s+is\s+the\s+best\s+way\s+to\b/i',
+        '/^\s*what\s+is\s+the\s+process\s+for\b/i',
+        '/^\s*can\s+you\s+show\s+me\s+how\s+to\b/i',
+        '/^\s*can\s+you\s+tell\s+me\s+how\s+to\b/i',
+        '/^\s*walk\s+me\s+through\b/i',
+        '/^\s*explain\s+how\s+to\b/i',
+    ];
+
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $message)) {
+            return true;
+        }
+    }
+
+    return substr($message, -1) === '?';
 }
 
 function hatchers_execute_write_action($userId, array $action)

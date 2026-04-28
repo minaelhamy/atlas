@@ -151,6 +151,91 @@ i,
     display: none;
 }
 
+.atlas-founder-context-shell {
+    padding: 0 0 18px;
+}
+
+.atlas-founder-context-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid var(--atlas-line);
+    border-radius: 20px;
+    box-shadow: var(--atlas-shadow-soft);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 14px 18px;
+}
+
+.atlas-founder-context-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.atlas-founder-context-copy strong {
+    color: var(--atlas-text);
+    font-size: 19px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+.atlas-founder-context-copy span:last-child {
+    color: var(--atlas-muted);
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.atlas-founder-context-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--atlas-muted-soft);
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 600;
+}
+
+.atlas-founder-context-eyebrow::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff6f61 0%, #e8346b 100%);
+    box-shadow: 0 0 0 5px rgba(232, 52, 107, 0.12);
+}
+
+.atlas-founder-context-metrics {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.atlas-founder-context-metrics span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(247, 246, 242, 0.95);
+    border: 1px solid var(--atlas-line);
+    color: var(--atlas-text);
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
 .page-app-home .dashboard-sidebar,
 .page-app-ai-images .dashboard-sidebar,
 .page-app-ai-chat .dashboard-sidebar,
@@ -167,6 +252,23 @@ i,
     gap: 24px;
     padding: 28px;
     align-items: stretch;
+}
+
+@media (max-width: 991px) {
+    .atlas-founder-context-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .atlas-founder-context-metrics {
+        justify-content: flex-start;
+    }
+
+    .atlas-founder-context-copy span:last-child {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
 }
 
 .dashboard-sidebar {

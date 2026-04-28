@@ -110,7 +110,12 @@
 <![endif]-->
 <?php
 global $current_user;
-$plan_settings = $current_user['plan']['settings']; ?>
+$plan_settings = $current_user['plan']['settings'];
+$atlasFounderContext = [];
+if ($is_login && !empty($current_user['id']) && function_exists('hatchers_get_founder_context_summary')) {
+    $atlasFounderContext = hatchers_get_founder_context_summary((int) $current_user['id']);
+}
+?>
 
 <?php if (CURRENT_PAGE == 'app/home'){ ?>
 <div>
@@ -454,6 +459,41 @@ $plan_settings = $current_user['plan']['settings']; ?>
             </div>
             <!-- Header / End -->
         </header>
+        <?php if ($is_login && !empty($atlasFounderContext['connected'])) { ?>
+            <div class="atlas-founder-context-shell">
+                <div class="container">
+                    <div class="atlas-founder-context-bar">
+                        <div class="atlas-founder-context-copy">
+                            <span class="atlas-founder-context-eyebrow"><?php _e("Connected to Hatchers OS") ?></span>
+                            <strong><?php _esc(!empty($atlasFounderContext['company_name']) ? $atlasFounderContext['company_name'] : __('Founder context is active')); ?></strong>
+                            <span>
+                                <?php
+                                $contextSummary = [];
+                                if (!empty($atlasFounderContext['business_model'])) {
+                                    $contextSummary[] = $atlasFounderContext['business_model'];
+                                }
+                                if (!empty($atlasFounderContext['target_audience'])) {
+                                    $contextSummary[] = __('Audience') . ': ' . $atlasFounderContext['target_audience'];
+                                }
+                                if (!empty($atlasFounderContext['brand_voice'])) {
+                                    $contextSummary[] = __('Voice') . ': ' . $atlasFounderContext['brand_voice'];
+                                }
+                                echo !empty($contextSummary)
+                                    ? _esc(implode(' • ', array_slice($contextSummary, 0, 3)))
+                                    : _esc(__('Atlas is using your synced company intelligence and live founder context.'));
+                                ?>
+                            </span>
+                        </div>
+                        <div class="atlas-founder-context-metrics">
+                            <span><?php _esc(__('Tasks') . ' ' . (int) ($atlasFounderContext['open_tasks'] ?? 0)); ?></span>
+                            <span><?php _esc(__('Orders') . ' ' . (int) ($atlasFounderContext['orders'] ?? 0)); ?></span>
+                            <span><?php _esc(__('Bookings') . ' ' . (int) ($atlasFounderContext['bookings'] ?? 0)); ?></span>
+                            <span><?php _esc(strtoupper((string) ($atlasFounderContext['currency'] ?? 'USD')) . ' ' . number_format((float) ($atlasFounderContext['revenue'] ?? 0), 0)); ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php } ?>
         <div class="clearfix"></div>
         <!-- Header Container / End -->
 <?php } ?>
