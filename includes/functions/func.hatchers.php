@@ -213,6 +213,57 @@ function hatchers_get_tool_knowledge()
     ];
 }
 
+function hatchers_system_knowledge_paths()
+{
+    $paths = [];
+
+    $configured = trim((string) get_env_setting('HATCHERS_SYSTEM_KNOWLEDGE_PATH', ''));
+    if ($configured !== '') {
+        $paths[] = $configured;
+    }
+
+    $atlasRoot = dirname(__DIR__, 2);
+    $workspaceRoot = dirname($atlasRoot);
+
+    $paths[] = $workspaceRoot . '/app.hatchers.ai/docs/HATCHERS_SYSTEM_KNOWLEDGE.md';
+    $paths[] = $atlasRoot . '/includes/data/HATCHERS_SYSTEM_KNOWLEDGE.md';
+
+    return array_values(array_unique($paths));
+}
+
+function hatchers_read_system_knowledge()
+{
+    foreach (hatchers_system_knowledge_paths() as $path) {
+        if (!is_string($path) || $path === '' || !is_file($path) || !is_readable($path)) {
+            continue;
+        }
+
+        $contents = file_get_contents($path);
+        if (is_string($contents) && trim($contents) !== '') {
+            return trim($contents);
+        }
+    }
+
+    return '';
+}
+
+function hatchers_system_knowledge_text()
+{
+    $knowledge = hatchers_read_system_knowledge();
+    if ($knowledge !== '') {
+        return $knowledge;
+    }
+
+    return trim(
+        "Hatchers OS is the founder home base and subscription authority.\n" .
+        "Atlas handles AI, campaigns, agents, and company intelligence.\n" .
+        "LMS handles learning plans, milestones, tasks, and mentor execution.\n" .
+        "Bazaar handles products, storefronts, and orders.\n" .
+        "Servio handles services, bookings, staff, and working hours.\n" .
+        "Founders should not be told to buy separate plans inside those tools."
+    );
+}
+
 function hatchers_get_founder_intelligence($userId)
 {
     $intelligence = hatchers_decode_json_option($userId, 'hatchers_founder_intelligence', [
@@ -400,6 +451,7 @@ function hatchers_build_assistant_instructions($userId, array $payload)
         "Current app: " . ($currentApp !== '' ? $currentApp : 'unknown') . "\n" .
         "Current page: " . ($currentPage !== '' ? $currentPage : 'unknown') . "\n\n" .
         (!empty($mentorBrief) ? "Mentor brief JSON:\n" . json_encode($mentorBrief) . "\n\n" : '') .
+        "Central system knowledge:\n" . hatchers_system_knowledge_text() . "\n\n" .
         "Tool knowledge:\n" . hatchers_tool_knowledge_text($currentApp) . "\n\n" .
         ($actionPlan !== '' ? "Current founder action plan:\n" . $actionPlan . "\n\n" : '') .
         "Founder intelligence JSON:\n" . json_encode($intelligence)
