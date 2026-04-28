@@ -238,6 +238,11 @@ function get_user_group()
  */
 function get_user_membership_settings()
 {
+    $currentUserId = isset($_SESSION['user']['id']) ? (int) $_SESSION['user']['id'] : 0;
+    if ($currentUserId > 0 && hatchers_os_user_has_full_access($currentUserId)) {
+        return hatchers_os_membership_detail($currentUserId)['settings'];
+    }
+
     global $config;
     // Get usergroup details
     $group_id = get_user_group();
@@ -276,6 +281,11 @@ function get_user_membership_settings()
  */
 function get_user_membership_detail($user_id)
 {
+    $user_id = (int) $user_id;
+    if ($user_id > 0 && hatchers_os_user_has_full_access($user_id)) {
+        return hatchers_os_membership_detail($user_id);
+    }
+
     global $config;
     // Get usergroup details
     $group_id = get_user_group();
@@ -298,6 +308,154 @@ function get_user_membership_detail($user_id)
         }
     }
     return $sub_info;
+}
+
+function hatchers_os_user_has_full_access($user_id)
+{
+    return (string) get_user_option($user_id, 'hatchers_os_access', '') === '1';
+}
+
+function hatchers_os_membership_detail($user_id)
+{
+    global $config;
+
+    $plans = [];
+
+    $freePlan = json_decode(get_option('free_membership_plan'), true);
+    if (is_array($freePlan)) {
+        $plans[] = $freePlan;
+    }
+
+    $trialPlan = json_decode(get_option('trial_membership_plan'), true);
+    if (is_array($trialPlan)) {
+        $plans[] = $trialPlan;
+    }
+
+    $databasePlans = ORM::for_table($config['db']['pre'] . 'plans')->find_array();
+    foreach ($databasePlans as $plan) {
+        if (!empty($plan['settings'])) {
+            $plan['settings'] = json_decode($plan['settings'], true);
+        }
+
+        if (is_array($plan)) {
+            $plans[] = $plan;
+        }
+    }
+
+    $merged = [
+        'id' => 'hatchers-os',
+        'name' => 'Hatchers OS',
+        'badge' => 'OS',
+        'status' => 1,
+        'settings' => [],
+    ];
+
+    foreach ($plans as $plan) {
+        if (!is_array($plan) || !isset($plan['settings']) || !is_array($plan['settings'])) {
+            continue;
+        }
+
+        $merged['settings'] = hatchers_os_merge_membership_settings($merged['settings'], $plan['settings']);
+    }
+
+    $merged['settings']['ai_chat'] = 1;
+    $merged['settings']['ai_code'] = 1;
+    $merged['settings']['ai_templates'] = hatchers_os_all_ai_template_slugs();
+    $merged['settings']['ai_chatbots'] = hatchers_os_all_ai_chatbot_ids();
+
+    return $merged;
+}
+
+function hatchers_os_merge_membership_settings(array $base, array $incoming)
+{
+    foreach ($incoming as $key => $value) {
+        if (!array_key_exists($key, $base)) {
+            $base[$key] = $value;
+            continue;
+        }
+
+        if (is_array($value) && is_array($base[$key])) {
+            $base[$key] = hatchers_os_merge_membership_arrays($base[$key], $value);
+            continue;
+        }
+
+        if (is_numeric($value) && is_numeric($base[$key])) {
+            $base[$key] = max((float) $base[$key], (float) $value);
+            continue;
+        }
+
+        if (is_bool($value) || $value === 0 || $value === 1 || $value === '0' || $value === '1') {
+            $base[$key] = ((int) $base[$key] === 1 || (int) $value === 1) ? 1 : 0;
+            continue;
+        }
+
+        if (empty($base[$key]) && !empty($value)) {
+            $base[$key] = $value;
+        }
+    }
+
+    return $base;
+}
+
+function hatchers_os_merge_membership_arrays(array $base, array $incoming)
+{
+    $baseIsList = array_values($base) === $base;
+    $incomingIsList = array_values($incoming) === $incoming;
+
+    if ($baseIsList && $incomingIsList) {
+        return array_values(array_unique(array_merge($base, $incoming), SORT_REGULAR));
+    }
+
+    foreach ($incoming as $key => $value) {
+        if (!array_key_exists($key, $base)) {
+            $base[$key] = $value;
+            continue;
+        }
+
+        if (is_array($value) && is_array($base[$key])) {
+            $base[$key] = hatchers_os_merge_membership_arrays($base[$key], $value);
+            continue;
+        }
+
+        if (is_numeric($value) && is_numeric($base[$key])) {
+            $base[$key] = max((float) $base[$key], (float) $value);
+            continue;
+        }
+
+        if (((int) $base[$key] !== 1) && ((int) $value === 1)) {
+            $base[$key] = 1;
+        }
+    }
+
+    return $base;
+}
+
+function hatchers_os_all_ai_template_slugs()
+{
+    global $config;
+
+    $templates = ORM::for_table($config['db']['pre'] . 'ai_templates')
+        ->where('active', 1)
+        ->order_by_asc('position')
+        ->find_array();
+
+    return array_values(array_filter(array_map(function ($template) {
+        return isset($template['slug']) ? $template['slug'] : null;
+    }, $templates)));
+}
+
+function hatchers_os_all_ai_chatbot_ids()
+{
+    global $config;
+
+    $chatBots = ORM::for_table($config['db']['pre'] . 'ai_chat_bots')
+        ->where('active', 1)
+        ->order_by_asc('position')
+        ->find_array();
+
+    return array_values(array_filter(array_map(function ($chatBot) {
+        return isset($chatBot['id']) ? $chatBot['id'] : null;
+    }, $chatBots)));
 }
 
 /**

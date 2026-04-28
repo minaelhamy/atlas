@@ -114,7 +114,8 @@ if (!empty($payload['company_brief'])) {
 if (!empty($payload['phone'])) {
     update_user_option($user->id(), 'hatchers_phone', trim((string) $payload['phone']));
 }
-update_user_option($user->id(), 'hatchers_source', 'lms');
+update_user_option($user->id(), 'hatchers_source', 'app.hatchers.ai');
+update_user_option($user->id(), 'hatchers_os_access', '1');
 
 $osUrl = rtrim((string) get_env_setting('HATCHERS_OS_URL', 'https://app.hatchers.ai'), '/');
 if ($osUrl !== '') {
