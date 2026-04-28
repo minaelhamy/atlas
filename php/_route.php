@@ -39,6 +39,7 @@ $router->map('POST','/hatchers/founder-sync/?', 'global/hatchers-founder-sync.ph
 $router->map('GET','/hatchers/launch/?', 'global/hatchers-launch.php');
 $router->map('POST','/hatchers/intelligence/sync/?', 'global/hatchers-intelligence-sync.php');
 $router->map('POST','/hatchers/assistant/chat/?', 'global/hatchers-assistant-chat.php');
+$router->map('POST','/hatchers/workspace/summary/?', 'global/hatchers-workspace-summary.php');
 $router->map('POST','/hatchers/intelligence/actions/?', 'global/hatchers-intelligence-actions.php');
 
 $router->map('GET|POST','/ai-templates/?', 'app/ai-templates.php');
