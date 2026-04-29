@@ -732,6 +732,7 @@ function hatchers_resolve_website_autopilot_assets($userId)
     }
 
     $resolved = [];
+    $usedAssetUrls = [];
     foreach ($assetSlots as $slot) {
         if (!is_array($slot)) {
             continue;
@@ -744,10 +745,14 @@ function hatchers_resolve_website_autopilot_assets($userId)
 
         $assets = [];
         if (function_exists('social_media_search_pexels')) {
-            $assets = social_media_search_pexels($query, 4);
+            $assets = social_media_search_pexels($query, 8);
         }
 
-        $selected = !empty($assets[0]) && is_array($assets[0]) ? $assets[0] : [];
+        $selected = hatchers_select_website_asset_candidate($slot, $assets, $usedAssetUrls);
+        if (!empty($selected['url'])) {
+            $usedAssetUrls[] = trim((string) $selected['url']);
+        }
+
         $resolved[] = [
             'slot_key' => trim((string) ($slot['slot_key'] ?? '')),
             'slot_label' => trim((string) ($slot['slot_label'] ?? '')),
@@ -765,6 +770,102 @@ function hatchers_resolve_website_autopilot_assets($userId)
     }
 
     return $resolved;
+}
+
+function hatchers_select_website_asset_candidate(array $slot, array $assets, array $usedAssetUrls = [])
+{
+    if (empty($assets)) {
+        return [];
+    }
+
+    $slotKey = strtolower(trim((string) ($slot['slot_key'] ?? '')));
+    $slotLabel = strtolower(trim((string) ($slot['slot_label'] ?? '')));
+    $visualBrief = strtolower(trim((string) ($slot['visual_brief'] ?? '')));
+    $best = [];
+    $bestScore = -100000;
+
+    foreach ($assets as $index => $asset) {
+        if (!is_array($asset)) {
+            continue;
+        }
+
+        $url = trim((string) ($asset['url'] ?? ''));
+        if ($url === '') {
+            continue;
+        }
+
+        $score = hatchers_score_website_asset_candidate($slotKey, $slotLabel, $visualBrief, $asset, $index);
+        if (in_array($url, $usedAssetUrls, true)) {
+            $score -= 300;
+        }
+
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $best = $asset;
+        }
+    }
+
+    return $best;
+}
+
+function hatchers_score_website_asset_candidate($slotKey, $slotLabel, $visualBrief, array $asset, $index = 0)
+{
+    $text = strtolower(trim(implode(' ', array_filter([
+        isset($asset['title']) ? (string) $asset['title'] : '',
+        isset($asset['description']) ? (string) $asset['description'] : '',
+        isset($asset['author_name']) ? (string) $asset['author_name'] : '',
+        isset($asset['url']) ? (string) $asset['url'] : '',
+        $slotLabel,
+        $visualBrief,
+    ]))));
+
+    $score = max(0, 60 - ((int) $index * 4));
+
+    if (strpos($text, 'abstract') !== false || strpos($text, 'pattern') !== false || strpos($text, 'texture') !== false || strpos($text, 'wallpaper') !== false) {
+        $score -= 30;
+    }
+
+    if (in_array($slotKey, ['hero', 'action'], true)) {
+        foreach (['storefront', 'store', 'business', 'office', 'lifestyle', 'customer', 'service', 'shop', 'team'] as $keyword) {
+            if (strpos($text, $keyword) !== false) {
+                $score += 12;
+            }
+        }
+    }
+
+    if ($slotKey === 'features') {
+        foreach (['detail', 'product', 'tool', 'workspace', 'professional', 'craft', 'service'] as $keyword) {
+            if (strpos($text, $keyword) !== false) {
+                $score += 12;
+            }
+        }
+    }
+
+    if ($slotKey === 'proof') {
+        foreach (['happy', 'customer', 'review', 'people', 'client', 'smile', 'result'] as $keyword) {
+            if (strpos($text, $keyword) !== false) {
+                $score += 12;
+            }
+        }
+    }
+
+    if ($slotKey === 'story') {
+        foreach (['owner', 'founder', 'team', 'portrait', 'people', 'small business', 'workshop'] as $keyword) {
+            if (strpos($text, $keyword) !== false) {
+                $score += 12;
+            }
+        }
+    }
+
+    if ($slotKey === 'faq') {
+        foreach (['support', 'consultation', 'desk', 'phone', 'laptop', 'conversation', 'help'] as $keyword) {
+            if (strpos($text, $keyword) !== false) {
+                $score += 12;
+            }
+        }
+    }
+
+    return $score;
 }
 
 function hatchers_push_os_snapshot($userId, $currentPage = 'atlas', array $extra = [])
