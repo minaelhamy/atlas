@@ -738,26 +738,33 @@ function hatchers_resolve_website_autopilot_assets($userId)
             continue;
         }
 
-        $query = trim((string) ($slot['query'] ?? ''));
-        if ($query === '') {
+        $queries = hatchers_expand_website_asset_queries($slot);
+        if (empty($queries)) {
             continue;
         }
 
         $assets = [];
         $providerSearches = [
+            'social_media_search_wikimedia',
             'social_media_search_pexels',
             'social_media_search_pixabay',
             'social_media_search_unsplash',
         ];
 
-        foreach ($providerSearches as $providerSearch) {
-            if (!function_exists($providerSearch)) {
-                continue;
+        foreach ($queries as $query) {
+            foreach ($providerSearches as $providerSearch) {
+                if (!function_exists($providerSearch)) {
+                    continue;
+                }
+
+                $providerAssets = $providerSearch($query, 8);
+                if (!empty($providerAssets) && is_array($providerAssets)) {
+                    $assets = array_merge($assets, $providerAssets);
+                }
             }
 
-            $providerAssets = $providerSearch($query, 8);
-            if (!empty($providerAssets) && is_array($providerAssets)) {
-                $assets = array_merge($assets, $providerAssets);
+            if (!empty($assets)) {
+                break;
             }
         }
 
@@ -769,9 +776,9 @@ function hatchers_resolve_website_autopilot_assets($userId)
         $resolved[] = [
             'slot_key' => trim((string) ($slot['slot_key'] ?? '')),
             'slot_label' => trim((string) ($slot['slot_label'] ?? '')),
-            'query' => $query,
+            'query' => trim((string) ($slot['query'] ?? '')),
             'status' => !empty($selected) ? 'selected' : 'requested',
-            'provider' => !empty($selected['provider']) ? $selected['provider'] : 'pexels',
+            'provider' => !empty($selected['provider']) ? $selected['provider'] : 'wikimedia',
             'asset_url' => !empty($selected['url']) ? $selected['url'] : '',
             'preview_url' => !empty($selected['thumb']) ? $selected['thumb'] : (!empty($selected['url']) ? $selected['url'] : ''),
             'alt_text' => !empty($slot['alt_text']) ? $slot['alt_text'] : (!empty($selected['title']) ? $selected['title'] : ''),
@@ -783,6 +790,71 @@ function hatchers_resolve_website_autopilot_assets($userId)
     }
 
     return $resolved;
+}
+
+function hatchers_expand_website_asset_queries(array $slot)
+{
+    $queries = [];
+
+    foreach ((array) ($slot['fallback_queries'] ?? []) as $candidate) {
+        $candidate = trim((string) $candidate);
+        if ($candidate !== '') {
+            $queries[] = $candidate;
+        }
+    }
+
+    $primary = trim((string) ($slot['query'] ?? ''));
+    if ($primary !== '') {
+        array_unshift($queries, $primary);
+    }
+
+    $slotKey = strtolower(trim((string) ($slot['slot_key'] ?? '')));
+    $slotLabel = strtolower(trim((string) ($slot['slot_label'] ?? '')));
+    $visualBrief = strtolower(trim((string) ($slot['visual_brief'] ?? '')));
+    $baseText = trim(implode(' ', array_filter([$primary, $slotLabel, $visualBrief])));
+    $normalizedBase = preg_replace('/\s+/', ' ', strtolower($baseText)) ?? strtolower($baseText);
+
+    if ($normalizedBase !== '') {
+        $tokens = preg_split('/\s+/', $normalizedBase) ?: [];
+        $tokens = array_values(array_filter($tokens, function ($token) {
+            return $token !== ''
+                && strlen($token) >= 3
+                && !in_array($token, [
+                    'the', 'and', 'for', 'with', 'that', 'this', 'from', 'your', 'into', 'use',
+                    'image', 'section', 'banner', 'business', 'local', 'lifestyle', 'support',
+                    'helpful', 'customer', 'professional', 'detail', 'checkout', 'action',
+                    'small', 'owner', 'story', 'founder', 'proof', 'hero', 'faq', 'booking'
+                ], true);
+        }));
+
+        if (!empty($tokens)) {
+            $queries[] = implode(' ', array_slice($tokens, 0, 4));
+            $queries[] = implode(' ', array_slice($tokens, 0, 2));
+        }
+    }
+
+    if ($slotKey === 'hero') {
+        $queries[] = 'small business storefront';
+        $queries[] = 'local service business';
+    } elseif ($slotKey === 'features') {
+        $queries[] = 'professional detail service';
+    } elseif ($slotKey === 'proof') {
+        $queries[] = 'happy customer service';
+    } elseif ($slotKey === 'story') {
+        $queries[] = 'small business owner portrait';
+    } elseif ($slotKey === 'faq') {
+        $queries[] = 'helpful support consultation';
+    } elseif ($slotKey === 'action') {
+        $queries[] = 'booking appointment service';
+    }
+
+    $queries = array_values(array_unique(array_filter(array_map(function ($query) {
+        $query = trim((string) $query);
+        $query = preg_replace('/\s+/', ' ', $query) ?? $query;
+        return $query;
+    }, $queries))));
+
+    return array_slice($queries, 0, 8);
 }
 
 function hatchers_select_website_asset_candidate(array $slot, array $assets, array $usedAssetUrls = [])

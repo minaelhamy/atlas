@@ -2533,6 +2533,59 @@ function social_media_search_pixabay($query, $limit = 8)
     return $assets;
 }
 
+function social_media_search_wikimedia($query, $limit = 8)
+{
+    $query = trim((string) $query);
+    if ($query === '') {
+        return [];
+    }
+
+    $url = 'https://commons.wikimedia.org/w/api.php?action=query'
+        . '&generator=search'
+        . '&gsrsearch=' . rawurlencode($query)
+        . '&gsrnamespace=6'
+        . '&gsrlimit=' . max(1, min(20, (int) $limit))
+        . '&prop=imageinfo'
+        . '&iiprop=url|size|user'
+        . '&iiurlwidth=1200'
+        . '&format=json'
+        . '&formatversion=2'
+        . '&origin=*';
+
+    $data = social_media_http_get_json($url);
+    $pages = !empty($data['query']['pages']) && is_array($data['query']['pages']) ? $data['query']['pages'] : [];
+
+    $assets = [];
+    foreach ($pages as $item) {
+        $imageInfo = !empty($item['imageinfo'][0]) && is_array($item['imageinfo'][0]) ? $item['imageinfo'][0] : [];
+        $imageUrl = trim((string) ($imageInfo['thumburl'] ?? $imageInfo['url'] ?? ''));
+        $previewUrl = trim((string) ($imageInfo['thumburl'] ?? $imageInfo['url'] ?? ''));
+
+        if ($imageUrl === '') {
+            continue;
+        }
+
+        $title = trim((string) ($item['title'] ?? 'Wikimedia Commons image'));
+        $title = preg_replace('/^File:/i', '', $title) ?: $title;
+
+        $assets[] = social_media_remote_asset_record(
+            'wikimedia',
+            !empty($item['pageid']) ? $item['pageid'] : md5($imageUrl),
+            $title,
+            $imageUrl,
+            $previewUrl,
+            !empty($imageInfo['width']) ? (int) $imageInfo['width'] : 0,
+            !empty($imageInfo['height']) ? (int) $imageInfo['height'] : 0,
+            [$title, $query],
+            '#6F8A5E',
+            !empty($item['canonicalurl']) ? $item['canonicalurl'] : $imageUrl,
+            !empty($imageInfo['user']) ? $imageInfo['user'] : 'Wikimedia Commons'
+        );
+    }
+
+    return $assets;
+}
+
 function social_media_filter_remote_assets($assets, $provider, $keywords = [], $design = [])
 {
     if (empty($assets)) {
