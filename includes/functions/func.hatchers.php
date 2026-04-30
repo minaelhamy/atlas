@@ -744,8 +744,21 @@ function hatchers_resolve_website_autopilot_assets($userId)
         }
 
         $assets = [];
-        if (function_exists('social_media_search_pexels')) {
-            $assets = social_media_search_pexels($query, 8);
+        $providerSearches = [
+            'social_media_search_pexels',
+            'social_media_search_pixabay',
+            'social_media_search_unsplash',
+        ];
+
+        foreach ($providerSearches as $providerSearch) {
+            if (!function_exists($providerSearch)) {
+                continue;
+            }
+
+            $providerAssets = $providerSearch($query, 8);
+            if (!empty($providerAssets) && is_array($providerAssets)) {
+                $assets = array_merge($assets, $providerAssets);
+            }
         }
 
         $selected = hatchers_select_website_asset_candidate($slot, $assets, $usedAssetUrls);
