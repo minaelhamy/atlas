@@ -21,7 +21,21 @@ function atlas_ajax_json_response(array $payload)
         ob_end_clean();
     }
 
-    die(json_encode($payload));
+    $json = atlas_ajax_json_encode_payload($payload);
+    if ($json === false) {
+        $fallback = [
+            'success' => false,
+            'error' => __('Atlas could not encode the response payload. Please try again.'),
+        ];
+        $json = atlas_ajax_json_encode_payload($fallback);
+    }
+
+    die($json);
+}
+
+function atlas_ajax_json_encode_payload(array $payload)
+{
+    return json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
 function atlas_ajax_log_failure($action, $message, array $context = [])
@@ -35,6 +49,73 @@ function atlas_ajax_log_failure($action, $message, array $context = [])
     }
 
     error_log(implode(' | ', $parts));
+}
+
+function atlas_chat_model_candidates($preferred = '')
+{
+    $preferred = normalize_openai_model((string) $preferred);
+    $candidates = array_values(array_filter([
+        $preferred,
+        get_default_openai_chat_model(),
+        'gpt-4o-mini',
+        'gpt-4o',
+        'gpt-4.1-mini',
+        'gpt-4.1',
+    ]));
+
+    $normalized = [];
+    foreach ($candidates as $candidate) {
+        $candidate = normalize_openai_model($candidate);
+        if ($candidate !== '' && !in_array($candidate, $normalized, true)) {
+            $normalized[] = $candidate;
+        }
+    }
+
+    return $normalized;
+}
+
+function atlas_resolve_stream_chat_model($openAi, array $history, $preferredModel, $userId, $maxTokens = -1)
+{
+    $lastError = '';
+    $lastCode = 0;
+    foreach (atlas_chat_model_candidates($preferredModel) as $candidate) {
+        $payload = [
+            'model' => $candidate,
+            'messages' => $history,
+            'temperature' => 0.7,
+            'user' => $userId,
+            'max_tokens' => $maxTokens !== -1 ? min((int) $maxTokens, 120) : 120,
+        ];
+
+        $response = $openAi->chat($payload);
+        $decoded = json_decode($response, true);
+
+        if (!empty($decoded['error']['message'])) {
+            $lastError = $decoded['error']['message'];
+            $lastCode = !empty($decoded['error']['code']) && is_numeric($decoded['error']['code'])
+                ? (int) $decoded['error']['code']
+                : 0;
+            atlas_ajax_log_failure('chat_stream_model_probe', $lastError, [
+                'user_id' => $userId,
+                'model' => $candidate,
+                'code' => $lastCode,
+            ]);
+            continue;
+        }
+
+        if (!empty($decoded['choices'][0]['message']['content']) || !empty($decoded['choices'][0]['finish_reason'])) {
+            return [
+                'success' => true,
+                'model' => $candidate,
+            ];
+        }
+    }
+
+    return [
+        'success' => false,
+        'error' => $lastError !== '' ? $lastError : __('Unexpected error, please try again.'),
+        'code' => $lastCode,
+    ];
 }
 
 if (isset($_GET['action'])) {
@@ -2344,6 +2425,13 @@ function chat_stream()
             $system_prompt .= "\n\nRecent company history from prior agent conversations:\n" . $history_context;
         }
         $system_prompt .= "\n\nIf the user asks for content, strategy, messaging, or positioning, tailor the answer to their company and competitors instead of giving generic advice.";
+        $system_prompt .= "\nUse a practical direct-response and offer-design lens inspired by Hormozi and Sabri Suby style methods:";
+        $system_prompt .= "\n- focus on painful, urgent, expensive problems";
+        $system_prompt .= "\n- identify dream outcomes and likely objections";
+        $system_prompt .= "\n- improve the offer through value, certainty, speed, and lower effort";
+        $system_prompt .= "\n- recommend strong hooks, risk reversal, guarantees, proof, and clear CTA paths";
+        $system_prompt .= "\n- prioritize concrete acquisition steps over generic motivation";
+        $system_prompt .= "\n- when asked what to do next, give the highest-leverage execution steps first";
         if (function_exists('hatchers_enrich_system_prompt_with_intelligence')) {
             $system_prompt = hatchers_enrich_system_prompt_with_intelligence(
                 $system_prompt,
@@ -2418,6 +2506,16 @@ function chat_stream()
         require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
         $open_ai = new Orhanerday\OpenAi\OpenAi(get_api_key());
+
+        $modelProbe = atlas_resolve_stream_chat_model($open_ai, $history, $model, $_SESSION['user']['id'], $max_tokens);
+        if (empty($modelProbe['success'])) {
+            $result = [];
+            $result['api_error'] = !empty($modelProbe['error']) ? $modelProbe['error'] : __('Unexpected error, please try again.');
+            $result['error'] = !empty($modelProbe['code']) ? get_api_error_message((int) $modelProbe['code']) : __('Atlas Agents could not access an allowed AI model right now. Please check the configured model access.');
+            die('data: ' . atlas_ajax_json_encode_payload($result) . PHP_EOL);
+        }
+
+        $model = $modelProbe['model'];
 
         $opts = [
             'model' => $model,
