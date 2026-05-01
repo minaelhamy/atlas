@@ -11,6 +11,32 @@ require_once ROOTPATH . '/includes/lang/lang_' . $config['lang'] . '.php';
 
 sec_session_start();
 
+function atlas_ajax_json_response(array $payload)
+{
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    die(json_encode($payload));
+}
+
+function atlas_ajax_log_failure($action, $message, array $context = [])
+{
+    $parts = ['Atlas AJAX failure', 'action=' . $action, 'message=' . $message];
+    foreach ($context as $key => $value) {
+        if (is_array($value) || is_object($value)) {
+            $value = json_encode($value);
+        }
+        $parts[] = $key . '=' . $value;
+    }
+
+    error_log(implode(' | ', $parts));
+}
+
 if (isset($_GET['action'])) {
     if ($_GET['action'] == "submitBlogComment") {
         submitBlogComment();
@@ -1404,6 +1430,7 @@ function generate_content()
 function generate_image()
 {
     $result = array();
+    ob_start();
     if (checkloggedin()) {
         global $config;
 
@@ -1482,11 +1509,37 @@ function generate_image()
                 die(json_encode($result));
             }
 
-            $ideas = social_media_generate_batch($_SESSION['user']['id'], $prompt);
-            $posts = social_media_store_generated_posts($_SESSION['user']['id'], $ideas, $prompt, [
-                'batch_key' => $batchKey,
-                'campaign' => $campaignContext,
-            ]);
+            try {
+                $ideas = social_media_generate_batch($_SESSION['user']['id'], $prompt);
+                $posts = social_media_store_generated_posts($_SESSION['user']['id'], $ideas, $prompt, [
+                    'batch_key' => $batchKey,
+                    'campaign' => $campaignContext,
+                ]);
+            } catch (Throwable $e) {
+                atlas_ajax_log_failure('generate_image', $e->getMessage(), [
+                    'user_id' => $_SESSION['user']['id'],
+                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
+                    'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
+                    'prompt_excerpt' => substr($prompt, 0, 220),
+                    'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
+                ]);
+                $result['success'] = false;
+                $result['error'] = __('Atlas hit an internal error while generating posts. Please try again.');
+                atlas_ajax_json_response($result);
+            }
+
+            if (empty($posts)) {
+                atlas_ajax_log_failure('generate_image', 'No posts were stored after generation.', [
+                    'user_id' => $_SESSION['user']['id'],
+                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
+                    'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
+                    'prompt_excerpt' => substr($prompt, 0, 220),
+                    'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
+                ]);
+                $result['success'] = false;
+                $result['error'] = __('Atlas could not save generated posts right now. Please try again.');
+                atlas_ajax_json_response($result);
+            }
 
             if (!empty($campaignContext['id'])) {
                 hatchers_record_campaign_generation($_SESSION['user']['id'], $campaignContext['id'], [
@@ -1510,17 +1563,18 @@ function generate_image()
             $result['old_used_images'] = (int) $total_images_used;
             $result['current_used_images'] = (int) $total_images_used + $postsToGenerate;
 
-            die(json_encode($result));
+            atlas_ajax_json_response($result);
         }
     }
     $result['success'] = false;
     $result['error'] = __('Unexpected error, please try again.');
-    die(json_encode($result));
+    atlas_ajax_json_response($result);
 }
 
 function generate_instagram_grid()
 {
     $result = array();
+    ob_start();
     if (checkloggedin()) {
         global $config;
 
@@ -1592,11 +1646,37 @@ function generate_instagram_grid()
                 die(json_encode($result));
             }
 
-            $gridBatch = social_media_generate_instagram_grid($_SESSION['user']['id'], $prompt, $_POST);
-            $posts = social_media_store_generated_posts($_SESSION['user']['id'], $gridBatch['items'], $prompt, [
-                'batch_key' => $batchKey,
-                'campaign' => $campaignContext,
-            ]);
+            try {
+                $gridBatch = social_media_generate_instagram_grid($_SESSION['user']['id'], $prompt, $_POST);
+                $posts = social_media_store_generated_posts($_SESSION['user']['id'], $gridBatch['items'], $prompt, [
+                    'batch_key' => $batchKey,
+                    'campaign' => $campaignContext,
+                ]);
+            } catch (Throwable $e) {
+                atlas_ajax_log_failure('generate_instagram_grid', $e->getMessage(), [
+                    'user_id' => $_SESSION['user']['id'],
+                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
+                    'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
+                    'prompt_excerpt' => substr($prompt, 0, 220),
+                    'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
+                ]);
+                $result['success'] = false;
+                $result['error'] = __('Atlas hit an internal error while generating the Instagram grid. Please try again.');
+                atlas_ajax_json_response($result);
+            }
+
+            if (empty($posts)) {
+                atlas_ajax_log_failure('generate_instagram_grid', 'No posts were stored after grid generation.', [
+                    'user_id' => $_SESSION['user']['id'],
+                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
+                    'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
+                    'prompt_excerpt' => substr($prompt, 0, 220),
+                    'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
+                ]);
+                $result['success'] = false;
+                $result['error'] = __('Atlas could not save generated grid posts right now. Please try again.');
+                atlas_ajax_json_response($result);
+            }
 
             if (!empty($campaignContext['id'])) {
                 hatchers_record_campaign_generation($_SESSION['user']['id'], $campaignContext['id'], [
@@ -1628,13 +1708,13 @@ function generate_instagram_grid()
             $result['old_used_images'] = (int) $total_images_used;
             $result['current_used_images'] = (int) $total_images_used + $postsToGenerate;
 
-            die(json_encode($result));
+            atlas_ajax_json_response($result);
         }
     }
 
     $result['success'] = false;
     $result['error'] = __('Unexpected error, please try again.');
-    die(json_encode($result));
+    atlas_ajax_json_response($result);
 }
 
 function save_document()
