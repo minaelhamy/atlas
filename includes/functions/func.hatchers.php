@@ -1552,13 +1552,7 @@ function hatchers_update_campaign_detail($userId, $campaignId, array $payload)
         $campaign['updated_at'] = date('Y-m-d H:i:s');
 
         $cleanState = [
-            'campaign_type' => trim((string) ($payload['campaign_type'] ?? ($campaign['form_state']['campaign_type'] ?? ''))),
-            'funnel_stage' => trim((string) ($payload['funnel_stage'] ?? ($campaign['form_state']['funnel_stage'] ?? ''))),
-            'focus_area' => trim((string) ($payload['focus_area'] ?? ($campaign['form_state']['focus_area'] ?? ''))),
-            'content_angle' => trim((string) ($payload['content_angle'] ?? ($campaign['form_state']['content_angle'] ?? ''))),
-            'use_case' => trim((string) ($payload['use_case'] ?? ($campaign['form_state']['use_case'] ?? ''))),
             'grid_style' => trim((string) ($payload['grid_style'] ?? ($campaign['form_state']['grid_style'] ?? ''))),
-            'description' => trim((string) ($payload['strategy_notes'] ?? ($campaign['form_state']['description'] ?? ''))),
         ];
 
         $campaign['form_state'] = hatchers_compact_array($cleanState);
@@ -1626,13 +1620,7 @@ function hatchers_duplicate_campaign_record($userId, $campaignId)
     hatchers_update_campaign_detail($userId, $result['record_id'], [
         'title' => $payload['title'],
         'description' => $payload['description'],
-        'campaign_type' => $campaign['form_state']['campaign_type'] ?? '',
-        'funnel_stage' => $campaign['form_state']['funnel_stage'] ?? '',
-        'focus_area' => $campaign['form_state']['focus_area'] ?? '',
-        'content_angle' => $campaign['form_state']['content_angle'] ?? '',
-        'use_case' => $campaign['form_state']['use_case'] ?? '',
         'grid_style' => $campaign['form_state']['grid_style'] ?? '',
-        'strategy_notes' => $campaign['form_state']['description'] ?? '',
         'actor_role' => $payload['actor_role'],
     ]);
 
@@ -1776,13 +1764,7 @@ function hatchers_update_campaign_form_state($userId, $campaignId, array $formSt
         }
 
         $cleanState = [
-            'campaign_type' => trim((string) ($formState['campaign_type'] ?? '')),
-            'funnel_stage' => trim((string) ($formState['funnel_stage'] ?? '')),
-            'focus_area' => trim((string) ($formState['focus_area'] ?? '')),
-            'content_angle' => trim((string) ($formState['content_angle'] ?? '')),
-            'use_case' => trim((string) ($formState['use_case'] ?? '')),
             'grid_style' => trim((string) ($formState['grid_style'] ?? '')),
-            'description' => trim((string) ($formState['description'] ?? '')),
         ];
 
         $campaign['form_state'] = hatchers_compact_array($cleanState);

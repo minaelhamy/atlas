@@ -41,8 +41,8 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                 <div class="atlas-wizard-header">
                     <div>
                         <span class="atlas-workflow-eyebrow"><?php _e("Step 1 of 2") ?></span>
-                        <h2><?php _e("Shape your grid direction") ?></h2>
-                        <p><?php _e("Atlas uses your company profile, visual direction, and campaign strategy to generate 9 coordinated tiles that should be posted in exact sequence.") ?></p>
+                        <h2><?php _e("Shape your grid style") ?></h2>
+                        <p><?php _e("Atlas uses your company profile and the selected grid style to generate 9 coordinated tiles that stay visually consistent and business-relevant.") ?></p>
                     </div>
                     <div class="atlas-stepper">
                         <span class="active"><?php _e("Direction") ?></span>
@@ -58,7 +58,7 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                 </div>
             <?php } else { ?>
                 <div class="notification notice">
-                    <?php _e("Atlas generates 9 coordinated posts designed to work as one Instagram grid. It uses your company context, campaign strategy, and brand direction to build a sequence that should be posted in order.") ?>
+                    <?php _e("Atlas generates 9 coordinated posts designed to work as one Instagram grid. It should use your company context first, then apply the selected grid style without drifting into unrelated industries or generic visuals.") ?>
                 </div>
             <?php } ?>
 
@@ -69,7 +69,7 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                     <?php if (!empty($selected_campaign['updated_at'])) { ?>
                         <span>· <?php _e("Updated") ?> <?php _esc(timeAgo($selected_campaign['updated_at'])) ?></span>
                     <?php } ?>
-                    <span>· <?php _e("Atlas will remember your strategy selections for this grid too.") ?></span>
+                    <span>· <?php _e("Atlas will remember your selected grid style for this campaign.") ?></span>
                 </div>
             <?php } ?>
 
@@ -86,67 +86,7 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                             <div class="content with-padding">
                                 <div class="atlas-wizard-inline-note margin-bottom-25">
                                     <strong><?php _e("How Atlas uses this") ?>:</strong>
-                                    <?php _e("Your selections shape the visual structure, message pacing, and asset relevance of the full 9-tile grid so it feels deliberate on the profile view, not random.") ?>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="submit-field">
-                                            <h5><?php _e("Campaign Type") ?></h5>
-                                            <select name="campaign_type" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                                <option value=""><?php _e("Select campaign type") ?></option>
-                                                <?php foreach ($campaign_catalog as $campaignKey => $campaignMeta) { ?>
-                                                    <option value="<?php _esc($campaignKey) ?>" <?php echo (!empty($selected_campaign_form['campaign_type']) && $selected_campaign_form['campaign_type'] === $campaignKey) ? 'selected' : ''; ?>><?php _esc($campaignMeta['label']) ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="submit-field">
-                                            <h5><?php _e("Funnel Stage") ?></h5>
-                                            <select name="funnel_stage" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                                <option value=""><?php _e("Select funnel stage") ?></option>
-                                                <?php foreach ($funnel_stage_catalog as $stageKey => $stageLabel) { ?>
-                                                    <option value="<?php _esc($stageKey) ?>" <?php echo (!empty($selected_campaign_form['funnel_stage']) && $selected_campaign_form['funnel_stage'] === $stageKey) ? 'selected' : ''; ?>><?php _esc($stageLabel) ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="submit-field">
-                                            <h5><?php _e("Primary Focus") ?></h5>
-                                            <select name="focus_area" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                                <option value=""><?php _e("Select focus area") ?></option>
-                                                <?php foreach ($focus_options as $focusValue) { ?>
-                                                    <option value="<?php _esc($focusValue) ?>" <?php echo (!empty($selected_campaign_form['focus_area']) && $selected_campaign_form['focus_area'] === $focusValue) ? 'selected' : ''; ?>><?php _esc($focusValue) ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="submit-field">
-                                            <h5><?php _e("Content Angle") ?></h5>
-                                            <select name="content_angle" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                                <option value=""><?php _e("Select content angle") ?></option>
-                                                <?php foreach ($content_angle_options as $contentAngleValue) { ?>
-                                                    <option value="<?php _esc($contentAngleValue) ?>" <?php echo (!empty($selected_campaign_form['content_angle']) && $selected_campaign_form['content_angle'] === $contentAngleValue) ? 'selected' : ''; ?>><?php _esc($contentAngleValue) ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="submit-field">
-                                            <h5><?php _e("Use Case") ?></h5>
-                                            <select name="use_case" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                                <option value=""><?php _e("Select use case") ?></option>
-                                                <?php foreach ($use_case_options as $useCaseValue) { ?>
-                                                    <option value="<?php _esc($useCaseValue) ?>" <?php echo (!empty($selected_campaign_form['use_case']) && $selected_campaign_form['use_case'] === $useCaseValue) ? 'selected' : ''; ?>><?php _esc($useCaseValue) ?></option>
-                                                <?php } ?>
-                                            </select>
-                                        </div>
-                                    </div>
+                                    <?php _e("Your company intelligence drives the business message. Grid Style only controls the visual sequencing and layout pattern.") ?>
                                 </div>
 
                                 <div class="submit-field">
@@ -159,19 +99,9 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
                                     </select>
                                 </div>
 
-                                <div class="submit-field">
-                                    <h5><?php _e("Extra Notes") ?></h5>
-                                    <textarea name="description" class="with-border" rows="3" placeholder="<?php _e('Optional: add launch context, product focus, seasonal message, or any visual direction Atlas should follow.') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>><?php _esc($prefill_campaign_notes) ?></textarea>
-                                </div>
-
-                                <div class="social-campaign-summary atlas-strategy-summary margin-bottom-15">
-                                    <strong><?php _e("Atlas Strategy Readback") ?>:</strong>
-                                    <p class="margin-top-10 margin-bottom-0 social-campaign-summary-text"><?php _e("Choose a campaign type to see its goal, focus, content style, and best-use guidance.") ?></p>
-                                </div>
-
                                 <div class="social-campaign-summary social-grid-summary atlas-strategy-summary margin-bottom-20">
                                     <strong><?php _e("Grid System") ?>:</strong>
-                                    <p class="margin-top-10 margin-bottom-0 social-grid-summary-text"><?php _e("Atlas can auto-pick the strongest grid system for your campaign, or you can select one manually.") ?></p>
+                                    <p class="margin-top-10 margin-bottom-0 social-grid-summary-text"><?php _e("Atlas can auto-pick the strongest grid system for your business, or you can select one manually.") ?></p>
                                 </div>
 
                                 <small class="form-error"></small>
@@ -411,11 +341,8 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
 </style>
 <script>
     (function ($) {
-        var campaignCatalog = <?php echo json_encode($campaign_catalog); ?>;
         var gridCatalog = <?php echo json_encode($grid_catalog); ?>;
-        var $campaignSelect = $('select[name="campaign_type"]');
         var $gridSelect = $('select[name="grid_style"]');
-        var $campaignSummary = $('.social-campaign-summary-text');
         var $gridSummary = $('.social-grid-summary-text');
         var $form = $('#instagram_grid_form');
 
@@ -456,25 +383,10 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
             }, stepTime);
         }
 
-        function renderCampaignSummary() {
-            var key = $campaignSelect.val();
-            if (!key || !campaignCatalog[key]) {
-                $campaignSummary.text('Choose a campaign type to see its goal, focus, content style, and best-use guidance.');
-                return;
-            }
-            var item = campaignCatalog[key];
-            $campaignSummary.html(
-                '<strong>Goal:</strong> ' + escapeHtml(item.goal) +
-                '<br><strong>Focus:</strong> ' + escapeHtml(item.focus.join(' | ')) +
-                '<br><strong>Content:</strong> ' + escapeHtml(item.content_examples.join(' | ')) +
-                '<br><strong>When to use:</strong> ' + escapeHtml(item.when_to_use.join(' | '))
-            );
-        }
-
         function renderGridSummary() {
             var key = $gridSelect.val();
             if (!key || key === 'auto' || !gridCatalog[key]) {
-                $gridSummary.text('Atlas can auto-pick the strongest grid system for your campaign, or you can select one manually.');
+                $gridSummary.text('Atlas can auto-pick the strongest grid system for your business, or you can select one manually.');
                 return;
             }
             var item = gridCatalog[key];
@@ -558,9 +470,7 @@ $companyLogo = !empty($social_profile['company_logo']) ? $config['site_url'] . '
             $('body').removeClass('atlas-modal-open');
         }
 
-        $campaignSelect.on('change', renderCampaignSummary);
         $gridSelect.on('change', renderGridSummary);
-        renderCampaignSummary();
         renderGridSummary();
 
         $(document).on('click', '.atlas-instagram-tile-button', function () {

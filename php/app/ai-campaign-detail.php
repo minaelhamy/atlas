@@ -21,11 +21,6 @@ if (empty($selected_campaign)) {
     headerRedirect($link['AI_IMAGES_CAMPAIGN']);
 }
 
-$campaign_catalog = social_media_get_campaign_catalog();
-$focus_options = social_media_get_selection_options($campaign_catalog, 'focus');
-$content_angle_options = social_media_get_selection_options($campaign_catalog, 'content_examples');
-$use_case_options = social_media_get_selection_options($campaign_catalog, 'when_to_use');
-$funnel_stage_catalog = social_media_get_funnel_stage_catalog();
 $grid_catalog = social_media_get_instagram_grid_catalog();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['campaign_action']) && $_POST['campaign_action'] === 'save_campaign_detail') {
@@ -33,13 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['campaign_action']) &
     $saveResult = hatchers_update_campaign_detail($_SESSION['user']['id'], $campaignId, [
         'title' => isset($_POST['title']) ? $_POST['title'] : '',
         'description' => isset($_POST['description']) ? $_POST['description'] : '',
-        'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
-        'funnel_stage' => isset($_POST['funnel_stage']) ? $_POST['funnel_stage'] : '',
-        'focus_area' => isset($_POST['focus_area']) ? $_POST['focus_area'] : '',
-        'content_angle' => isset($_POST['content_angle']) ? $_POST['content_angle'] : '',
-        'use_case' => isset($_POST['use_case']) ? $_POST['use_case'] : '',
         'grid_style' => isset($_POST['grid_style']) ? $_POST['grid_style'] : '',
-        'strategy_notes' => isset($_POST['strategy_notes']) ? $_POST['strategy_notes'] : '',
         'actor_role' => 'founder',
     ]);
 
@@ -93,11 +82,6 @@ HtmlTemplate::display('ai-campaign-detail', array(
     'campaign_posts' => $campaign_posts,
     'recent_campaigns' => $recent_campaigns,
     'archived_campaigns' => $archived_campaigns,
-    'campaign_catalog' => $campaign_catalog,
-    'focus_options' => $focus_options,
-    'content_angle_options' => $content_angle_options,
-    'use_case_options' => $use_case_options,
-    'funnel_stage_catalog' => $funnel_stage_catalog,
     'grid_catalog' => $grid_catalog,
     'campaign_notice' => $campaign_notice,
     'campaign_error' => $campaign_error

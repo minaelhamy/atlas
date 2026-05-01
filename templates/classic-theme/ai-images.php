@@ -33,8 +33,8 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 <div class="atlas-wizard-header">
                     <div>
                         <span class="atlas-workflow-eyebrow"><?php _e("Step 1 of 2") ?></span>
-                        <h2><?php _e("Shape your campaign direction") ?></h2>
-                        <p><?php _e("Choose the strategic inputs Atlas should use. We’ll turn your brand context and campaign direction into 9 posts that move like a funnel instead of random content.") ?></p>
+                        <h2><?php _e("Generate business-matched posts") ?></h2>
+                        <p><?php _e("Atlas uses your company profile, offer, audience, and positioning to generate 9 posts that stay tied to the actual business instead of drifting into generic content.") ?></p>
                     </div>
                     <div class="atlas-stepper">
                         <span class="active"><?php _e("Direction") ?></span>
@@ -50,7 +50,7 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 </div>
             <?php } else { ?>
                 <div class="notification notice">
-                    <?php _e("Each run generates 9 strategic posts for one campaign goal. Atlas uses your brand intelligence, market context, and selected funnel inputs to create a complete social funnel for publishing."); ?>
+                    <?php _e("Each run generates 9 business-specific posts using your company intelligence, offer, audience, and positioning. Atlas should anchor both the messaging and imagery to what the company actually sells or provides."); ?>
                 </div>
             <?php } ?>
 
@@ -77,28 +77,11 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                                 <?php if (!empty($selected_campaign['description'])) { ?>
                                     <p class="margin-bottom-15"><?php _esc($selected_campaign['description']) ?></p>
                                 <?php } ?>
-                                <div class="atlas-campaign-pill-row">
-                                    <?php if (!empty($selected_campaign_form['campaign_type'])) { ?>
-                                        <span class="atlas-campaign-pill"><?php _esc($selected_campaign_form['campaign_type']) ?></span>
-                                    <?php } ?>
-                                    <?php if (!empty($selected_campaign_form['funnel_stage'])) { ?>
-                                        <span class="atlas-campaign-pill"><?php _esc($selected_campaign_form['funnel_stage']) ?></span>
-                                    <?php } ?>
-                                    <?php if (!empty($selected_campaign_form['focus_area'])) { ?>
-                                        <span class="atlas-campaign-pill"><?php _esc($selected_campaign_form['focus_area']) ?></span>
-                                    <?php } ?>
-                                    <?php if (!empty($selected_campaign_form['content_angle'])) { ?>
-                                        <span class="atlas-campaign-pill"><?php _esc($selected_campaign_form['content_angle']) ?></span>
-                                    <?php } ?>
-                                    <?php if (!empty($selected_campaign_form['use_case'])) { ?>
-                                        <span class="atlas-campaign-pill"><?php _esc($selected_campaign_form['use_case']) ?></span>
-                                    <?php } ?>
-                                </div>
                             </div>
                             <div class="atlas-campaign-setup-side">
                                 <div class="atlas-campaign-setup-card">
                                     <strong><?php _e("Why this studio context matters") ?></strong>
-                                    <span><?php _e("Atlas keeps the brief, funnel stage, and angle together so future generations stay consistent instead of drifting from the original strategy.") ?></span>
+                                    <span><?php _e("Atlas keeps the campaign brief together so future generations stay consistent with the business and offer instead of drifting into generic stock messaging.") ?></span>
                                 </div>
                                 <div class="atlas-campaign-stats">
                                     <div class="atlas-campaign-stat">
@@ -126,79 +109,16 @@ $profileReady = !empty($social_profile['company_name']) && !empty($social_profil
                 <?php } ?>
                 <div class="dashboard-box margin-top-0 atlas-wizard-form-card">
                     <div class="headline">
-                        <h3><i class="icon-feather-target"></i> <?php _e("Campaign Direction") ?></h3>
+                        <h3><i class="icon-feather-target"></i> <?php _e("Post Generator") ?></h3>
                     </div>
                     <div class="content with-padding">
                         <div class="atlas-wizard-inline-note margin-bottom-25">
                             <strong><?php _e("How Atlas uses this") ?>:</strong>
-                            <?php _e("These choices tell Atlas what stage of the funnel this campaign belongs to, what kind of response you want, and how the copy should sound, convert, and visually cohere.") ?>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="submit-field">
-                                    <h5><?php _e("Campaign Type") ?></h5>
-                                    <select name="campaign_type" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                        <option value=""><?php _e("Select campaign type") ?></option>
-                                        <?php foreach ($campaign_catalog as $campaignKey => $campaignMeta) { ?>
-                                            <option value="<?php _esc($campaignKey) ?>" <?php echo (!empty($selected_campaign_form['campaign_type']) && $selected_campaign_form['campaign_type'] === $campaignKey) ? 'selected' : ''; ?>><?php _esc($campaignMeta['label']) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="submit-field">
-                                    <h5><?php _e("Funnel Stage") ?></h5>
-                                    <select name="funnel_stage" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                        <option value=""><?php _e("Select funnel stage") ?></option>
-                                        <?php foreach ($funnel_stage_catalog as $stageKey => $stageLabel) { ?>
-                                            <option value="<?php _esc($stageKey) ?>" <?php echo (!empty($selected_campaign_form['funnel_stage']) && $selected_campaign_form['funnel_stage'] === $stageKey) ? 'selected' : ''; ?>><?php _esc($stageLabel) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="submit-field">
-                                    <h5><?php _e("Primary Focus") ?></h5>
-                                    <select name="focus_area" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                        <option value=""><?php _e("Select focus area") ?></option>
-                                        <?php foreach ($focus_options as $focusValue) { ?>
-                                            <option value="<?php _esc($focusValue) ?>" <?php echo (!empty($selected_campaign_form['focus_area']) && $selected_campaign_form['focus_area'] === $focusValue) ? 'selected' : ''; ?>><?php _esc($focusValue) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="submit-field">
-                                    <h5><?php _e("Content Angle") ?></h5>
-                                    <select name="content_angle" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                        <option value=""><?php _e("Select content angle") ?></option>
-                                        <?php foreach ($content_angle_options as $contentAngleValue) { ?>
-                                            <option value="<?php _esc($contentAngleValue) ?>" <?php echo (!empty($selected_campaign_form['content_angle']) && $selected_campaign_form['content_angle'] === $contentAngleValue) ? 'selected' : ''; ?>><?php _esc($contentAngleValue) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="submit-field">
-                                    <h5><?php _e("Use Case") ?></h5>
-                                    <select name="use_case" class="selectpicker with-border" data-size="10" <?php echo $profileReady ? '' : 'disabled'; ?> required>
-                                        <option value=""><?php _e("Select use case") ?></option>
-                                        <?php foreach ($use_case_options as $useCaseValue) { ?>
-                                            <option value="<?php _esc($useCaseValue) ?>" <?php echo (!empty($selected_campaign_form['use_case']) && $selected_campaign_form['use_case'] === $useCaseValue) ? 'selected' : ''; ?>><?php _esc($useCaseValue) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="submit-field">
-                            <h5><?php _e("Extra Notes") ?></h5>
-                            <textarea name="description" class="with-border" rows="5" placeholder="<?php _e('Optional: add product, offer, launch context, audience nuance, or anything the generator should emphasize.') ?>" <?php echo $profileReady ? '' : 'disabled'; ?>><?php _esc(!empty($prefill_campaign_notes) ? $prefill_campaign_notes : '') ?></textarea>
+                            <?php _e("Atlas is generating directly from company intelligence now. It should use the actual business offer, audience, problem, USP, and outcome instead of extra campaign selectors.") ?>
                         </div>
                         <div class="social-campaign-summary atlas-strategy-summary margin-bottom-20">
-                            <strong><?php _e("Atlas Strategy Readback") ?>:</strong>
-                            <p class="margin-top-10 margin-bottom-0 social-campaign-summary-text"><?php _e("Choose a campaign type to see its goal, focus, content style, and best-use guidance.") ?></p>
+                            <strong><?php _e("Atlas Readback") ?>:</strong>
+                            <p class="margin-top-10 margin-bottom-0 social-campaign-summary-text"><?php _e("Atlas will use your company profile, company description, audience, problems solved, differentiators, key products or services, and recent company context to generate business-matched posts.") ?></p>
                         </div>
                         <small class="form-error"></small>
                         <button type="submit" name="submit" class="button ripple-effect atlas-primary-action" <?php echo $profileReady ? '' : 'disabled'; ?>>

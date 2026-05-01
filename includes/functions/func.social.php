@@ -672,7 +672,18 @@ function social_media_grid_visual_profile($profile, $brief = '')
         'journey_setting' => 'path',
     ];
 
-    if (preg_match('/\bdog|dogs|puppy|puppies|leash|collar|pet\b/i', $profileText)) {
+    if (preg_match('/\bbarber|barbershop|barber shop|haircut|haircuts|fade|fades|beard|beard trim|trimming|grooming|clippers|scissors|line-up|line up\b/i', $profileText)) {
+        $map = [
+            'subject' => 'barber haircut beard trim',
+            'daily_object' => 'clippers scissors comb',
+            'environment' => 'barbershop chair mirror',
+            'obsession' => 'clean fade sharp line-up',
+            'aspiration' => 'look sharp feel confident',
+            'style_signal' => 'clean editorial',
+            'sensory_object' => 'barber tools towel',
+            'journey_setting' => 'barbershop interior',
+        ];
+    } elseif (preg_match('/\bdog|dogs|puppy|puppies|leash|collar|pet\b/i', $profileText)) {
         $map = [
             'subject' => 'dog leash',
             'daily_object' => 'dog walk',
@@ -886,6 +897,15 @@ function social_media_grid_slot_strategy($templateKey, $position, $mode, $profil
 {
     $context = social_media_grid_visual_profile($profile, $brief);
     $warmBase = ['warm', 'editorial'];
+    $businessText = strtolower(trim(implode(' ', array_filter([
+        $context['company_description'],
+        $context['industry'],
+        $context['subject'],
+        $context['daily_object'],
+        $context['environment'],
+        $brief,
+    ]))));
+    $isBarber = preg_match('/\bbarber|barbershop|haircut|fade|beard|grooming|clippers|scissors\b/i', $businessText) === 1;
     $slot = [
         'search_queries' => [],
         'provider_search_queries' => [],
@@ -902,6 +922,29 @@ function social_media_grid_slot_strategy($templateKey, $position, $mode, $profil
             'pexels' => ['warm minimal textured background'],
         ];
         $slot['visual_brief'] = 'Create a text-led tile with the typography carrying the message. Keep the background minimal, warm, and consistent with the selected grid system.';
+        return $slot;
+    }
+
+    if ($isBarber) {
+        $barberQueries = [
+            1 => ['barber haircut chair mirror clippers editorial', 'barbershop fade haircut close up'],
+            2 => ['barber beard trim scissors close-up', 'barber tools comb clippers towel'],
+            3 => ['mens haircut fade profile barbershop', 'barber line up detail editorial'],
+            4 => ['barbershop interior chair mirror warm', 'barber shop counter tools clean'],
+            5 => ['barber trimming beard customer close-up', 'barber hands clippers haircut detail'],
+            6 => ['fresh fade haircut finished result', 'mens grooming barbershop portrait'],
+            7 => ['barber consultation customer mirror', 'barber haircut process editorial'],
+            8 => ['beard trim razor towel barber shop', 'barber station scissors comb clipper'],
+            9 => ['confident client fresh haircut portrait', 'sharp fade beard trim barbershop'],
+        ];
+        $slot['search_queries'] = !empty($barberQueries[$position]) ? $barberQueries[$position] : ['barber haircut barbershop editorial'];
+        $slot['provider_search_queries'] = [
+            'unsplash' => $slot['search_queries'],
+            'pexels' => $slot['search_queries'],
+            'pixabay' => $slot['search_queries'],
+        ];
+        $slot['asset_tags'] = array_merge($warmBase, ['barber', 'haircut', 'fade', 'beard', 'clippers', 'barbershop']);
+        $slot['visual_brief'] = 'Use real barber-related imagery only: haircuts, fades, beard trims, clippers, scissors, mirrors, barber chairs, barber hands at work, or finished grooming results. Avoid cafes, laptops, generic workspace shots, coffee cups, and unrelated lifestyle scenes.';
         return $slot;
     }
 
@@ -1005,14 +1048,7 @@ function social_media_get_selection_options($catalog, $field)
 
 function social_media_build_campaign_brief($input)
 {
-    $notes = trim((string) ($input['description'] ?? ''));
-
-    $parts = [];
-    if ($notes !== '') {
-        $parts[] = 'Founder notes: ' . $notes;
-    }
-
-    return implode("\n", $parts);
+    return '';
 }
 
 function social_media_get_marketing_messaging_prompt($companyContext, $historyContext, $competitorSnapshots, $brief = '', $options = [])
@@ -1111,6 +1147,15 @@ function social_media_get_marketing_messaging_prompt($companyContext, $historyCo
         . "Where possible include before vs after, wrong vs right, current vs desired state.\n"
         . "5. NO ABSTRACT CLAIMS\n"
         . "Everything must be observable or measurable or clearly imaginable.\n\n"
+        . "DIRECT-RESPONSE METHOD (MANDATORY)\n"
+        . "Use a practical direct-response approach inspired by Sabri Suby and Alex Hormozi.\n"
+        . "That means every message should be built from:\n"
+        . "A painful, urgent, expensive, or frustrating problem\n"
+        . "A clear dream outcome or desired status change\n"
+        . "A believable mechanism or reason this company is different\n"
+        . "Specificity, proof, clarity, and low fluff\n"
+        . "A direct next step or call to action\n"
+        . "Do not write vague inspiration. Write buying-relevant messaging.\n\n"
         . "OUTPUT FORMAT FOR GENERATING VISUAL ASSETS\n"
         . "You are a direct-response copywriter specializing in small business marketing. When given a business type, target audience, and key benefit, generate:\n"
         . "5 hooks\n"
@@ -1134,6 +1179,8 @@ function social_media_get_marketing_messaging_prompt($companyContext, $historyCo
         . "Use the framework above internally, but return only the JSON fields requested for this task.\n"
         . "Overlay text must be the strongest usable marketing statement from the framework, not filler.\n"
         . "Prefer statement pillars, painful problem hooks, differentiated USP hooks, and believable outcomes.\n"
+        . "Every overlay and caption must be clearly about the actual business offer, service, product, buyer, and result. If the company is a barber, talk about cuts, fades, beard trims, booking, grooming confidence, and trusted service. If the company sells pet gear, talk about leash durability, city walks, control, comfort, and style. Never drift into generic motivation or unrelated industries.\n"
+        . "Every visual brief and keyword set must stay tightly related to the actual business. Do not suggest generic coffee, laptops, offices, cafes, or random lifestyle scenes unless the company genuinely sells or uses those in its offer.\n"
         . "Ignore campaign selectors like Campaign Type, Funnel Stage, Primary Focus, Content Angle, and Use Case. Use company reality first.\n\n"
         . "Company context:\n{$companyContext}\n\n"
         . "Recent company history from agents:\n{$historyContext}\n\n"
@@ -3994,70 +4041,92 @@ function social_media_generate_fallback_batch($profile, $brief = '')
     $briefSummary = trim(preg_replace('/\s+/', ' ', strtok((string) $brief, "\n")));
     $audienceLower = strtolower($audience);
     $productLower = strtolower($product);
-    $industryLower = strtolower($industry);
+    $businessText = strtolower(trim(implode(' ', array_filter([$industry, $product, $profile['company_description'] ?? '', $differentiator]))));
+    $isBarber = preg_match('/\bbarber|barbershop|haircut|fade|beard|grooming|clippers|scissors\b/i', $businessText) === 1;
+    $isPet = preg_match('/\bdog|leash|collar|pet|canine\b/i', $businessText) === 1;
     $themes = [
         [
             'title' => 'Founder take for ' . $company,
-            'overlay' => 'Still choosing style over function?',
-            'hook' => 'Still choosing style over function?',
-            'caption' => 'Busy ' . $audienceLower . ' who want something that looks sharp and actually lasts get a more useful option through ' . $company . '\'s ' . $productLower . ' approach.',
-            'cta' => 'See the difference',
+            'overlay' => $isBarber ? 'Stop gambling on your haircut' : ($isPet ? 'Still choosing style over function?' : 'Stop settling for the generic option'),
+            'hook' => $isBarber ? 'Stop gambling on your haircut' : ($isPet ? 'Still choosing style over function?' : 'Stop settling for the generic option'),
+            'caption' => $isBarber
+                ? 'Busy ' . $audienceLower . ' who want a sharp haircut without guesswork choose ' . $company . ' for clearer pricing, easier booking, and more consistent grooming results.'
+                : ($isPet
+                    ? 'Busy ' . $audienceLower . ' who want something that looks sharp and actually lasts get a more useful option through ' . $company . '\'s ' . $productLower . ' approach.'
+                    : ucfirst($audienceLower) . ' who are tired of weak, vague, or forgettable options get a clearer result through ' . $company . '\'s ' . $productLower . ' approach.'),
+            'cta' => $isBarber ? 'Book now' : 'See the difference',
         ],
         [
             'title' => 'Educational post for ' . $company,
-            'overlay' => 'Is your leash routine working?',
-            'hook' => 'Is your leash routine working?',
-            'caption' => 'Dog owners who struggle with messy walks and weak gear get a cleaner, more reliable experience through ' . $company . '\'s better-built ' . $productLower . '.',
+            'overlay' => $isBarber ? 'A clean fade should last longer' : ($isPet ? 'Is your leash routine working?' : 'Why the current way underperforms'),
+            'hook' => $isBarber ? 'A clean fade should last longer' : ($isPet ? 'Is your leash routine working?' : 'Why the current way underperforms'),
+            'caption' => $isBarber
+                ? 'Clients who are tired of inconsistent barbers get a cleaner, more reliable result through ' . $company . '\'s haircut and beard-trim process.'
+                : ($isPet
+                    ? 'Dog owners who struggle with messy walks and weak gear get a cleaner, more reliable experience through ' . $company . '\'s better-built ' . $productLower . '.'
+                    : ucfirst($audienceLower) . ' who struggle with confusing choices and weak outcomes get a cleaner, more reliable experience through ' . $company . '.'),
             'cta' => 'Save this tip',
         ],
         [
             'title' => 'Customer transformation for ' . $company,
-            'overlay' => 'Make every walk feel easier',
-            'hook' => 'Make every walk feel easier',
-            'caption' => 'Pet owners who are tired of awkward, forgettable accessories get a smarter everyday upgrade through ' . $company . '\'s creative ' . $productLower . '.',
-            'cta' => 'Shop the look',
+            'overlay' => $isBarber ? 'Look sharper in one visit' : ($isPet ? 'Make every walk feel easier' : 'Get the outcome faster'),
+            'hook' => $isBarber ? 'Look sharper in one visit' : ($isPet ? 'Make every walk feel easier' : 'Get the outcome faster'),
+            'caption' => $isBarber
+                ? 'People who need a barber they can trust before work, events, or weekends get that confidence through ' . $company . '\'s focused grooming service.'
+                : ($isPet
+                    ? 'Pet owners who are tired of awkward, forgettable accessories get a smarter everyday upgrade through ' . $company . '\'s creative ' . $productLower . '.'
+                    : ucfirst($audienceLower) . ' who want a better result without extra friction get a smarter upgrade through ' . $company . '\'s ' . $productLower . '.'),
+            'cta' => $isBarber ? 'Book your cut' : 'Shop the look',
         ],
         [
             'title' => 'Framework post for ' . $company,
-            'overlay' => 'Want calmer walks fast?',
-            'hook' => 'Want calmer walks fast?',
-            'caption' => 'Style-conscious ' . $audienceLower . ' who want more control without losing personality get a more thoughtful solution through ' . $company . '\'s design-led ' . $productLower . '.',
-            'cta' => 'Try it now',
+            'overlay' => $isBarber ? 'A barber should save you time' : ($isPet ? 'Want calmer walks fast?' : 'Clarity beats noise every time'),
+            'hook' => $isBarber ? 'A barber should save you time' : ($isPet ? 'Want calmer walks fast?' : 'Clarity beats noise every time'),
+            'caption' => $isBarber
+                ? 'Clients who want easy booking, clear timing, and no wasted visits get a more thoughtful service model through ' . $company . '.'
+                : ($isPet
+                    ? 'Style-conscious ' . $audienceLower . ' who want more control without losing personality get a more thoughtful solution through ' . $company . '\'s design-led ' . $productLower . '.'
+                    : ucfirst($audienceLower) . ' who want better results with less confusion get a more thoughtful solution through ' . $company . '.'),
+            'cta' => $isBarber ? 'See services' : 'Try it now',
         ],
         [
             'title' => 'Myth busting post for ' . $company,
-            'overlay' => 'Cheap leashes cost more later',
-            'hook' => 'Cheap leashes cost more later',
-            'caption' => 'Pet owners who keep replacing low-quality gear get longer-lasting value through ' . $company . '\'s more durable and design-forward ' . $productLower . '.',
-            'cta' => 'Upgrade your gear',
+            'overlay' => $isBarber ? 'Cheap cuts cost more later' : ($isPet ? 'Cheap leashes cost more later' : 'The cheapest option costs more later'),
+            'hook' => $isBarber ? 'Cheap cuts cost more later' : ($isPet ? 'Cheap leashes cost more later' : 'The cheapest option costs more later'),
+            'caption' => $isBarber
+                ? 'People who keep fixing rushed or inconsistent cuts get longer-lasting value through ' . $company . '\'s more dependable haircut and beard service.'
+                : ($isPet
+                    ? 'Pet owners who keep replacing low-quality gear get longer-lasting value through ' . $company . '\'s more durable and design-forward ' . $productLower . '.'
+                    : ucfirst($audienceLower) . ' who keep replacing weak solutions get longer-lasting value through ' . $company . '.'),
+            'cta' => $isBarber ? 'Upgrade your cut' : 'Upgrade your gear',
         ],
         [
             'title' => 'Case study post for ' . $company,
-            'overlay' => 'Better gear changes the walk',
-            'hook' => 'Better gear changes the walk',
-            'caption' => 'Active ' . $audienceLower . ' who want more comfort and confidence on every outing get both through ' . $company . '\'s well-designed ' . $productLower . '.',
-            'cta' => 'Find your fit',
+            'overlay' => $isBarber ? 'Consistency changes everything' : ($isPet ? 'Better gear changes the walk' : 'Consistency changes the result'),
+            'hook' => $isBarber ? 'Consistency changes everything' : ($isPet ? 'Better gear changes the walk' : 'Consistency changes the result'),
+            'caption' => ucfirst($audienceLower) . ' who want more confidence and better everyday results get that edge through ' . $company . '\'s ' . $productLower . '.',
+            'cta' => $isBarber ? 'Find your barber' : 'Find your fit',
         ],
         [
             'title' => 'Trend reaction post for ' . $company,
-            'overlay' => 'Pet style should still perform',
-            'hook' => 'Pet style should still perform',
-            'caption' => 'Modern ' . $audienceLower . ' who want standout accessories without sacrificing function get both through ' . $company . '\'s practical take on ' . $productLower . '.',
-            'cta' => 'Explore the collection',
+            'overlay' => $isBarber ? 'Style still needs precision' : ($isPet ? 'Pet style should still perform' : 'Style should still perform'),
+            'hook' => $isBarber ? 'Style still needs precision' : ($isPet ? 'Pet style should still perform' : 'Style should still perform'),
+            'caption' => ucfirst($audienceLower) . ' who want standout results without sacrificing function get both through ' . $company . '\'s practical approach to ' . $productLower . '.',
+            'cta' => $isBarber ? 'View the studio' : 'Explore the collection',
         ],
         [
             'title' => 'Case study post for ' . $company,
-            'overlay' => 'Your pet deserves better design',
-            'hook' => 'Your pet deserves better design',
-            'caption' => 'Design-minded ' . $audienceLower . ' who want accessories that feel unique and dependable get that edge through ' . $company . '\'s signature ' . $productLower . '.',
+            'overlay' => $isBarber ? 'Your look deserves better detail' : ($isPet ? 'Your pet deserves better design' : 'You deserve a better option'),
+            'hook' => $isBarber ? 'Your look deserves better detail' : ($isPet ? 'Your pet deserves better design' : 'You deserve a better option'),
+            'caption' => ucfirst($audienceLower) . ' who want something dependable and easy to trust get that through ' . $company . '\'s ' . $productLower . '.',
             'cta' => 'Discover more',
         ],
         [
             'title' => 'How-to post for ' . $company,
-            'overlay' => 'Need better walks this week?',
-            'hook' => 'Need better walks this week?',
-            'caption' => 'Pet owners who want better control, cleaner design, and a more enjoyable routine get it through ' . $company . '\'s fresh approach to ' . $productLower . '.',
-            'cta' => 'Shop now',
+            'overlay' => $isBarber ? 'Need a sharper look this week?' : ($isPet ? 'Need better walks this week?' : 'Need a better result this week?'),
+            'hook' => $isBarber ? 'Need a sharper look this week?' : ($isPet ? 'Need better walks this week?' : 'Need a better result this week?'),
+            'caption' => ucfirst($audienceLower) . ' who want better control, cleaner design, and a more enjoyable experience get it through ' . $company . '\'s fresh approach to ' . $productLower . '.',
+            'cta' => $isBarber ? 'Book now' : 'Shop now',
         ],
     ];
     $types = ['post', 'post', 'post', 'post', 'post', 'post', 'post', 'post', 'post'];
@@ -4087,8 +4156,12 @@ function social_media_generate_fallback_batch($profile, $brief = '')
             'cta' => $theme['cta'],
             'hashtags' => ['#' . preg_replace('/\s+/', '', ucwords($industry)), '#' . preg_replace('/\s+/', '', ucwords($company)), '#Marketing'],
             'visual_brief' => 'Use a polished branded layout with a clear focal point, generous spacing, and typography that matches a ' . $companyTone . ' tone.',
-            'keywords' => [$industry, $product, $company, $differentiator],
-            'design' => $design,
+            'keywords' => array_values(array_filter([$industry, $product, $company, $differentiator, $isBarber ? 'barber haircut beard trim fade' : ''])),
+            'design' => array_merge($design, [
+                'asset_tags' => $isBarber
+                    ? ['barber', 'haircut', 'fade', 'beard', 'clippers', 'barbershop']
+                    : ($isPet ? ['dog', 'leash', 'walk', 'pet', 'outdoor'] : $design['asset_tags']),
+            ]),
             'slides' => !empty($theme['slides']) ? $theme['slides'] : [],
             'reel_script' => !empty($theme['reel_script']) ? $theme['reel_script'] : [],
         ];

@@ -4,36 +4,23 @@ $generationHistory = !empty($selected_campaign['recent_generations']) && is_arra
     ? array_reverse($selected_campaign['recent_generations'])
     : [];
 $strategyRows = [
-    __('Campaign Type') => !empty($selected_campaign_form['campaign_type']) ? $selected_campaign_form['campaign_type'] : '',
-    __('Funnel Stage') => !empty($selected_campaign_form['funnel_stage']) ? $selected_campaign_form['funnel_stage'] : '',
-    __('Primary Focus') => !empty($selected_campaign_form['focus_area']) ? $selected_campaign_form['focus_area'] : '',
-    __('Content Angle') => !empty($selected_campaign_form['content_angle']) ? $selected_campaign_form['content_angle'] : '',
-    __('Use Case') => !empty($selected_campaign_form['use_case']) ? $selected_campaign_form['use_case'] : '',
     __('Grid Style') => !empty($selected_campaign_form['grid_style']) ? $selected_campaign_form['grid_style'] : '',
 ];
 $strategyRows = array_filter($strategyRows, function ($value) {
     return $value !== '';
 });
-$creativeDirectionRows = [];
-if (!empty($selected_campaign_form['focus_area'])) {
+$creativeDirectionRows = [
+    [
+        'label' => __('Business context'),
+        'value' => __('Company intelligence'),
+        'note' => __('Atlas uses the real business profile, audience, offer, pains, differentiators, and promise as the source of truth for posts and grids.')
+    ],
+];
+if (!empty($selected_campaign_form['grid_style'])) {
     $creativeDirectionRows[] = [
-        'label' => __('Focus'),
-        'value' => $selected_campaign_form['focus_area'],
-        'note' => __('Anchor the message around the main commercial outcome this campaign should move.')
-    ];
-}
-if (!empty($selected_campaign_form['content_angle'])) {
-    $creativeDirectionRows[] = [
-        'label' => __('Angle'),
-        'value' => $selected_campaign_form['content_angle'],
-        'note' => __('Use this as the emotional or strategic lens across posts, hooks, and visuals.')
-    ];
-}
-if (!empty($selected_campaign_form['use_case'])) {
-    $creativeDirectionRows[] = [
-        'label' => __('Use case'),
-        'value' => $selected_campaign_form['use_case'],
-        'note' => __('Keep the examples concrete so the audience can quickly see themselves in the story.')
+        'label' => __('Grid style'),
+        'value' => $selected_campaign_form['grid_style'],
+        'note' => __('This only shapes sequencing and layout. The message and imagery still stay tied to the business.')
     ];
 }
 $campaignSummaryChips = [
@@ -127,19 +114,12 @@ $campaignSummaryChips = [
                                     <div class="atlas-campaign-side-card">
                                         <span class="atlas-workflow-eyebrow"><?php _e("Creative direction") ?></span>
                                         <h4><?php _e("What Atlas should make next") ?></h4>
-                                        <p><?php _e("Use these direction anchors to keep every post, grid, and variant strategically consistent.") ?></p>
+                                        <p><?php _e("Atlas now uses company intelligence as the source of truth, then applies the selected grid style as the visual system.") ?></p>
                                         <div class="atlas-direction-list">
-                                            <?php if (!empty($creativeDirectionRows)) { ?>
-                                                <?php foreach ($creativeDirectionRows as $directionRow) { ?>
-                                                    <div class="atlas-direction-item">
-                                                        <strong><?php _esc($directionRow['label']) ?> · <?php _esc($directionRow['value']) ?></strong>
-                                                        <span><?php _esc($directionRow['note']) ?></span>
-                                                    </div>
-                                                <?php } ?>
-                                            <?php } else { ?>
+                                            <?php foreach ($creativeDirectionRows as $directionRow) { ?>
                                                 <div class="atlas-direction-item">
-                                                    <strong><?php _e("Campaign direction not fully shaped yet") ?></strong>
-                                                    <span><?php _e("Complete the strategy fields and Atlas will use them here as execution anchors.") ?></span>
+                                                    <strong><?php _esc($directionRow['label']) ?> · <?php _esc($directionRow['value']) ?></strong>
+                                                    <span><?php _esc($directionRow['note']) ?></span>
                                                 </div>
                                             <?php } ?>
                                         </div>
@@ -217,7 +197,7 @@ $campaignSummaryChips = [
                 <div class="col-xl-4">
                     <div class="dashboard-box margin-top-0 margin-bottom-24">
                         <div class="headline">
-                            <h3><i class="icon-feather-edit-3"></i> <?php _e("Campaign Strategy") ?></h3>
+                            <h3><i class="icon-feather-edit-3"></i> <?php _e("Campaign Setup") ?></h3>
                         </div>
                         <div class="content with-padding">
                             <form method="post" action="">
@@ -228,52 +208,7 @@ $campaignSummaryChips = [
                                 </div>
                                 <div class="submit-field">
                                     <h5><?php _e("Core Brief") ?></h5>
-                                    <textarea name="description" class="with-border" rows="4" placeholder="<?php _e("What is this campaign trying to achieve, for whom, and why now?") ?>"><?php _esc(!empty($selected_campaign['description']) ? $selected_campaign['description'] : '') ?></textarea>
-                                </div>
-                                <div class="submit-field">
-                                    <h5><?php _e("Campaign Type") ?></h5>
-                                    <select name="campaign_type" class="selectpicker with-border" data-size="10">
-                                        <option value=""><?php _e("Select campaign type") ?></option>
-                                        <?php foreach ($campaign_catalog as $campaignKey => $campaignMeta) { ?>
-                                            <option value="<?php _esc($campaignKey) ?>" <?php echo (!empty($selected_campaign_form['campaign_type']) && $selected_campaign_form['campaign_type'] === $campaignKey) ? 'selected' : ''; ?>><?php _esc($campaignMeta['label']) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="submit-field">
-                                    <h5><?php _e("Funnel Stage") ?></h5>
-                                    <select name="funnel_stage" class="selectpicker with-border" data-size="10">
-                                        <option value=""><?php _e("Select funnel stage") ?></option>
-                                        <?php foreach ($funnel_stage_catalog as $stageKey => $stageLabel) { ?>
-                                            <option value="<?php _esc($stageKey) ?>" <?php echo (!empty($selected_campaign_form['funnel_stage']) && $selected_campaign_form['funnel_stage'] === $stageKey) ? 'selected' : ''; ?>><?php _esc($stageLabel) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="submit-field">
-                                    <h5><?php _e("Primary Focus") ?></h5>
-                                    <select name="focus_area" class="selectpicker with-border" data-size="10">
-                                        <option value=""><?php _e("Select focus area") ?></option>
-                                        <?php foreach ($focus_options as $focusValue) { ?>
-                                            <option value="<?php _esc($focusValue) ?>" <?php echo (!empty($selected_campaign_form['focus_area']) && $selected_campaign_form['focus_area'] === $focusValue) ? 'selected' : ''; ?>><?php _esc($focusValue) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="submit-field">
-                                    <h5><?php _e("Content Angle") ?></h5>
-                                    <select name="content_angle" class="selectpicker with-border" data-size="10">
-                                        <option value=""><?php _e("Select content angle") ?></option>
-                                        <?php foreach ($content_angle_options as $contentAngleValue) { ?>
-                                            <option value="<?php _esc($contentAngleValue) ?>" <?php echo (!empty($selected_campaign_form['content_angle']) && $selected_campaign_form['content_angle'] === $contentAngleValue) ? 'selected' : ''; ?>><?php _esc($contentAngleValue) ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="submit-field">
-                                    <h5><?php _e("Use Case") ?></h5>
-                                    <select name="use_case" class="selectpicker with-border" data-size="10">
-                                        <option value=""><?php _e("Select use case") ?></option>
-                                        <?php foreach ($use_case_options as $useCaseValue) { ?>
-                                            <option value="<?php _esc($useCaseValue) ?>" <?php echo (!empty($selected_campaign_form['use_case']) && $selected_campaign_form['use_case'] === $useCaseValue) ? 'selected' : ''; ?>><?php _esc($useCaseValue) ?></option>
-                                        <?php } ?>
-                                    </select>
+                                    <textarea name="description" class="with-border" rows="4" placeholder="<?php _e("Capture the offer, audience, painful problem, desired outcome, and believable promise Atlas should keep reinforcing.") ?>"><?php _esc(!empty($selected_campaign['description']) ? $selected_campaign['description'] : '') ?></textarea>
                                 </div>
                                 <div class="submit-field">
                                     <h5><?php _e("Grid Style") ?></h5>
@@ -284,10 +219,6 @@ $campaignSummaryChips = [
                                             <option value="<?php _esc($gridKey) ?>" <?php echo (!empty($selected_campaign_form['grid_style']) && $selected_campaign_form['grid_style'] === $gridKey) ? 'selected' : ''; ?>><?php _esc($gridMeta['label']) ?></option>
                                         <?php } ?>
                                     </select>
-                                </div>
-                                <div class="submit-field">
-                                    <h5><?php _e("Operator Notes") ?></h5>
-                                    <textarea name="strategy_notes" class="with-border" rows="4" placeholder="<?php _e("Add launch context, positioning nuances, or execution notes Atlas should remember.") ?>"><?php _esc(!empty($selected_campaign_form['description']) ? $selected_campaign_form['description'] : '') ?></textarea>
                                 </div>
                                 <button type="submit" class="button ripple-effect atlas-primary-action"><?php _e("Save Campaign Detail") ?></button>
                             </form>
