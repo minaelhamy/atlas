@@ -38,6 +38,55 @@ function atlas_ajax_json_encode_payload(array $payload)
     return json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
+function atlas_ajax_prepare_social_post_for_response($post)
+{
+    $post = is_array($post) ? $post : [];
+    $asset = !empty($post['asset']) && is_array($post['asset']) ? $post['asset'] : [];
+    $design = !empty($post['design']) && is_array($post['design']) ? $post['design'] : [];
+    $grid = !empty($post['grid']) && is_array($post['grid']) ? $post['grid'] : [];
+
+    return [
+        'id' => !empty($post['id']) ? (int) $post['id'] : 0,
+        'post_type' => !empty($post['post_type']) ? (string) $post['post_type'] : 'post',
+        'title' => !empty($post['title']) ? (string) $post['title'] : '',
+        'caption' => !empty($post['caption']) ? (string) $post['caption'] : '',
+        'overlay_text' => !empty($post['overlay_text']) ? (string) $post['overlay_text'] : '',
+        'preview_image' => !empty($post['preview_image']) ? (string) $post['preview_image'] : '',
+        'asset_title' => !empty($post['asset_title']) ? (string) $post['asset_title'] : '',
+        'cta' => !empty($post['cta']) ? (string) $post['cta'] : '',
+        'hashtags' => !empty($post['hashtags']) && is_array($post['hashtags']) ? array_values(array_map('strval', $post['hashtags'])) : [],
+        'reel_script' => !empty($post['reel_script']) && is_array($post['reel_script']) ? array_values(array_map('strval', $post['reel_script'])) : [],
+        'rendered_video' => !empty($post['rendered_video']) ? (string) $post['rendered_video'] : '',
+        'source_video' => !empty($post['source_video']) ? (string) $post['source_video'] : '',
+        'vote_value' => !empty($post['vote_value']) ? (int) $post['vote_value'] : 0,
+        'design' => [
+            'headline_font_key' => !empty($design['headline_font_key']) ? (string) $design['headline_font_key'] : '',
+            'body_font_key' => !empty($design['body_font_key']) ? (string) $design['body_font_key'] : '',
+            'headline_size' => !empty($design['headline_size']) ? (int) $design['headline_size'] : 0,
+            'background_tone' => !empty($design['background_tone']) ? (string) $design['background_tone'] : '',
+        ],
+        'grid' => [
+            'position' => !empty($grid['position']) ? (int) $grid['position'] : 0,
+        ],
+        'asset' => [
+            'remote_provider' => !empty($asset['remote_provider']) ? (string) $asset['remote_provider'] : '',
+            'remote_author' => !empty($asset['remote_author']) ? (string) $asset['remote_author'] : '',
+            'remote_author_url' => !empty($asset['remote_author_url']) ? (string) $asset['remote_author_url'] : '',
+            'remote_page_url' => !empty($asset['remote_page_url']) ? (string) $asset['remote_page_url'] : '',
+        ],
+    ];
+}
+
+function atlas_ajax_prepare_social_posts_for_response($posts)
+{
+    $posts = is_array($posts) ? $posts : [];
+    $prepared = [];
+    foreach ($posts as $post) {
+        $prepared[] = atlas_ajax_prepare_social_post_for_response($post);
+    }
+    return $prepared;
+}
+
 function atlas_ajax_log_failure($action, $message, array $context = [])
 {
     $parts = ['Atlas AJAX failure', 'action=' . $action, 'message=' . $message];
@@ -1639,7 +1688,7 @@ function generate_image()
             update_user_option($_SESSION['user']['id'], 'total_images_used', $total_images_used + $postsToGenerate);
 
             $result['success'] = true;
-            $result['posts'] = $posts;
+            $result['posts'] = atlas_ajax_prepare_social_posts_for_response($posts);
             $result['description'] = !empty($_POST['description']) ? $_POST['description'] : '';
             $result['old_used_images'] = (int) $total_images_used;
             $result['current_used_images'] = (int) $total_images_used + $postsToGenerate;
@@ -1776,7 +1825,7 @@ function generate_instagram_grid()
             update_user_option($_SESSION['user']['id'], 'total_images_used', $total_images_used + $postsToGenerate);
 
             $result['success'] = true;
-            $result['posts'] = $posts;
+            $result['posts'] = atlas_ajax_prepare_social_posts_for_response($posts);
             $result['grid_template'] = !empty($gridBatch['template']) ? $gridBatch['template'] : [];
             $result['grid_template_key'] = !empty($gridBatch['template_key']) ? $gridBatch['template_key'] : '';
             $result['company_profile'] = [
@@ -1887,7 +1936,7 @@ function regenerate_social_post()
 
         $result['success'] = true;
         $result['message'] = __('Image regenerated successfully.');
-        $result['post'] = $regenerated['post'];
+        $result['post'] = atlas_ajax_prepare_social_post_for_response($regenerated['post']);
         die(json_encode($result));
     }
 
@@ -1923,7 +1972,7 @@ function vote_social_post_image()
         $result['message'] = $voteValue > 0
             ? __('Thanks, we will learn from this image.')
             : __('Thanks, we will use this feedback next time.');
-        $result['post'] = $post;
+        $result['post'] = atlas_ajax_prepare_social_post_for_response($post);
         die(json_encode($result));
     }
 
@@ -1955,7 +2004,7 @@ function save_social_post_overlay()
 
         $result['success'] = true;
         $result['message'] = __('Overlay text updated.');
-        $result['post'] = $saved['post'];
+        $result['post'] = atlas_ajax_prepare_social_post_for_response($saved['post']);
         die(json_encode($result));
     }
 
