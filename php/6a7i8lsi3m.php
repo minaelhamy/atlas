@@ -1584,7 +1584,7 @@ function generate_image()
 
         $_POST = validate_input($_POST);
 
-        if (!empty($_POST['campaign_type'])) {
+        if (true) {
 
             $membership = get_user_membership_detail($_SESSION['user']['id']);
             $images_limit = $membership['settings']['ai_images_limit'];
@@ -1608,13 +1608,7 @@ function generate_image()
 
             if (!empty($_POST['campaign_id'])) {
                 hatchers_update_campaign_form_state($_SESSION['user']['id'], $_POST['campaign_id'], [
-                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
-                    'funnel_stage' => isset($_POST['funnel_stage']) ? $_POST['funnel_stage'] : '',
-                    'focus_area' => isset($_POST['focus_area']) ? $_POST['focus_area'] : '',
-                    'content_angle' => isset($_POST['content_angle']) ? $_POST['content_angle'] : '',
-                    'use_case' => isset($_POST['use_case']) ? $_POST['use_case'] : '',
                     'grid_style' => isset($_POST['grid_style']) ? $_POST['grid_style'] : '',
-                    'description' => isset($_POST['description']) ? $_POST['description'] : '',
                 ]);
             }
 
@@ -1648,7 +1642,6 @@ function generate_image()
             } catch (Throwable $e) {
                 atlas_ajax_log_failure('generate_image', $e->getMessage(), [
                     'user_id' => $_SESSION['user']['id'],
-                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
                     'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
                     'prompt_excerpt' => substr($prompt, 0, 220),
                     'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
@@ -1661,7 +1654,6 @@ function generate_image()
             if (empty($posts)) {
                 atlas_ajax_log_failure('generate_image', 'No posts were stored after generation.', [
                     'user_id' => $_SESSION['user']['id'],
-                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
                     'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
                     'prompt_excerpt' => substr($prompt, 0, 220),
                     'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
@@ -1726,7 +1718,7 @@ function generate_instagram_grid()
         set_time_limit(0);
         $_POST = validate_input($_POST);
 
-        if (!empty($_POST['campaign_type'])) {
+        if (true) {
             $membership = get_user_membership_detail($_SESSION['user']['id']);
             $images_limit = $membership['settings']['ai_images_limit'];
             $total_images_used = get_user_option($_SESSION['user']['id'], 'total_images_used', 0);
@@ -1747,12 +1739,7 @@ function generate_instagram_grid()
 
             if (!empty($_POST['campaign_id'])) {
                 hatchers_update_campaign_form_state($_SESSION['user']['id'], $_POST['campaign_id'], [
-                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
-                    'funnel_stage' => isset($_POST['funnel_stage']) ? $_POST['funnel_stage'] : '',
-                    'focus_area' => isset($_POST['focus_area']) ? $_POST['focus_area'] : '',
-                    'content_angle' => isset($_POST['content_angle']) ? $_POST['content_angle'] : '',
-                    'use_case' => isset($_POST['use_case']) ? $_POST['use_case'] : '',
-                    'description' => isset($_POST['description']) ? $_POST['description'] : '',
+                    'grid_style' => isset($_POST['grid_style']) ? $_POST['grid_style'] : '',
                 ]);
             }
 
@@ -1785,7 +1772,6 @@ function generate_instagram_grid()
             } catch (Throwable $e) {
                 atlas_ajax_log_failure('generate_instagram_grid', $e->getMessage(), [
                     'user_id' => $_SESSION['user']['id'],
-                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
                     'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
                     'prompt_excerpt' => substr($prompt, 0, 220),
                     'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
@@ -1798,7 +1784,6 @@ function generate_instagram_grid()
             if (empty($posts)) {
                 atlas_ajax_log_failure('generate_instagram_grid', 'No posts were stored after grid generation.', [
                     'user_id' => $_SESSION['user']['id'],
-                    'campaign_type' => isset($_POST['campaign_type']) ? $_POST['campaign_type'] : '',
                     'campaign_id' => isset($_POST['campaign_id']) ? $_POST['campaign_id'] : '',
                     'prompt_excerpt' => substr($prompt, 0, 220),
                     'openai_debug' => function_exists('social_media_runtime_debug') ? social_media_runtime_debug('openai') : [],
