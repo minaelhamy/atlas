@@ -55,7 +55,7 @@
 
     <meta name="theme-color" content="<?php _esc($config['theme_color']);?>">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="<?php _esc($config['pwa_app_name']);?>">
+    <meta name="application-name" content="<?php _esc(!empty($config['pwa_app_name']) ? $config['pwa_app_name'] : (!empty($config['site_title']) ? $config['site_title'] : 'Atlas'));?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="manifest" href="<?php _esc($config['site_url']); ?>manifest.json">
@@ -110,7 +110,16 @@
 <![endif]-->
 <?php
 global $current_user;
-$plan_settings = $current_user['plan']['settings'];
+$plan_settings = !empty($current_user['plan']['settings']) && is_array($current_user['plan']['settings'])
+    ? $current_user['plan']['settings']
+    : [];
+$plan_settings = array_merge([
+    'ai_images_limit' => 0,
+    'ai_chat' => 0,
+    'ai_speech_to_text_limit' => 0,
+    'ai_speech_to_text_file_limit' => 0,
+    'ai_text_to_speech_limit' => 0,
+], $plan_settings);
 $atlasFounderContext = [];
 if ($is_login && !empty($current_user['id']) && function_exists('hatchers_get_founder_context_summary')) {
     $atlasFounderContext = hatchers_get_founder_context_summary((int) $current_user['id']);
