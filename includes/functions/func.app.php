@@ -96,6 +96,16 @@ function get_default_openai_chat_model()
     return get_env_setting('OPENAI_CHAT_MODEL_DEFAULT', get_default_openai_model());
 }
 
+function get_openai_fallback_model()
+{
+    return get_env_setting('OPENAI_FALLBACK_MODEL', 'gpt-5.2');
+}
+
+function get_openai_legacy_fallback_model()
+{
+    return get_env_setting('OPENAI_LEGACY_FALLBACK_MODEL', 'gpt-4.1-mini');
+}
+
 function get_default_openai_image_model()
 {
     return get_env_setting('OPENAI_IMAGE_MODEL_DEFAULT', 'gpt-image-1');

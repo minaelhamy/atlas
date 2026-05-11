@@ -106,8 +106,8 @@ function atlas_chat_model_candidates($preferred = '')
     $candidates = array_values(array_filter([
         $preferred,
         get_default_openai_chat_model(),
-        'gpt-4o-mini',
-        'gpt-4o',
+        get_openai_fallback_model(),
+        get_openai_legacy_fallback_model(),
         'gpt-4.1-mini',
         'gpt-4.1',
     ]));

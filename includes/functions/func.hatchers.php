@@ -491,46 +491,67 @@ function hatchers_call_openai_responses(array $messages, $instructions)
         return ['ok' => false, 'error' => 'OpenAI API key is not configured in Atlas.'];
     }
 
-    $model = normalize_openai_model(get_default_openai_chat_model(), 'text');
-    $payload = [
-        'model' => $model,
-        'input' => $messages,
-        'instructions' => (string) $instructions,
-        'max_output_tokens' => 700,
-    ];
-
-    $ch = curl_init('https://api.openai.com/v1/responses');
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey,
-        ],
-        CURLOPT_POSTFIELDS => json_encode($payload),
-        CURLOPT_TIMEOUT => 45,
-    ]);
-
-    $responseBody = curl_exec($ch);
-    $curlError = curl_error($ch);
-    $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($responseBody === false || $curlError) {
-        return ['ok' => false, 'error' => $curlError !== '' ? $curlError : 'OpenAI request failed.'];
+    $candidates = [];
+    foreach ([
+        get_default_openai_chat_model(),
+        get_openai_fallback_model(),
+        get_openai_legacy_fallback_model(),
+        'gpt-4.1-mini',
+        'gpt-4.1',
+    ] as $candidate) {
+        $candidate = normalize_openai_model($candidate, 'text');
+        if ($candidate !== '' && !in_array($candidate, $candidates, true)) {
+            $candidates[] = $candidate;
+        }
     }
 
-    $decoded = json_decode($responseBody, true);
-    if ($statusCode >= 400) {
-        $message = isset($decoded['error']['message']) ? $decoded['error']['message'] : 'OpenAI request failed.';
-        return ['ok' => false, 'error' => $message];
+    $lastError = 'OpenAI request failed.';
+
+    foreach ($candidates as $model) {
+        $payload = [
+            'model' => $model,
+            'input' => $messages,
+            'instructions' => (string) $instructions,
+            'max_output_tokens' => 700,
+        ];
+
+        $ch = curl_init('https://api.openai.com/v1/responses');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => 45,
+        ]);
+
+        $responseBody = curl_exec($ch);
+        $curlError = curl_error($ch);
+        $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($responseBody === false || $curlError) {
+            $lastError = $curlError !== '' ? $curlError : 'OpenAI request failed.';
+            continue;
+        }
+
+        $decoded = json_decode($responseBody, true);
+        if ($statusCode >= 400) {
+            $lastError = isset($decoded['error']['message']) ? $decoded['error']['message'] : 'OpenAI request failed.';
+            continue;
+        }
+
+        if (!is_array($decoded)) {
+            $lastError = 'Invalid OpenAI response.';
+            continue;
+        }
+
+        return ['ok' => true, 'data' => $decoded];
     }
 
-    if (!is_array($decoded)) {
-        return ['ok' => false, 'error' => 'Invalid OpenAI response.'];
-    }
-
-    return ['ok' => true, 'data' => $decoded];
+    return ['ok' => false, 'error' => $lastError];
 }
 
 function hatchers_get_founder_intelligence_text($userId, array $options = [])
