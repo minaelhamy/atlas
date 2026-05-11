@@ -1657,7 +1657,6 @@ function social_media_extract_profile_from_website($url, $existingProfile = [])
             ['role' => 'system', 'content' => 'You extract structured business profile information from websites. Return JSON only.'],
             ['role' => 'user', 'content' => $prompt],
         ],
-        'temperature' => 0.2,
         'response_format' => ['type' => 'json_object'],
         'max_tokens' => 900,
     ]);
@@ -1752,7 +1751,6 @@ function social_media_generate_profile_field_suggestion($user_id, $field, $profi
             ['role' => 'system', 'content' => 'You help fill business onboarding forms. Return JSON only.'],
             ['role' => 'user', 'content' => "Fill the requested Company Intelligence field.\nReturn JSON with one key named value.\nPayload:\n" . json_encode($payload)],
         ],
-        'temperature' => 0.5,
         'response_format' => ['type' => 'json_object'],
         'max_tokens' => 700,
     ]);
@@ -1805,7 +1803,6 @@ function social_media_generate_intelligence_via_openai($profile, $companySite, $
             ['role' => 'system', 'content' => $system],
             ['role' => 'user', 'content' => $prompt],
         ],
-        'temperature' => 0.4,
         'response_format' => ['type' => 'json_object'],
         'max_tokens' => 900,
     ]);
@@ -3927,7 +3924,6 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $userPrompt],
             ],
-            'temperature' => 0.7,
             'response_format' => ['type' => 'json_object'],
             'max_tokens' => 2200,
             'user' => $user_id,
@@ -3940,7 +3936,6 @@ function social_media_generate_batch_via_openai($system, $userPrompt, $user_id)
             $lastError = $decoded['error']['message'];
             $lastAttempt = 'json_mode';
             unset($payload['response_format']);
-            $payload['temperature'] = 0.6;
             $response = $openAi->chat($payload);
             $decoded = json_decode($response, true);
         }

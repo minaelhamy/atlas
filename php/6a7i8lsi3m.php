@@ -131,7 +131,6 @@ function atlas_resolve_stream_chat_model($openAi, array $history, $preferredMode
         $payload = [
             'model' => $candidate,
             'messages' => $history,
-            'temperature' => 0.7,
             'user' => $userId,
             'max_tokens' => $maxTokens !== -1 ? min((int) $maxTokens, 120) : 120,
         ];
@@ -1482,7 +1481,6 @@ function generate_content()
                 $complete = $open_ai->chat([
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => $temperature,
                     'frequency_penalty' => 0,
                     'presence_penalty' => 0,
                     'max_tokens' => $max_tokens,
@@ -2554,7 +2552,6 @@ function chat_stream()
         $opts = [
             'model' => $model,
             'messages' => $history,
-            'temperature' => 1.0,
             'frequency_penalty' => 0,
             'presence_penalty' => 0,
             'user' => $_SESSION['user']['id'],
@@ -2940,7 +2937,6 @@ function ai_code()
                             "content" => $prompt
                         ],
                     ],
-                    'temperature' => 1,
                     'n' => 1,
                     'user' => $_SESSION['user']['id']
                 ];
@@ -2952,7 +2948,6 @@ function ai_code()
                 $opt = [
                     'model' => $model,
                     'prompt' => $prompt,
-                    'temperature' => 1,
                     'n' => 1,
                 ];
                 if ($max_tokens != -1) {
@@ -3098,7 +3093,6 @@ function text_to_speech()
                             ],
                             'frequency_penalty' => 0,
                             'presence_penalty' => 0,
-                            'temperature' => 0,
                             'user' => $_SESSION['user']['id']
                         ]);
                     } else {
@@ -3107,7 +3101,6 @@ function text_to_speech()
                             'prompt' => "You are a professional translator that can translate strings to $language language. Translate, but avoid returning ending dots:\n\n" . $_POST['description'] . "\n\n",
                             'frequency_penalty' => 0,
                             'presence_penalty' => 0,
-                            'temperature' => 0,
                             'user' => $_SESSION['user']['id']
                         ]);
                     }

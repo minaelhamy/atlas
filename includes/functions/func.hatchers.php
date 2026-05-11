@@ -497,7 +497,6 @@ function hatchers_call_openai_responses(array $messages, $instructions)
         'input' => $messages,
         'instructions' => (string) $instructions,
         'max_output_tokens' => 700,
-        'temperature' => 0.4,
     ];
 
     $ch = curl_init('https://api.openai.com/v1/responses');
