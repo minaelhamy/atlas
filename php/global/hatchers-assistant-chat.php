@@ -66,10 +66,22 @@ $response = hatchers_call_openai_responses(
 );
 
 if (!$response['ok']) {
-    hatchers_json_response(502, [
-        'success' => false,
-        'error' => $response['error'],
+    $reply = "I'm Atlas. I couldn't reach the full AI layer right now, but I still know your Hatchers workspace and can help with the next best step. Try asking me again in a moment, or open Tasks / Company Intelligence while I recover.";
+
+    hatchers_record_assistant_exchange($user->id(), trim((string) ($payload['app'] ?? 'atlas')), $message, $reply);
+    hatchers_push_os_snapshot($user->id(), trim((string) ($payload['current_page'] ?? 'atlas_assistant_chat')), [
+        'activity' => 'Atlas assistant used a degraded fallback reply.',
+        'latest_content_summary' => trim(substr($reply, 0, 180)),
+    ]);
+
+    hatchers_json_response(200, [
+        'success' => true,
+        'degraded' => true,
+        'created' => (bool) $result['created'],
         'founder_user_id' => $user->id(),
+        'reply' => $reply,
+        'actions' => hatchers_get_founder_action_plan($user->id(), 5),
+        'intelligence_updated_at' => isset($intelligence['updated_at']) ? $intelligence['updated_at'] : date('Y-m-d H:i:s'),
     ]);
 }
 

@@ -109,7 +109,6 @@ function atlas_chat_model_candidates($preferred = '')
         get_openai_fallback_model(),
         get_openai_legacy_fallback_model(),
         'gpt-4.1-mini',
-        'gpt-4.1',
     ]));
 
     $normalized = [];

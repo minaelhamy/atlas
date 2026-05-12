@@ -497,7 +497,6 @@ function hatchers_call_openai_responses(array $messages, $instructions)
         get_openai_fallback_model(),
         get_openai_legacy_fallback_model(),
         'gpt-4.1-mini',
-        'gpt-4.1',
     ] as $candidate) {
         $candidate = normalize_openai_model($candidate, 'text');
         if ($candidate !== '' && !in_array($candidate, $candidates, true)) {

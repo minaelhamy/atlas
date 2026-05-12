@@ -1644,23 +1644,15 @@ function social_media_extract_profile_from_website($url, $existingProfile = [])
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
     $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
-    $models = social_media_get_chat_model_candidates();
-    $model = !empty($models[0]) ? $models[0] : get_default_openai_chat_model();
     $prompt = "Extract a concise company profile from this website snapshot. Return valid JSON only with keys: company_name, company_description, company_industry, ideal_customer_profile, target_audience, content_goals, differentiators, top_problems_solved, unique_selling_points.\n"
         . "Website URL: {$url}\n"
         . "Website snapshot:\n" . json_encode($snapshot) . "\n"
         . "If something is unclear, leave it empty instead of inventing it. top_problems_solved and unique_selling_points should be arrays of short statements.";
 
-    $response = $openAi->chat([
-        'model' => $model,
-        'messages' => [
-            ['role' => 'system', 'content' => 'You extract structured business profile information from websites. Return JSON only.'],
-            ['role' => 'user', 'content' => $prompt],
-        ],
-        'response_format' => ['type' => 'json_object'],
-        'max_tokens' => 900,
-    ]);
-    $decoded = json_decode($response, true);
+    $decoded = social_media_chat_json_with_fallback($openAi, [
+        ['role' => 'system', 'content' => 'You extract structured business profile information from websites. Return JSON only.'],
+        ['role' => 'user', 'content' => $prompt],
+    ], 900, 'profile_from_website');
     if (empty($decoded['choices'][0]['message']['content'])) {
         return $fallback;
     }
@@ -1721,8 +1713,6 @@ function social_media_generate_profile_field_suggestion($user_id, $field, $profi
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/OpenAi.php';
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
-    $models = social_media_get_chat_model_candidates();
-    $model = !empty($models[0]) ? $models[0] : get_default_openai_chat_model();
     $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
 
     $instructions = [
@@ -1745,17 +1735,10 @@ function social_media_generate_profile_field_suggestion($user_id, $field, $profi
         'instruction' => $instructions[$field],
     ];
 
-    $response = $openAi->chat([
-        'model' => $model,
-        'messages' => [
-            ['role' => 'system', 'content' => 'You help fill business onboarding forms. Return JSON only.'],
-            ['role' => 'user', 'content' => "Fill the requested Company Intelligence field.\nReturn JSON with one key named value.\nPayload:\n" . json_encode($payload)],
-        ],
-        'response_format' => ['type' => 'json_object'],
-        'max_tokens' => 700,
-    ]);
-
-    $decoded = json_decode($response, true);
+    $decoded = social_media_chat_json_with_fallback($openAi, [
+        ['role' => 'system', 'content' => 'You help fill business onboarding forms. Return JSON only.'],
+        ['role' => 'user', 'content' => "Fill the requested Company Intelligence field.\nReturn JSON with one key named value.\nPayload:\n" . json_encode($payload)],
+    ], 700, 'profile_field_suggestion');
     if (empty($decoded['choices'][0]['message']['content'])) {
         return isset($fallbacks[$field]) ? $fallbacks[$field] : null;
     }
@@ -1785,8 +1768,6 @@ function social_media_generate_intelligence_via_openai($profile, $companySite, $
     require_once ROOTPATH . '/includes/lib/orhanerday/open-ai/src/Url.php';
 
     $openAi = new Orhanerday\OpenAi\OpenAi(get_api_key());
-    $model = social_media_get_chat_model_candidates();
-    $model = !empty($model[0]) ? $model[0] : get_default_openai_chat_model();
 
     $system = 'You are a business strategist. Build a concise reusable company intelligence brief as valid JSON only.';
     $prompt = "Create a structured intelligence summary for Atlas to reuse in AI chats and social media generation.\n"
@@ -1797,16 +1778,10 @@ function social_media_generate_intelligence_via_openai($profile, $companySite, $
         . "Recent founder/agent history:\n" . $historyContext . "\n\n"
         . "Be specific. Focus on what the company does, who it serves, how it is different, market themes, and how content should position the brand.";
 
-    $response = $openAi->chat([
-        'model' => $model,
-        'messages' => [
-            ['role' => 'system', 'content' => $system],
-            ['role' => 'user', 'content' => $prompt],
-        ],
-        'response_format' => ['type' => 'json_object'],
-        'max_tokens' => 900,
-    ]);
-    $decoded = json_decode($response, true);
+    $decoded = social_media_chat_json_with_fallback($openAi, [
+        ['role' => 'system', 'content' => $system],
+        ['role' => 'user', 'content' => $prompt],
+    ], 900, 'intelligence_generation');
     if (empty($decoded['choices'][0]['message']['content'])) {
         return [];
     }
@@ -3991,7 +3966,6 @@ function social_media_get_chat_model_candidates()
         get_openai_fallback_model(),
         get_openai_legacy_fallback_model(),
         'gpt-4.1-mini',
-        'gpt-4.1',
     ];
 
     $normalized = [];
@@ -4003,6 +3977,46 @@ function social_media_get_chat_model_candidates()
     }
 
     return $normalized;
+}
+
+function social_media_chat_json_with_fallback($openAi, $messages, $maxTokens = 900, $context = 'chat_json')
+{
+    $modelsToTry = social_media_get_chat_model_candidates();
+    $lastError = '';
+
+    foreach ($modelsToTry as $modelToTry) {
+        $payload = [
+            'model' => $modelToTry,
+            'messages' => $messages,
+            'response_format' => ['type' => 'json_object'],
+            'max_tokens' => (int) $maxTokens,
+        ];
+
+        $response = $openAi->chat($payload);
+        $decoded = json_decode($response, true);
+
+        if (!empty($decoded['error']['message'])) {
+            $lastError = $decoded['error']['message'];
+            social_media_runtime_debug('openai', [
+                'attempt' => $context,
+                'model' => $modelToTry,
+                'error' => $lastError,
+            ]);
+            continue;
+        }
+
+        if (!empty($decoded['choices'][0]['message']['content']) || !empty($decoded['choices'][0]['finish_reason'])) {
+            return is_array($decoded) ? $decoded : [];
+        }
+    }
+
+    social_media_runtime_debug('openai', [
+        'attempt' => $context,
+        'model' => !empty($modelsToTry) ? end($modelsToTry) : '',
+        'error' => $lastError !== '' ? $lastError : 'No valid content returned',
+    ]);
+
+    return [];
 }
 
 function social_media_extract_json($text)
